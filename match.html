@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, maximum-scale=1.0">
+    <title>Rebuilt Match Scouting</title>
+    <link rel="stylesheet" href="resources/css/scoutingPASS.css">
+  </head>
+
+  <body>
+    <form id="scoutingForm" onsubmit="return false" name="scoutingForm">
+      <div id="main-panel-holder">
+
+        <!-- ===================== PRE-MATCH ===================== -->
+        <div id="prematch" class="main-panel" style="background-color: black;">
+          <h1 id="prematchHeader1">Pre-Match</h1>
+          <p class="match-label">
+            <input type="button" value="Next" id="nextButton1" onclick="swipePage(1)">
+          </p>
+
+          <table id="prematch_table">
+            <!-- Scouter Initials -->
+            <tr>
+              <td class="title">Scouter Initials&nbsp;</td>
+              <td class="field">
+                <input type="text" id="input_s" name="s" size="5" maxlength="5" required>
+              </td>
+            </tr>
+            <!-- Event -->
+            <tr>
+              <td class="title">Event&nbsp;</td>
+              <td class="field">
+                <input type="text" id="input_e" name="e" value="2026mimus" required>
+              </td>
+            </tr>
+            <!-- Match Level -->
+            <tr>
+              <td class="title">Match Level&nbsp;</td>
+              <td class="field" onchange="updateMatchStart(event)">
+                <input type="radio" id="input_l_qm" name="l" value="qm" checked>Quals<br>
+                <input type="radio" id="input_l_sf" name="l" value="sf">Semifinals<br>
+                <input type="radio" id="input_l_f"  name="l" value="f">Finals
+                <input type="hidden" id="display_l" value="qm">
+                <input type="hidden" id="default_l" value="qm">
+              </td>
+            </tr>
+            <!-- Match # -->
+            <tr>
+              <td class="title">Match #&nbsp;</td>
+              <td class="field">
+                <input type="number" id="input_m" name="m" min="1" max="150" required onchange="updateMatchStart(event)">
+              </td>
+            </tr>
+            <!-- Robot -->
+            <tr>
+              <td class="title">Robot&nbsp;</td>
+              <td class="field" onchange="updateMatchStart(event)">
+                <input type="radio" id="input_r_r1" name="r" value="r1">Red-1
+                <input type="radio" id="input_r_b1" name="r" value="b1">Blue-1<br>
+                <input type="radio" id="input_r_r2" name="r" value="r2">Red-2
+                <input type="radio" id="input_r_b2" name="r" value="b2">Blue-2<br>
+                <input type="radio" id="input_r_r3" name="r" value="r3">Red-3
+                <input type="radio" id="input_r_b3" name="r" value="b3">Blue-3
+                <input type="hidden" id="display_r" value="">
+                <input type="hidden" id="default_r" value="">
+              </td>
+            </tr>
+            <!-- Team # -->
+            <tr>
+              <td class="title">Team #&nbsp;</td>
+              <td class="field">
+                <input type="number" id="input_t" name="t" min="1" max="99999">
+              </td>
+            </tr>
+            <tr>
+              <td id="teamname-label" colspan="2" style="text-align:center;"></td>
+            </tr>
+            <!-- Auto Start Position -->
+            <tr>
+              <td class="title" colspan="2" style="text-align:center;">Auto Start Position</td>
+            </tr>
+            <tr>
+              <td colspan="2" style="text-align:center;"><input type="button" value="Undo" id="undo_as" class="undoButton" onclick="undo(this.parentElement)"><input type="button" value="Flip Image" id="flip_as" class="flipButton" onclick="flip(this.parentElement)"></td>
+            </tr>
+            <tr>
+              <td colspan="2" style="text-align:center;"><canvas id="canvas_as" class="field-image-src" onclick="onFieldClick(event)"></canvas></td>
+            </tr>
+            <tr style="display:none">
+              <td colspan="2">
+                <input type="hidden" id="XY_as"                  value="[]">
+                <input type="hidden" id="input_as"               name="as"   value="[]" class="clickableImage">
+                <input type="hidden" id="clickRestriction_as"    value="one">
+                <input type="hidden" id="allowableResponses_as"  value="none">
+                <input type="hidden" id="dimensions_as"          value="12 6">
+                <input type="hidden" id="shape_as"               value="circle 5 black red true">
+                <input type="hidden" id="toggleClick_as"         value="false">
+              </td>
+            </tr>
+            <tr style="display:none">
+              <td colspan="2">
+                <img src="2026/field_image.png" id="img_as" class="field-image-src" onload="initCanvas()" hidden>
+              </td>
+            </tr>
+          </table>
+
+          <!-- TBA live match preview -->
+          <p id="tba-status"  style="text-align:center; font-size:11px; color:#888; padding:2px 8px; margin:0;"></p>
+          <p id="match-preview" style="text-align:center; padding:6px 8px; font-size:13px; background:rgba(255,255,255,0.08); margin:4px 8px; border-radius:4px; min-height:18px;"></p>
+
+          <p class="match-label">
+            <input type="button" value="Next" id="nextButton2" onclick="swipePage(1)">
+          </p>
+        </div>
+
+        <!-- ===================== AUTON ===================== -->
+        <div id="auton" class="main-panel" style="background-color: rgb(123, 168, 184);">
+          <h2 id="autonHeader2">Auton</h2>
+          <p class="match-label">
+            <input type="button" value="Prev" id="prevButton1" onclick="swipePage(-1)">
+            <input type="button" value="Next" id="nextButton3" onclick="swipePage(1)">
+          </p>
+
+          <table id="auton_table">
+            <!-- Dumps 8 - bool -->
+            <tr>
+              <td class="title">Dumps 8&nbsp;</td>
+              <td class="field"><input type="checkbox" id="input_ad8" name="ad8">(checked = Yes)</td>
+            </tr>
+            <!-- Shot 1 - counter -->
+            <tr>
+              <td class="title">Shot 1&nbsp;</td>
+              <td class="field"><input type="button" id="minus_as1" value="-" onclick="counter(this.parentElement,-1)"><input class="counter" id="input_as1" type="text" name="as1" style="background-color:black;color:white;border:none;text-align:center;" disabled value="0" size="2" maxlength="2"><input type="button" id="plus_as1" value="+" onclick="counter(this.parentElement,1)"></td>
+            </tr>
+            <!-- Shot 5 - counter -->
+            <tr>
+              <td class="title">Shot 5&nbsp;</td>
+              <td class="field"><input type="button" id="minus_as5" value="-" onclick="counter(this.parentElement,-1)"><input class="counter" id="input_as5" type="text" name="as5" style="background-color:black;color:white;border:none;text-align:center;" disabled value="0" size="2" maxlength="2"><input type="button" id="plus_as5" value="+" onclick="counter(this.parentElement,1)"></td>
+            </tr>
+            <!-- Missed Fuel - counter -->
+            <tr>
+              <td class="title">Missed Fuel&nbsp;</td>
+              <td class="field"><input type="button" id="minus_amf" value="-" onclick="counter(this.parentElement,-1)"><input class="counter" id="input_amf" type="text" name="amf" style="background-color:black;color:white;border:none;text-align:center;" disabled value="0" size="2" maxlength="2"><input type="button" id="plus_amf" value="+" onclick="counter(this.parentElement,1)"></td>
+            </tr>
+            <!-- Climbed to L1 - bool -->
+            <tr>
+              <td class="title">Climbed to L1&nbsp;</td>
+              <td class="field"><input type="checkbox" id="input_ac1" name="ac1">(checked = Yes)</td>
+            </tr>
+          </table>
+
+          <p class="match-label">
+            <input type="button" value="Prev" id="prevButton2" onclick="swipePage(-1)">
+            <input type="button" value="Next" id="nextButton4" onclick="swipePage(1)">
+          </p>
+        </div>
+
+        <!-- ===================== TELEOP ===================== -->
+        <div id="teleop" class="main-panel" style="background-color: rgb(175, 207, 163);">
+          <h2 id="teleopHeader2">Teleop</h2>
+          <p class="match-label">
+            <input type="button" value="Prev" id="prevButton3" onclick="swipePage(-1)">
+            <input type="button" value="Next" id="nextButton5" onclick="swipePage(1)">
+          </p>
+
+          <table id="teleop_table">
+            <!-- Won Auto? - bool -->
+            <tr>
+              <td class="title">Won Auto?&nbsp;</td>
+              <td class="field"><input type="checkbox" id="input_taw" name="taw">(checked = Yes)</td>
+            </tr>
+            <!-- Shot 1 - counter -->
+            <tr>
+              <td class="title">Shot 1&nbsp;</td>
+              <td class="field"><input type="button" id="minus_ts1" value="-" onclick="counter(this.parentElement,-1)"><input class="counter" id="input_ts1" type="text" name="ts1" style="background-color:black;color:white;border:none;text-align:center;" disabled value="0" size="2" maxlength="2"><input type="button" id="plus_ts1" value="+" onclick="counter(this.parentElement,1)"></td>
+            </tr>
+            <!-- Shot 5 - counter -->
+            <tr>
+              <td class="title">Shot 5&nbsp;</td>
+              <td class="field"><input type="button" id="minus_ts5" value="-" onclick="counter(this.parentElement,-1)"><input class="counter" id="input_ts5" type="text" name="ts5" style="background-color:black;color:white;border:none;text-align:center;" disabled value="0" size="2" maxlength="2"><input type="button" id="plus_ts5" value="+" onclick="counter(this.parentElement,1)"></td>
+            </tr>
+            <!-- Missed Fuel - counter -->
+            <tr>
+              <td class="title">Missed Fuel&nbsp;</td>
+              <td class="field"><input type="button" id="minus_tmf" value="-" onclick="counter(this.parentElement,-1)"><input class="counter" id="input_tmf" type="text" name="tmf" style="background-color:black;color:white;border:none;text-align:center;" disabled value="0" size="2" maxlength="2"><input type="button" id="plus_tmf" value="+" onclick="counter(this.parentElement,1)"></td>
+            </tr>
+          </table>
+
+          <p class="match-label">
+            <input type="button" value="Prev" id="prevButton4" onclick="swipePage(-1)">
+            <input type="button" value="Next" id="nextButton6" onclick="swipePage(1)">
+          </p>
+        </div>
+
+        <!-- ===================== ENDGAME ===================== -->
+        <div id="endgame" class="main-panel" style="background-color: rgb(198, 186, 222);">
+          <h2 id="endgameHeader2">Endgame</h2>
+          <p class="match-label">
+            <input type="button" value="Prev" id="prevButton5" onclick="swipePage(-1)">
+            <input type="button" value="Next" id="nextButton7" onclick="swipePage(1)">
+          </p>
+
+          <table id="endgame_table">
+            <!-- Tower Climb Timer - timer (label row) -->
+            <tr>
+              <td class="title" colspan="2" style="text-align:center;">Tower Climb Timer</td>
+            </tr>
+            <!-- Timer controls row - NO whitespace inside td before first input -->
+            <tr>
+              <td colspan="2" style="text-align:center;"><input type="button" id="start_ect" value="Start" onclick="timer(this.parentElement)"><input class="timer" id="input_ect" type="text" name="ect" style="background-color:black;color:white;border:none;text-align:center;" disabled value="0" size="7" maxlength="7"><input type="button" id="clear_ect" value="Reset" onclick="resetTimer(this.parentElement)"><br></td>
+            </tr>
+            <!-- Timer hidden state row -->
+            <tr style="display:none">
+              <td colspan="2" style="text-align:center;">
+                <input type="hidden" id="status_ect"     value="stopped">
+                <input type="hidden" id="intervalId_ect" value="">
+              </td>
+            </tr>
+            <!-- Final Status - radio -->
+            <tr>
+              <td class="title">Final Status&nbsp;</td>
+              <td class="field">
+                <input type="radio" id="input_efs_1" name="efs" value="1">Level 1 Climb<br>
+                <input type="radio" id="input_efs_2" name="efs" value="2">Level 2 Climb<br>
+                <input type="radio" id="input_efs_3" name="efs" value="3">Level 3 Climb<br>
+                <input type="radio" id="input_efs_F" name="efs" value="F">Failed Climb<br>
+                <input type="radio" id="input_efs_X" name="efs" value="X">Not attempted
+                <input type="hidden" id="display_efs" value="">
+                <input type="hidden" id="default_efs"  value="">
+              </td>
+            </tr>
+          </table>
+
+          <p class="match-label">
+            <input type="button" value="Prev" id="prevButton6" onclick="swipePage(-1)">
+            <input type="button" value="Next" id="nextButton8" onclick="swipePage(1)">
+          </p>
+        </div>
+
+        <!-- ===================== POST-MATCH (MISC) ===================== -->
+        <div id="post-match" class="main-panel" style="background-color: rgb(89, 134, 168);">
+          <h2>Miscellaneous</h2>
+          <p class="match-label">
+            <input type="button" value="Prev" id="prevButton7" onclick="swipePage(-1)">
+            <input type="button" value="Next" id="nextButton9" onclick="swipePage(1)">
+          </p>
+
+          <table id="postmatch_table">
+            <!-- Died/Immobilized - bool -->
+            <tr>
+              <td class="title">Died/Immobilized&nbsp;</td>
+              <td class="field"><input type="checkbox" id="input_die" name="die">(checked = Yes)</td>
+            </tr>
+            <!-- Tippy - bool -->
+            <tr>
+              <td class="title">Tippy<br>(almost tipped over)&nbsp;</td>
+              <td class="field"><input type="checkbox" id="input_tip" name="tip">(checked = Yes)</td>
+            </tr>
+            <!-- Downtime Actions - radio -->
+            <tr>
+              <td class="title">Downtime Actions&nbsp;</td>
+              <td class="field">
+                <input type="radio" id="input_dta_D" name="dta" value="D">Defence<br>
+                <input type="radio" id="input_dta_P" name="dta" value="P">Pickup Fuel<br>
+                <input type="radio" id="input_dta_B" name="dta" value="B">Both<br>
+                <input type="radio" id="input_dta_N" name="dta" value="N">No Actions<br>
+                <input type="hidden" id="display_dta" value="">
+              </td>
+            </tr>
+            <!-- Comments - text -->
+            <tr>
+              <td class="title">Comments (Keep Brief)&nbsp;</td>
+              <td class="field"><input type="text" id="input_cmm" name="cmm" size="20" maxlength="150"></td>
+            </tr>
+          </table>
+
+          <p class="match-label">
+            <input type="button" value="Prev" id="prevButton8" onclick="swipePage(-1)">
+            <input type="button" value="Next" id="nextButton10" onclick="swipePage(1)">
+          </p>
+        </div>
+
+        <!-- ===================== SUBMIT ===================== -->
+        <div id="qr-code" class="main-panel" style="background-color: white;">
+          <h2 id="qrHeader2" style="color: black;">Submit Data</h2>
+          <p class="match-label">
+            <input type="button" value="Prev" id="prevButton9" onclick="swipePage(-1)">
+          </p>
+
+          <!-- Match summary -->
+          <table id="summary-table" style="color:black; width:90%; margin:12px auto; font-size:14px; border:none;">
+          </table>
+
+          <!-- Status message -->
+          <p id="submit-status" style="text-align:center; font-size:15px; font-weight:bold; padding:10px 16px; min-height:24px;"></p>
+
+          <!-- Submit button -->
+          <div id="submitButton" style="text-align:center; margin:8px 0;">
+            <input type="button" id="submit" value="Submit to Server"
+              style="font-family:Alexis; padding:14px 32px; font-size:18px; background-color:#4CAF50; color:white; border:none; cursor:pointer;"
+              onclick="submitData()">
+          </div>
+
+          <p class="match-label" style="margin-top:10px;">
+            <input type="button" value="Display Data" id="displayButton" onclick="displayData()">
+            <input type="button" value="Copy Data"    id="copyButton"    onclick="copyData()">
+          </p>
+
+          <p id="data" style="text-align:center; font-family:monospace; font-size:12px; word-break:break-all; color:#333; padding:8px 16px;"></p>
+
+          <div id="clearButton" style="text-align:center; margin-top:10px;">
+            <button type="button" class="clearForm" onclick="clearForm()">Clear Form</button>
+          </div>
+          <br>
+        </div>
+
+      </div><!-- #main-panel-holder -->
+    </form>
+
+    <script src="match.js"></script>
+  </body>
+</html>
