@@ -18,20 +18,21 @@
       min-height: 100vh;
     }
 
+    /* ── Header ── */
     header {
       background: #000;
       border-bottom: 2px solid #333;
-      padding: 16px 24px;
+      padding: 14px 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
-      gap: 12px;
+      gap: 10px;
     }
 
     header h1 {
       font-family: Alexis;
-      font-size: 28px;
+      font-size: 26px;
       font-weight: 400;
       color: #97c7f0;
       letter-spacing: 2px;
@@ -40,91 +41,88 @@
     .header-right {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       flex-wrap: wrap;
     }
 
-    .status-pill {
-      font-size: 12px;
-      padding: 4px 10px;
-      border-radius: 12px;
-      background: #1a3a1a;
-      color: #6fcf6f;
-      border: 1px solid #3a6a3a;
+    .pill {
+      font-size: 11px;
+      padding: 3px 9px;
+      border-radius: 10px;
+      border: 1px solid;
+      white-space: nowrap;
     }
+    .pill-green  { background:#1a3a1a; color:#6fcf6f; border-color:#3a6a3a; }
+    .pill-red    { background:#3a1a1a; color:#faa;    border-color:#6a3a3a; }
+    .pill-blue   { background:#1a2a3a; color:#9cf;    border-color:#3a5a7a; }
+    .pill-grey   { background:#222;    color:#888;    border-color:#444; }
 
     .btn {
-      padding: 7px 14px;
-      font-size: 13px;
+      padding: 6px 13px;
+      font-size: 12px;
       border: none;
       border-radius: 4px;
       cursor: pointer;
       font-family: inherit;
     }
+    .btn-refresh { background:#2a4a2a; color:#9ef; }
+    .btn-export  { background:#2c5f8a; color:#fff; }
+    .btn-clear   { background:#5a1a1a; color:#faa; }
+    .btn:hover   { filter: brightness(1.2); }
 
-    .btn-export  { background: #2c5f8a; color: #fff; }
-    .btn-refresh { background: #2a4a2a; color: #9ef; }
-    .btn-clear   { background: #5a1a1a; color: #faa; }
-
-    .btn:hover { filter: brightness(1.2); }
-
-    /* Summary cards */
+    /* ── Cards ── */
     .cards {
       display: flex;
-      gap: 12px;
-      padding: 16px 24px;
+      gap: 10px;
+      padding: 14px 24px 4px;
       flex-wrap: wrap;
     }
-
     .card {
       background: #1a1a1a;
       border: 1px solid #333;
       border-radius: 6px;
-      padding: 12px 18px;
-      min-width: 120px;
+      padding: 10px 16px;
+      min-width: 110px;
       text-align: center;
     }
+    .card-val   { font-size: 26px; font-weight: 700; color: #97c7f0; }
+    .card-label { font-size: 10px; color: #777; margin-top: 2px; text-transform: uppercase; letter-spacing: 1px; }
 
-    .card-val  { font-size: 28px; font-weight: 700; color: #97c7f0; }
-    .card-label{ font-size: 11px; color: #888; margin-top: 2px; text-transform: uppercase; letter-spacing: 1px; }
-
-    /* Filter bar */
+    /* ── Filter bar ── */
     .filter-bar {
-      padding: 0 24px 12px;
+      padding: 10px 24px 8px;
       display: flex;
-      gap: 10px;
+      gap: 14px;
       align-items: center;
       flex-wrap: wrap;
     }
-
-    .filter-bar label { font-size: 13px; color: #aaa; }
-
-    .filter-bar select, .filter-bar input {
+    .filter-bar label { font-size: 12px; color: #aaa; display:flex; align-items:center; gap:6px; }
+    .filter-bar select, .filter-bar input[type=text] {
       background: #1e1e1e;
       border: 1px solid #444;
       color: #eee;
-      padding: 5px 8px;
+      padding: 4px 8px;
       border-radius: 4px;
-      font-size: 13px;
+      font-size: 12px;
     }
+    .filter-bar input[type=checkbox] { width:14px; height:14px; cursor:pointer; }
 
-    /* Table wrapper */
-    .table-wrap {
-      padding: 0 24px 40px;
-      overflow-x: auto;
-    }
+    .last-update { font-size: 11px; color: #555; padding: 2px 24px 10px; }
+
+    /* ── Table ── */
+    .table-wrap { padding: 0 24px 40px; overflow-x: auto; }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 13px;
-      min-width: 900px;
+      font-size: 12px;
+      min-width: 1100px;
     }
 
     thead th {
       background: #1a1a1a;
-      color: #ccc;
-      padding: 10px 8px;
+      color: #bbb;
+      padding: 9px 7px;
       text-align: center;
       cursor: pointer;
       user-select: none;
@@ -132,77 +130,86 @@
       border-bottom: 2px solid #333;
       position: sticky;
       top: 0;
+      z-index: 1;
     }
-
-    thead th:hover { background: #252525; color: #fff; }
-
+    thead th:hover { background: #242424; color: #fff; }
+    thead th.no-sort { cursor: default; }
     thead th.sorted-asc::after  { content: ' ▲'; color: #97c7f0; }
     thead th.sorted-desc::after { content: ' ▼'; color: #97c7f0; }
 
-    /* Section headers */
     thead tr.section-row th {
       background: #0d0d0d;
-      color: #666;
-      font-size: 10px;
+      font-size: 9px;
       letter-spacing: 1.5px;
       text-transform: uppercase;
-      padding: 4px 8px;
+      padding: 3px 7px;
       cursor: default;
-      border-bottom: 1px solid #222;
+      border-bottom: 1px solid #1e1e1e;
     }
+    .sec-scout  { color: #7baacc; }
+    .sec-auton  { color: #aaa; }
+    .sec-teleop { color: #aaa; }
+    .sec-end    { color: #aaa; }
+    .sec-rely   { color: #aaa; }
+    .sec-sb     { color: #f0c060; }
 
-    tbody tr { border-bottom: 1px solid #1e1e1e; }
+    /* Statbotics columns get a subtle gold left border */
+    th.sb-col, td.sb-col { border-left: 1px solid #2e2200; }
+    th.sb-col-first, td.sb-col-first { border-left: 2px solid #6e4a00; }
+
+    tbody tr { border-bottom: 1px solid #1c1c1c; }
     tbody tr:hover { background: #1c1c1c; }
 
-    td {
-      padding: 9px 8px;
-      text-align: center;
-      color: #ddd;
-    }
+    td { padding: 8px 7px; text-align: center; color: #ddd; }
 
     td.team-num {
       font-weight: 700;
-      font-size: 15px;
+      font-size: 14px;
       color: #97c7f0;
-      min-width: 70px;
+      min-width: 60px;
+      cursor: pointer;
     }
+    td.team-num:hover { text-decoration: underline; }
+    td.match-count { color: #888; }
 
-    td.match-count { color: #aaa; }
+    /* Heat colors */
+    td.h-great { color: #4caf50; font-weight: 700; }
+    td.h-good  { color: #8bc34a; }
+    td.h-mid   { color: #ccc; }
+    td.h-low   { color: #888; }
+    td.h-bad   { color: #ef5350; font-weight: 600; }
 
-    /* Heat-map coloring: applied via JS */
-    td.heat-high   { color: #4caf50; font-weight: 600; }
-    td.heat-mid    { color: #ddd; }
-    td.heat-low    { color: #888; }
-    td.heat-bad    { color: #ef5350; font-weight: 600; }
+    /* Climb level */
+    td.c3 { color: #4caf50; font-weight: 700; }
+    td.c2 { color: #8bc34a; font-weight: 600; }
+    td.c1 { color: #cddc39; }
+    td.cX { color: #555; }
 
-    td.climb-3 { color: #4caf50; font-weight: 700; }
-    td.climb-2 { color: #8bc34a; font-weight: 600; }
-    td.climb-1 { color: #cddc39; }
-    td.climb-F { color: #ef5350; }
-    td.climb-X { color: #666; }
-
-    .no-data {
-      text-align: center;
-      padding: 60px;
-      color: #555;
-      font-size: 16px;
-    }
+    /* Statbotics rank */
+    td.sb-rank-top { color: #ffd700; font-weight: 700; }
+    td.sb-rank-mid { color: #ccc; }
+    td.sb-rank-low { color: #888; }
 
     .comments-cell {
       text-align: left;
-      max-width: 180px;
+      max-width: 160px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      color: #aaa;
-      font-size: 12px;
+      color: #888;
+      font-size: 11px;
     }
 
-    .last-update {
-      font-size: 11px;
-      color: #555;
-      padding: 4px 24px 12px;
+    .no-data {
+      text-align: center;
+      padding: 50px;
+      color: #444;
+      font-size: 15px;
     }
+
+    /* TBA link on team number */
+    a.tba-link { color: inherit; text-decoration: none; }
+    a.tba-link:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -210,24 +217,25 @@
 <header>
   <h1>FRC Scouting Dashboard</h1>
   <div class="header-right">
-    <span class="status-pill" id="status-pill">⏳ Loading...</span>
+    <span class="pill pill-grey"  id="pill-server">⏳ Loading…</span>
+    <span class="pill pill-grey"  id="pill-sb">Statbotics —</span>
     <button class="btn btn-refresh" onclick="loadData()">Refresh</button>
     <button class="btn btn-export"  onclick="exportCSV()">Export CSV</button>
     <button class="btn btn-clear"   onclick="clearAllData()">Clear All Data</button>
   </div>
 </header>
 
-<!-- Summary cards -->
 <div class="cards">
-  <div class="card"><div class="card-val" id="c-entries">—</div><div class="card-label">Total Entries</div></div>
+  <div class="card"><div class="card-val" id="c-entries">—</div><div class="card-label">Entries</div></div>
   <div class="card"><div class="card-val" id="c-teams">—</div><div class="card-label">Teams Scouted</div></div>
-  <div class="card"><div class="card-val" id="c-matches">—</div><div class="card-label">Matches Covered</div></div>
+  <div class="card"><div class="card-val" id="c-matches">—</div><div class="card-label">Matches</div></div>
   <div class="card"><div class="card-val" id="c-event">—</div><div class="card-label">Event</div></div>
+  <div class="card"><div class="card-val" id="c-sb">—</div><div class="card-label">Statbotics Teams</div></div>
 </div>
 
 <div class="filter-bar">
-  <label>Filter team:
-    <input type="text" id="filter-team" placeholder="e.g. 3603" oninput="renderTable()" style="width:80px;">
+  <label>Team:
+    <input type="text" id="filter-team" placeholder="e.g. 3603" oninput="renderTable()" style="width:72px;">
   </label>
   <label>Min matches:
     <select id="filter-min" onchange="renderTable()">
@@ -237,6 +245,10 @@
       <option value="5">5+</option>
     </select>
   </label>
+  <label>
+    <input type="checkbox" id="filter-sb-only" onchange="renderTable()">
+    Statbotics teams only
+  </label>
 </div>
 
 <div class="last-update" id="last-update"></div>
@@ -245,273 +257,378 @@
   <table id="rankings-table">
     <thead>
       <tr class="section-row">
-        <th colspan="2"></th>
-        <th colspan="4">AUTON</th>
-        <th colspan="3">TELEOP</th>
-        <th colspan="3">ENDGAME</th>
-        <th colspan="2">RELIABILITY</th>
-        <th colspan="1"></th>
+        <th colspan="2"  class="sec-scout">SCOUTED</th>
+        <th colspan="4"  class="sec-auton">AUTON</th>
+        <th colspan="3"  class="sec-teleop">TELEOP</th>
+        <th colspan="3"  class="sec-end">ENDGAME</th>
+        <th colspan="2"  class="sec-rely">RELIABILITY</th>
+        <th colspan="1"  class="sec-scout"></th>
+        <th colspan="5"  class="sec-sb sb-col-first">STATBOTICS EPA</th>
       </tr>
       <tr id="header-row">
-        <th onclick="sortBy('t')"       data-col="t">Team</th>
-        <th onclick="sortBy('matches')" data-col="matches">Matches</th>
+        <th onclick="sortBy('t')"          data-col="t">Team</th>
+        <th onclick="sortBy('matches')"    data-col="matches">Matches</th>
         <!-- Auton -->
-        <th onclick="sortBy('as1')"  data-col="as1">Shot 1<br><small>avg</small></th>
-        <th onclick="sortBy('as5')"  data-col="as5">Shot 5<br><small>avg</small></th>
-        <th onclick="sortBy('amf')"  data-col="amf">Missed<br><small>avg</small></th>
-        <th onclick="sortBy('ac1')"  data-col="ac1">L1 Climb<br><small>%</small></th>
+        <th onclick="sortBy('as1')"        data-col="as1">Shot 1<br><small>avg</small></th>
+        <th onclick="sortBy('as5')"        data-col="as5">Shot 5<br><small>avg</small></th>
+        <th onclick="sortBy('amf')"        data-col="amf">Missed<br><small>avg</small></th>
+        <th onclick="sortBy('ac1')"        data-col="ac1">L1 Climb<br><small>%</small></th>
         <!-- Teleop -->
-        <th onclick="sortBy('ts1')"  data-col="ts1">Shot 1<br><small>avg</small></th>
-        <th onclick="sortBy('ts5')"  data-col="ts5">Shot 5<br><small>avg</small></th>
-        <th onclick="sortBy('tmf')"  data-col="tmf">Missed<br><small>avg</small></th>
+        <th onclick="sortBy('ts1')"        data-col="ts1">Shot 1<br><small>avg</small></th>
+        <th onclick="sortBy('ts5')"        data-col="ts5">Shot 5<br><small>avg</small></th>
+        <th onclick="sortBy('tmf')"        data-col="tmf">Missed<br><small>avg</small></th>
         <!-- Endgame -->
-        <th onclick="sortBy('climbRate')" data-col="climbRate">Climb %</th>
+        <th onclick="sortBy('climbRate')"  data-col="climbRate">Climb %</th>
         <th onclick="sortBy('climbLevel')" data-col="climbLevel">Avg Level</th>
-        <th onclick="sortBy('ect')"       data-col="ect">Climb Time<br><small>avg (s)</small></th>
+        <th onclick="sortBy('ect')"        data-col="ect">Time<br><small>avg (s)</small></th>
         <!-- Reliability -->
-        <th onclick="sortBy('die')"  data-col="die">Died %</th>
-        <th onclick="sortBy('tip')"  data-col="tip">Tippy %</th>
-        <!-- Notes -->
-        <th data-col="cmm">Latest Comment</th>
+        <th onclick="sortBy('die')"        data-col="die">Died %</th>
+        <th onclick="sortBy('tip')"        data-col="tip">Tippy %</th>
+        <!-- Comment -->
+        <th class="no-sort"                data-col="cmm">Comment</th>
+        <!-- Statbotics -->
+        <th onclick="sortBy('sbRank')"     data-col="sbRank"  class="sb-col-first">Rank</th>
+        <th onclick="sortBy('sbTotal')"    data-col="sbTotal" class="sb-col">EPA<br><small>total</small></th>
+        <th onclick="sortBy('sbAuto')"     data-col="sbAuto"  class="sb-col">EPA<br><small>auto</small></th>
+        <th onclick="sortBy('sbTele')"     data-col="sbTele"  class="sb-col">EPA<br><small>teleop</small></th>
+        <th onclick="sortBy('sbEnd')"      data-col="sbEnd"   class="sb-col">EPA<br><small>endgame</small></th>
       </tr>
     </thead>
     <tbody id="table-body">
-      <tr><td colspan="15" class="no-data">No data yet — submit some matches first.</td></tr>
+      <tr><td colspan="20" class="no-data">No data yet — submit some matches first.</td></tr>
     </tbody>
   </table>
 </div>
 
 <script>
-  var allData     = [];
-  var teamStats   = [];
-  var sortCol     = 't';
-  var sortDir     = 'asc';
-  var autoRefresh = null;
+  var allData        = [];
+  var teamStats      = [];
+  var statboticsData = {};  // keyed by team number string
+  var sortCol        = 't';
+  var sortDir        = 'asc';
 
-  // ── Load data ──────────────────────────────────────────────────────────────
+  // ── Load scouting data ─────────────────────────────────────────────────────
   function loadData() {
     fetch('/data')
-      .then(r => r.json())
-      .then(data => {
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
         allData = data;
         processData();
         renderTable();
         updateCards();
-        document.getElementById('status-pill').textContent = '● Live';
-        document.getElementById('status-pill').style.background = '#1a3a1a';
+
+        setPill('pill-server', '● Live', 'pill-green');
         document.getElementById('last-update').textContent =
           'Last updated: ' + new Date().toLocaleTimeString();
+
+        // Auto-detect event and fetch Statbotics
+        var event = getEvent();
+        if (event) fetchStatbotics(event);
       })
-      .catch(err => {
-        document.getElementById('status-pill').textContent = '✖ Server offline';
-        document.getElementById('status-pill').style.background = '#3a1a1a';
-        document.getElementById('status-pill').style.color = '#faa';
-        document.getElementById('last-update').textContent = 'Could not reach server — is server.js running?';
+      .catch(function() {
+        setPill('pill-server', '✖ Server offline', 'pill-red');
+        document.getElementById('last-update').textContent =
+          'Cannot reach server — is server.js running?';
       });
   }
 
-  // ── Process raw entries into per-team stats ────────────────────────────────
+  // ── Statbotics ─────────────────────────────────────────────────────────────
+  function fetchStatbotics(event) {
+    setPill('pill-sb', 'Statbotics loading…', 'pill-grey');
+
+    fetch('/api/statbotics?event=' + encodeURIComponent(event))
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!Array.isArray(data)) throw new Error(data.error || 'bad response');
+
+        statboticsData = {};
+        data.forEach(function(d) {
+          var epa  = d.epa       || {};
+          var tp   = epa.total_points || {};
+          var brk  = epa.breakdown   || {};
+          var qual = (d.record && d.record.qual) || {};
+
+          statboticsData[String(d.team)] = {
+            rank:     qual.rank      || null,
+            numTeams: qual.num_teams || null,
+            sbTotal:  tp.mean  != null ? tp.mean              : null,
+            sbAuto:   brk.auto_points    != null ? brk.auto_points    : null,
+            sbTele:   brk.teleop_points  != null ? brk.teleop_points  : null,
+            sbEnd:    brk.endgame_points != null ? brk.endgame_points : null,
+          };
+        });
+
+        // Merge into existing teamStats and re-render
+        mergeStatbotics();
+        renderTable();
+        updateCards();
+        setPill('pill-sb', '✓ Statbotics: ' + data.length + ' teams', 'pill-blue');
+      })
+      .catch(function(err) {
+        setPill('pill-sb', 'Statbotics: ' + (err.message || 'unavailable'), 'pill-grey');
+      });
+  }
+
+  function mergeStatbotics() {
+    teamStats = teamStats.map(function(s) {
+      var sb = statboticsData[s.t] || {};
+      return Object.assign({}, s, {
+        sbRank:  sb.rank   != null ? sb.rank   : null,
+        sbTotal: sb.sbTotal != null ? sb.sbTotal : null,
+        sbAuto:  sb.sbAuto  != null ? sb.sbAuto  : null,
+        sbTele:  sb.sbTele  != null ? sb.sbTele  : null,
+        sbEnd:   sb.sbEnd   != null ? sb.sbEnd   : null,
+      });
+    });
+  }
+
+  // ── Process scouting data into per-team stats ──────────────────────────────
   function processData() {
     var teams = {};
-
     allData.forEach(function(e) {
       var t = String(e.t || '?');
-      if (!teams[t]) {
-        teams[t] = {
-          t:      t,
-          matches: 0,
-          as1: [], as5: [], amf: [], ac1: [],
-          ts1: [], ts5: [], tmf: [],
-          ect: [], efs: [],
-          die: [], tip: [],
-          cmm: []
-        };
-      }
+      if (!teams[t]) teams[t] = {
+        t: t, matches: 0,
+        as1:[], as5:[], amf:[], ac1:[],
+        ts1:[], ts5:[], tmf:[],
+        ect:[], efs:[],
+        die:[], tip:[], cmm:[]
+      };
       var s = teams[t];
       s.matches++;
-      s.as1.push(num(e.as1));
-      s.as5.push(num(e.as5));
-      s.amf.push(num(e.amf));
-      s.ac1.push(num(e.ac1));
-      s.ts1.push(num(e.ts1));
-      s.ts5.push(num(e.ts5));
-      s.tmf.push(num(e.tmf));
-      s.ect.push(num(e.ect));
+      s.as1.push(num(e.as1)); s.as5.push(num(e.as5));
+      s.amf.push(num(e.amf)); s.ac1.push(num(e.ac1));
+      s.ts1.push(num(e.ts1)); s.ts5.push(num(e.ts5));
+      s.tmf.push(num(e.tmf)); s.ect.push(num(e.ect));
       s.efs.push(e.efs || 'X');
-      s.die.push(num(e.die));
-      s.tip.push(num(e.tip));
+      s.die.push(num(e.die)); s.tip.push(num(e.tip));
       if (e.cmm && e.cmm.trim()) s.cmm.push(e.cmm.trim());
     });
 
     teamStats = Object.values(teams).map(function(s) {
-      var climbs = s.efs.filter(v => v === '1' || v === '2' || v === '3');
-      var numericLevels = climbs.map(v => parseInt(v));
+      var climbs  = s.efs.filter(function(v){ return v==='1'||v==='2'||v==='3'; });
+      var levels  = climbs.map(function(v){ return parseInt(v); });
       return {
         t:          s.t,
         matches:    s.matches,
-        as1:        avg(s.as1),
-        as5:        avg(s.as5),
-        amf:        avg(s.amf),
-        ac1:        pct(s.ac1),
-        ts1:        avg(s.ts1),
-        ts5:        avg(s.ts5),
+        as1:        avg(s.as1), as5: avg(s.as5),
+        amf:        avg(s.amf), ac1: pct(s.ac1),
+        ts1:        avg(s.ts1), ts5: avg(s.ts5),
         tmf:        avg(s.tmf),
-        ect:        avg(s.ect.filter(v => v > 0)),
-        climbRate:  s.matches ? (climbs.length / s.matches * 100) : 0,
-        climbLevel: numericLevels.length ? avg(numericLevels) : 0,
-        efsLast:    s.efs[s.efs.length - 1],
+        ect:        avg(s.ect.filter(function(v){ return v > 0; })),
+        climbRate:  s.matches ? climbs.length / s.matches * 100 : 0,
+        climbLevel: levels.length ? avg(levels) : 0,
         die:        pct(s.die),
         tip:        pct(s.tip),
-        cmm:        s.cmm[s.cmm.length - 1] || ''
+        cmm:        s.cmm[s.cmm.length - 1] || '',
+        // Statbotics (null until fetched)
+        sbRank: null, sbTotal: null, sbAuto: null, sbTele: null, sbEnd: null,
       };
     });
+
+    // Re-apply any already-loaded Statbotics data
+    mergeStatbotics();
   }
 
+  // ── Helpers ────────────────────────────────────────────────────────────────
   function num(v)   { return parseFloat(v) || 0; }
-  function avg(arr) { return arr.length ? arr.reduce((a,b) => a+b, 0) / arr.length : 0; }
-  function pct(arr) { return arr.length ? (arr.filter(v => v > 0).length / arr.length * 100) : 0; }
+  function avg(arr) { return arr.length ? arr.reduce(function(a,b){return a+b;},0)/arr.length : 0; }
+  function pct(arr) { return arr.length ? arr.filter(function(v){return v>0;}).length/arr.length*100 : 0; }
+  function r1(v)    { return Math.round(v * 10) / 10; }
+  function esc(s)   {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function getEvent() {
+    var events = allData.map(function(d){ return d.e; }).filter(Boolean);
+    if (!events.length) return null;
+    // Most frequent event
+    var counts = {};
+    events.forEach(function(e){ counts[e] = (counts[e]||0)+1; });
+    return Object.keys(counts).sort(function(a,b){ return counts[b]-counts[a]; })[0];
+  }
 
   // ── Sort ───────────────────────────────────────────────────────────────────
+  var ASC_DEFAULT = ['t','amf','tmf','die','tip','sbRank'];
+
   function sortBy(col) {
     if (sortCol === col) {
       sortDir = sortDir === 'asc' ? 'desc' : 'asc';
     } else {
       sortCol = col;
-      sortDir = col === 't' || col === 'amf' || col === 'tmf' || col === 'die' || col === 'tip'
-        ? 'asc' : 'desc';
+      sortDir = ASC_DEFAULT.includes(col) ? 'asc' : 'desc';
     }
     renderTable();
   }
 
   // ── Render ─────────────────────────────────────────────────────────────────
   function renderTable() {
-    var minMatches  = parseInt(document.getElementById('filter-min').value) || 1;
-    var filterTeam  = document.getElementById('filter-team').value.trim().toLowerCase();
+    var minMatches = parseInt(document.getElementById('filter-min').value) || 1;
+    var filterTeam = document.getElementById('filter-team').value.trim().toLowerCase();
+    var sbOnly     = document.getElementById('filter-sb-only').checked;
 
-    var rows = teamStats.filter(s =>
-      s.matches >= minMatches &&
-      (filterTeam === '' || s.t.toLowerCase().includes(filterTeam))
-    );
+    var rows = teamStats.filter(function(s) {
+      return s.matches >= minMatches
+        && (filterTeam === '' || s.t.toLowerCase().includes(filterTeam))
+        && (!sbOnly || s.sbTotal != null);
+    });
 
     rows.sort(function(a, b) {
       var va = a[sortCol], vb = b[sortCol];
+      // Nulls always go last
+      if (va == null && vb == null) return 0;
+      if (va == null) return 1;
+      if (vb == null) return -1;
       if (sortCol === 't') { va = parseInt(va)||0; vb = parseInt(vb)||0; }
-      if (sortDir === 'asc')  return va > vb ?  1 : va < vb ? -1 : 0;
-      if (sortDir === 'desc') return va < vb ?  1 : va > vb ? -1 : 0;
-      return 0;
+      return sortDir === 'asc' ? (va > vb ? 1 : va < vb ? -1 : 0)
+                                : (va < vb ? 1 : va > vb ? -1 : 0);
     });
 
-    // Update header sort indicators
-    document.querySelectorAll('#header-row th').forEach(th => {
-      th.classList.remove('sorted-asc', 'sorted-desc');
-      if (th.dataset.col === sortCol) {
+    // Update sort indicators
+    document.querySelectorAll('#header-row th').forEach(function(th) {
+      th.classList.remove('sorted-asc','sorted-desc');
+      if (th.dataset.col === sortCol)
         th.classList.add(sortDir === 'asc' ? 'sorted-asc' : 'sorted-desc');
-      }
     });
 
     var tbody = document.getElementById('table-body');
 
     if (rows.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="15" class="no-data">No matching data.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="20" class="no-data">No matching data.</td></tr>';
       return;
     }
 
-    // Compute column ranges for heat-map
-    var cols = ['as1','as5','ts1','ts5','amf','tmf','climbRate','climbLevel','ect','die','tip'];
+    // Column ranges for heat-map (only from rows with values)
+    function range(col) {
+      var vals = rows.map(function(r){ return r[col]; }).filter(function(v){ return v != null; });
+      return vals.length ? { min: Math.min.apply(null,vals), max: Math.max.apply(null,vals) } : null;
+    }
+
     var ranges = {};
-    cols.forEach(c => {
-      var vals = rows.map(r => r[c]);
-      ranges[c] = { min: Math.min(...vals), max: Math.max(...vals) };
+    ['as1','as5','amf','ts1','ts5','tmf','climbRate','climbLevel','ect',
+     'die','tip','sbTotal','sbAuto','sbTele','sbEnd'].forEach(function(c){
+      ranges[c] = range(c);
     });
 
+    // Statbotics rank range (lower = better, need total teams)
+    var numTeams = 0;
+    Object.values(statboticsData).forEach(function(d){ if(d.numTeams) numTeams = Math.max(numTeams, d.numTeams); });
+
     tbody.innerHTML = rows.map(function(r) {
+      var tbaUrl = 'https://www.thebluealliance.com/team/' + r.t;
       return '<tr>' +
-        '<td class="team-num">' + r.t + '</td>' +
+        '<td class="team-num"><a class="tba-link" href="' + tbaUrl + '" target="_blank">' + r.t + '</a></td>' +
         '<td class="match-count">' + r.matches + '</td>' +
         // Auton
-        tdHeat(r.as1,  ranges.as1,  false) +
-        tdHeat(r.as5,  ranges.as5,  false) +
-        tdHeat(r.amf,  ranges.amf,  true)  +   // higher = worse
+        heat(r.as1,  ranges.as1,  false) +
+        heat(r.as5,  ranges.as5,  false) +
+        heat(r.amf,  ranges.amf,  true)  +
         '<td>' + r.ac1.toFixed(0) + '%</td>' +
         // Teleop
-        tdHeat(r.ts1,  ranges.ts1,  false) +
-        tdHeat(r.ts5,  ranges.ts5,  false) +
-        tdHeat(r.tmf,  ranges.tmf,  true)  +
+        heat(r.ts1, ranges.ts1, false) +
+        heat(r.ts5, ranges.ts5, false) +
+        heat(r.tmf, ranges.tmf, true)  +
         // Endgame
-        tdHeat(r.climbRate,  ranges.climbRate,  false, '%') +
-        tdClimbLevel(r.climbLevel) +
-        tdHeat(r.ect, ranges.ect, false, 's', true) +
+        heat(r.climbRate, ranges.climbRate, false, '%') +
+        climbLevelTd(r.climbLevel) +
+        heat(r.ect, ranges.ect, false, 's') +
         // Reliability
-        tdHeat(r.die, ranges.die, true, '%') +
-        tdHeat(r.tip, ranges.tip, true, '%') +
+        heat(r.die, ranges.die, true, '%') +
+        heat(r.tip, ranges.tip, true, '%') +
         // Comment
         '<td class="comments-cell" title="' + esc(r.cmm) + '">' + esc(r.cmm) + '</td>' +
+        // Statbotics
+        sbRankTd(r.sbRank, numTeams) +
+        sbHeat(r.sbTotal, ranges.sbTotal, ' sb-col') +
+        sbHeat(r.sbAuto,  ranges.sbAuto,  ' sb-col') +
+        sbHeat(r.sbTele,  ranges.sbTele,  ' sb-col') +
+        sbHeat(r.sbEnd,   ranges.sbEnd,   ' sb-col') +
       '</tr>';
     }).join('');
   }
 
-  function fmt(v, suffix) {
-    if (v === 0 && suffix === 's') return '—';
-    return (Math.round(v * 10) / 10) + (suffix || '');
-  }
-
-  function esc(s) {
-    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  function tdHeat(val, range, invertColors, suffix, showDash) {
-    var display = fmt(val, suffix);
-    var cls = 'heat-mid';
-    if (range.max !== range.min) {
-      var norm = (val - range.min) / (range.max - range.min); // 0–1
-      if (invertColors) norm = 1 - norm;
-      if      (norm >= 0.7) cls = 'heat-high';
-      else if (norm <= 0.2) cls = 'heat-low';
+  // ── Cell renderers ─────────────────────────────────────────────────────────
+  function heat(val, rng, invert, suffix) {
+    var display = (val === 0 && suffix === 's') ? '—' : r1(val) + (suffix||'');
+    var cls = 'h-mid';
+    if (rng && rng.max !== rng.min) {
+      var n = (val - rng.min) / (rng.max - rng.min);
+      if (invert) n = 1 - n;
+      cls = n >= 0.75 ? 'h-great' : n >= 0.5 ? 'h-good' : n <= 0.25 ? 'h-low' : 'h-mid';
     }
     return '<td class="' + cls + '">' + display + '</td>';
   }
 
-  function tdClimbLevel(level) {
-    if (level === 0) return '<td class="climb-X">—</td>';
-    var cls = level >= 2.5 ? 'climb-3' : level >= 1.5 ? 'climb-2' : 'climb-1';
-    return '<td class="' + cls + '">' + (Math.round(level * 10)/10) + '</td>';
+  function sbHeat(val, rng, extraCls) {
+    if (val == null) return '<td class="h-low' + (extraCls||'') + '">—</td>';
+    var display = r1(val);
+    var cls = 'h-mid';
+    if (rng && rng.max !== rng.min) {
+      var n = (val - rng.min) / (rng.max - rng.min);
+      cls = n >= 0.75 ? 'h-great' : n >= 0.5 ? 'h-good' : n <= 0.25 ? 'h-low' : 'h-mid';
+    }
+    return '<td class="' + cls + (extraCls||'') + '">' + display + '</td>';
+  }
+
+  function climbLevelTd(level) {
+    if (!level) return '<td class="cX">—</td>';
+    var cls = level >= 2.5 ? 'c3' : level >= 1.5 ? 'c2' : 'c1';
+    return '<td class="' + cls + '">' + r1(level) + '</td>';
+  }
+
+  function sbRankTd(rank, numTeams) {
+    if (rank == null) return '<td class="h-low sb-col-first">—</td>';
+    var display = rank + (numTeams ? '/' + numTeams : '');
+    var pct = numTeams ? rank / numTeams : 0.5;
+    var cls = pct <= 0.15 ? 'sb-rank-top' : pct <= 0.5 ? 'sb-rank-mid' : 'sb-rank-low';
+    return '<td class="' + cls + ' sb-col-first">' + display + '</td>';
   }
 
   // ── Summary cards ──────────────────────────────────────────────────────────
   function updateCards() {
-    document.getElementById('c-entries').textContent  = allData.length;
-    document.getElementById('c-teams').textContent    = teamStats.length;
-    var matchNums = [...new Set(allData.map(d => d.m + d.l + d.e))];
-    document.getElementById('c-matches').textContent  = matchNums.length;
-    var events = [...new Set(allData.map(d => d.e).filter(Boolean))];
-    document.getElementById('c-event').textContent    = events.join(', ') || '—';
+    document.getElementById('c-entries').textContent = allData.length;
+    document.getElementById('c-teams').textContent   = teamStats.length;
+    var unique = new Set(allData.map(function(d){ return d.m+'_'+d.l+'_'+d.e; }));
+    document.getElementById('c-matches').textContent = unique.size;
+    document.getElementById('c-event').textContent   = getEvent() || '—';
+    document.getElementById('c-sb').textContent      = Object.keys(statboticsData).length || '—';
   }
 
   // ── Export CSV ─────────────────────────────────────────────────────────────
   function exportCSV() {
-    if (allData.length === 0) { alert('No data to export.'); return; }
+    if (!allData.length) { alert('No data to export.'); return; }
     var headers = Object.keys(allData[0]);
-    var rows    = allData.map(r => headers.map(h => JSON.stringify(r[h] ?? '')).join(','));
-    var csv     = [headers.join(','), ...rows].join('\n');
-    var blob    = new Blob([csv], { type: 'text/csv' });
-    var a       = document.createElement('a');
-    a.href      = URL.createObjectURL(blob);
-    a.download  = 'scouting_' + new Date().toISOString().slice(0,10) + '.csv';
+    var rows    = allData.map(function(r){
+      return headers.map(function(h){ return JSON.stringify(r[h] != null ? r[h] : ''); }).join(',');
+    });
+    var csv  = [headers.join(',')].concat(rows).join('\n');
+    var blob = new Blob([csv], { type:'text/csv' });
+    var a    = document.createElement('a');
+    a.href   = URL.createObjectURL(blob);
+    a.download = 'scouting_' + (getEvent()||'export') + '_' + new Date().toISOString().slice(0,10) + '.csv';
     a.click();
   }
 
-  // ── Clear all data ─────────────────────────────────────────────────────────
+  // ── Clear data ─────────────────────────────────────────────────────────────
   function clearAllData() {
     if (!confirm('Delete ALL scouting data? This cannot be undone.')) return;
-    fetch('/data', { method: 'DELETE' })
-      .then(r => r.json())
-      .then(() => { allData = []; teamStats = []; renderTable(); updateCards(); })
-      .catch(err => alert('Error: ' + err.message));
+    fetch('/data', { method:'DELETE' })
+      .then(function(r){ return r.json(); })
+      .then(function(){ allData=[]; teamStats=[]; statboticsData={}; renderTable(); updateCards(); })
+      .catch(function(err){ alert('Error: ' + err.message); });
   }
 
-  // ── Auto-refresh every 20 seconds ─────────────────────────────────────────
+  // ── Pill helper ────────────────────────────────────────────────────────────
+  function setPill(id, text, cls) {
+    var el = document.getElementById(id);
+    el.textContent = text;
+    el.className   = 'pill ' + cls;
+  }
+
+  // ── Start ──────────────────────────────────────────────────────────────────
   loadData();
-  autoRefresh = setInterval(loadData, 20000);
+  setInterval(loadData, 20000);
 </script>
 </body>
 </html>
