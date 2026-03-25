@@ -11,4 +11,5 @@ const FIREBASE_CONFIG = {
 // Your TBA API key (get one free at https://www.thebluealliance.com/account)
 // Used to auto-fill team numbers from the live match schedule.
 // Leave as "" to skip TBA auto-fill.
-const TBA_KEY = "D0sikEeg6pogqXPslVg6Df5Bfbqm986ivNwOjEqrwuXw21bH6Q4a666YfMaKjc2D";
+const TBA_KEY    = "D0sikEeg6pogqXPslVg6Df5Bfbqm986ivNwOjEqrwuXw21bH6Q4a666YfMaKjc2D";
+const EVENT_CODE = "2026milac";   // ← change this each event

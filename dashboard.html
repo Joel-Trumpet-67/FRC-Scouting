@@ -284,15 +284,28 @@
   }
 
   function mergeStatbotics() {
+    // Update scouted teams with SB data
     teamStats = teamStats.map(function(s){
       var sb = statboticsData[s.t] || {};
       return Object.assign({}, s, {
-        sbRank:  sb.rank    != null ? sb.rank    : null,
-        numTeams:sb.numTeams != null ? sb.numTeams : null,
-        sbTotal: sb.sbTotal != null ? sb.sbTotal : null,
-        sbAuto:  sb.sbAuto  != null ? sb.sbAuto  : null,
-        sbTele:  sb.sbTele  != null ? sb.sbTele  : null,
-        sbEnd:   sb.sbEnd   != null ? sb.sbEnd   : null,
+        sbRank:   sb.rank     != null ? sb.rank     : null,
+        numTeams: sb.numTeams != null ? sb.numTeams : null,
+        sbTotal:  sb.sbTotal  != null ? sb.sbTotal  : null,
+        sbAuto:   sb.sbAuto   != null ? sb.sbAuto   : null,
+        sbTele:   sb.sbTele   != null ? sb.sbTele   : null,
+        sbEnd:    sb.sbEnd    != null ? sb.sbEnd    : null,
+      });
+    });
+    // Add teams from Statbotics that haven't been scouted yet
+    var scouted = teamStats.map(function(s){ return s.t; });
+    Object.keys(statboticsData).forEach(function(team){
+      if (scouted.indexOf(team) !== -1) return;
+      var sb = statboticsData[team];
+      teamStats.push({
+        t: team, matches: 0,
+        scoutAuto: null, scoutTele: null, hcap: null, climbRate: null,
+        sbRank: sb.rank, numTeams: sb.numTeams,
+        sbTotal: sb.sbTotal, sbAuto: sb.sbAuto, sbTele: sb.sbTele, sbEnd: sb.sbEnd,
       });
     });
   }
@@ -387,7 +400,7 @@
         htd(r.scoutAuto,R.scoutAuto)+
         htd(r.scoutTele,R.scoutTele)+
         htd(r.hcap,R.hcap)+
-        '<td class="'+clsCl(r.climbRate)+'">'+r.climbRate.toFixed(0)+'%</td>'+
+        (r.climbRate!=null?'<td class="'+clsCl(r.climbRate)+'">'+r.climbRate.toFixed(0)+'%</td>':'<td class="low">—</td>')+
         sbtd(r.sbTotal,R.sbTotal,true)+
         sbtd(r.sbAuto,R.sbAuto,false)+
         sbtd(r.sbTele,R.sbTele,false)+
@@ -398,6 +411,7 @@
   }
 
   function htd(v,rng) {
+    if (v==null) return '<td class="low">—</td>';
     var cls='mid';
     if (rng&&rng.max!==rng.min){var n=(v-rng.min)/(rng.max-rng.min);cls=n>=0.75?'good':n>=0.5?'ok':n<=0.25?'low':'mid';}
     return '<td class="'+cls+'">'+r1(v)+'</td>';
@@ -461,7 +475,8 @@
     var c={};
     allData.forEach(function(d){if(d.e)c[d.e]=(c[d.e]||0)+1;});
     var k=Object.keys(c);
-    return k.length?k.sort(function(a,b){return c[b]-c[a];})[0]:null;
+    if (k.length) return k.sort(function(a,b){return c[b]-c[a];})[0];
+    return (typeof EVENT_CODE !== 'undefined') ? EVENT_CODE : null;
   }
   function setPill(id,text,cls) {
     var el=document.getElementById(id);
