@@ -530,6 +530,16 @@
     return keys.length ? keys.sort(function(a,b){ return counts[b]-counts[a]; })[0] : null;
   }
 
+  // ── Team code branding ──────────────────────────────────────────────────────
+  fetch('/api/config')
+    .then(function(r){ return r.json(); })
+    .then(function(cfg){
+      if (cfg.team_code) {
+        document.title = cfg.team_code + ' Scouting Dashboard';
+        document.querySelector('header h1').textContent = cfg.team_code + ' — Scouting Dashboard';
+      }
+    }).catch(function(){});
+
   // ── Boot ────────────────────────────────────────────────────────────────────
   loadPicklist();
   loadData();

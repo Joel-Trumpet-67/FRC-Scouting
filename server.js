@@ -176,6 +176,16 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    // ── GET /api/config ────────────────────────────────────────────────────────
+    // Returns safe public config (team_code only — never the TBA key)
+    if (req.method === 'GET' && urlPath === '/api/config') {
+      const cfg = readConfig();
+      respond(res, 200, {
+        team_code: (cfg.team_code && cfg.team_code !== 'YOUR_TEAM_CODE') ? cfg.team_code : null
+      });
+      return;
+    }
+
     // ── GET /picklist ──────────────────────────────────────────────────────────
     if (req.method === 'GET' && urlPath === '/picklist') {
       respond(res, 200, readPicklist());
@@ -252,8 +262,17 @@ function ts() { return new Date().toLocaleTimeString(); }
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 server.listen(PORT, '0.0.0.0', () => {
+  const cfg      = readConfig();
+  const teamCode = (cfg.team_code && cfg.team_code !== 'YOUR_TEAM_CODE') ? cfg.team_code : null;
+  const hostname = os.hostname().replace(/\.local$/i, '') + '.local';
+
   console.log('\n╔══════════════════════════════════════════════════╗');
-  console.log('║         FRC Scouting Server — 2026               ║');
+  console.log(`║  FRC Scouting${teamCode ? ' — ' + teamCode : ''}${' '.repeat(Math.max(0, 36 - (teamCode ? teamCode.length + 3 : 0)))}║`);
+  console.log('╠══════════════════════════════════════════════════╣');
+
+  // Hostname-based URL (memorable, works on most LANs without knowing the IP)
+  console.log(`║  SHARE THIS with scouts:                         ║`);
+  console.log(`║  http://${hostname}:${PORT}/match.html`);
   console.log('╠══════════════════════════════════════════════════╣');
   console.log(`║  Scouting : http://localhost:${PORT}/match.html       ║`);
   console.log(`║  Dashboard: http://localhost:${PORT}/dashboard.html   ║`);
@@ -263,12 +282,11 @@ server.listen(PORT, '0.0.0.0', () => {
   for (const name of Object.keys(nets)) {
     for (const net of nets[name]) {
       if (net.family === 'IPv4' && !net.internal) {
-        console.log(`║  LAN      : http://${net.address}:${PORT}  `);
+        console.log(`║  LAN IP   : http://${net.address}:${PORT}  `);
       }
     }
   }
 
-  const cfg = readConfig();
   const keyStatus = (cfg.tba_key && cfg.tba_key !== 'YOUR_TBA_KEY_HERE')
     ? '✓ TBA key configured'
     : '✖ No TBA key — edit config.json to enable auto-fill';

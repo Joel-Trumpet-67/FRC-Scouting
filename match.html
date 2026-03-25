@@ -321,5 +321,17 @@
     </form>
 
     <script src="match.js"></script>
+    <script>
+      // Show team code branding on the pre-match header
+      fetch('/api/config')
+        .then(function(r){ return r.json(); })
+        .then(function(cfg){
+          if (cfg.team_code) {
+            document.title = cfg.team_code + ' — Match Scouting';
+            var h = document.getElementById('prematchHeader1');
+            if (h) h.textContent = cfg.team_code + ' Scouting';
+          }
+        }).catch(function(){});
+    </script>
   </body>
 </html>
