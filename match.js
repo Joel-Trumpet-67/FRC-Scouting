@@ -317,9 +317,10 @@ function submitData() {
         btn.setAttribute("value", "Submit");
         btn.disabled = false;
       } else {
-        statusEl.textContent = "✓ Saved to sync code: " + syncCode;
+        statusEl.textContent = "✓ Saved! Advancing to next match…";
         statusEl.style.color = "#27ae60";
         btn.setAttribute("value", "Submitted ✓");
+        setTimeout(clearForm, 1500);
       }
     });
   });
@@ -430,17 +431,22 @@ function showMatchPreview(match) {
   var red  = (match.alliances.red.team_keys  || []).map(function(k){ return k.replace("frc",""); });
   var blue = (match.alliances.blue.team_keys || []).map(function(k){ return k.replace("frc",""); });
 
+  function cell(color, bg, label, team) {
+    return '<td style="background:' + bg + ';color:' + color + ';padding:8px 6px;text-align:center;width:33%;">' +
+      '<div style="font-size:10px;opacity:0.75;">' + label + '</div>' +
+      '<div style="font-size:18px;">' + (team||'?') + '</div></td>';
+  }
+
   el.innerHTML =
-    '<table style="width:100%;border-collapse:collapse;font-size:13px;font-weight:700;">' +
+    '<table style="width:100%;border-collapse:collapse;">' +
     '<tr>' +
-      '<td style="color:#ff6060;padding:3px 8px;">R1: ' + (red[0]||'?')  + '</td>' +
-      '<td style="color:#60b0ff;padding:3px 8px;">B1: ' + (blue[0]||'?') + '</td>' +
+      cell('#fff','#c0392b','Red 1', red[0]) +
+      cell('#fff','#c0392b','Red 2', red[1]) +
+      cell('#fff','#c0392b','Red 3', red[2]) +
     '</tr><tr>' +
-      '<td style="color:#ff6060;padding:3px 8px;">R2: ' + (red[1]||'?')  + '</td>' +
-      '<td style="color:#60b0ff;padding:3px 8px;">B2: ' + (blue[1]||'?') + '</td>' +
-    '</tr><tr>' +
-      '<td style="color:#ff6060;padding:3px 8px;">R3: ' + (red[2]||'?')  + '</td>' +
-      '<td style="color:#60b0ff;padding:3px 8px;">B3: ' + (blue[2]||'?') + '</td>' +
+      cell('#fff','#1a5fa8','Blue 1', blue[0]) +
+      cell('#fff','#1a5fa8','Blue 2', blue[1]) +
+      cell('#fff','#1a5fa8','Blue 3', blue[2]) +
     '</tr></table>';
 }
 

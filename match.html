@@ -164,8 +164,8 @@
           </table>
 
           <!-- TBA live match preview -->
-          <p id="tba-status"  style="text-align:center; font-size:11px; color:#888; padding:2px 8px; margin:0;"></p>
-          <p id="match-preview" style="text-align:center; padding:6px 8px; font-size:13px; background:rgba(255,255,255,0.08); margin:4px 8px; border-radius:4px; min-height:18px;"></p>
+          <p id="tba-status" style="text-align:center; font-size:11px; color:#888; padding:2px 8px; margin:0;"></p>
+          <div id="match-preview" style="margin:6px 8px; border-radius:6px; overflow:hidden; font-size:15px; font-weight:700;"></div>
 
           <p class="match-label">
             <input type="button" value="Next" id="nextButton2" onclick="swipePage(1)">
@@ -360,7 +360,7 @@
 
           <!-- Submit button -->
           <div id="submitButton" style="text-align:center; margin:8px 0;">
-            <input type="button" id="submit" value="Submit to Server"
+            <input type="button" id="submit" value="Submit"
               style="font-family:Alexis; padding:14px 32px; font-size:18px; background-color:#4CAF50; color:white; border:none; cursor:pointer;"
               onclick="submitData()">
           </div>
