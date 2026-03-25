@@ -101,6 +101,46 @@
     .badge:hover { filter:brightness(1.3); }
 
     .no-data td { color:#333; text-align:center; padding:50px; font-size:14px; }
+
+    /* ── Team detail modal ── */
+    #team-modal {
+      display:none; position:fixed; inset:0;
+      background:rgba(0,0,0,0.88); z-index:998;
+      align-items:flex-start; justify-content:center;
+      padding:20px 12px; overflow-y:auto;
+    }
+    #team-modal.open { display:flex; }
+    .tm-box {
+      background:#111; border:1px solid #222; border-radius:10px;
+      width:100%; max-width:760px; padding:24px; position:relative;
+    }
+    .tm-close {
+      position:absolute; top:14px; right:16px; background:none; border:none;
+      color:#555; font-size:22px; cursor:pointer; line-height:1;
+    }
+    .tm-close:hover { color:#fff; }
+    .tm-title { font-size:22px; font-weight:700; color:#97c7f0; margin-bottom:4px; }
+    .tm-sub   { font-size:12px; color:#555; margin-bottom:18px; }
+    .tm-sb { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px; }
+    .tm-sb-chip { background:#1a1500; border:1px solid #3a2e00; border-radius:6px; padding:8px 14px; text-align:center; }
+    .tm-sb-chip .v { font-size:16px; font-weight:700; color:#f0c060; }
+    .tm-sb-chip .l { font-size:10px; color:#777; margin-top:2px; }
+    .tm-entries h3 { font-size:12px; color:#555; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; }
+    .tm-entry {
+      background:#161616; border:1px solid #1e1e1e; border-radius:6px;
+      padding:12px 14px; margin-bottom:10px;
+    }
+    .tm-entry-hdr { display:flex; gap:10px; align-items:center; margin-bottom:8px; flex-wrap:wrap; }
+    .tm-entry-hdr .m-num { font-size:16px; font-weight:700; color:#fff; }
+    .tm-entry-hdr .m-robot { font-size:12px; padding:2px 8px; border-radius:8px; font-weight:600; }
+    .red-tag  { background:#3a0808; color:#ff8080; }
+    .blue-tag { background:#08083a; color:#8080ff; }
+    .m-scout  { font-size:11px; color:#444; margin-left:auto; }
+    .tm-fields { display:flex; flex-wrap:wrap; gap:6px 16px; }
+    .tm-field { font-size:12px; color:#888; }
+    .tm-field span { color:#ccc; font-weight:600; }
+    .tm-comment { margin-top:8px; font-size:13px; color:#aaa; font-style:italic; border-top:1px solid #222; padding-top:8px; }
+    .no-entries { color:#333; text-align:center; padding:30px; font-size:14px; }
   </style>
 </head>
 <body>
@@ -163,6 +203,20 @@
       <tr class="no-data"><td colspan="11">Enter your sync code to load data.</td></tr>
     </tbody>
   </table>
+</div>
+
+<!-- Team detail modal -->
+<div id="team-modal">
+  <div class="tm-box">
+    <button class="tm-close" onclick="closeTeamModal()">✕</button>
+    <div class="tm-title" id="tm-title">—</div>
+    <div class="tm-sub" id="tm-sub"></div>
+    <div class="tm-sb" id="tm-sb"></div>
+    <div class="tm-entries">
+      <h3 id="tm-entries-hdr">Scouting Entries</h3>
+      <div id="tm-entries-list"></div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -396,7 +450,7 @@
       else                      { bdg='✅ Available';   bcls='badge b-ok'; }
       return '<tr>'+
         '<td class="'+rankCls+'">'+(r.sbRank!=null?r.sbRank:'—')+'</td>'+
-        '<td class="team"><a class="tba" href="'+url+'" target="_blank">'+r.t+'</a></td>'+
+        '<td class="team"><a class="tba" href="#" onclick="openTeamModal(\''+r.t+'\');return false;">'+r.t+'</a></td>'+
         htd(r.scoutAuto,R.scoutAuto)+
         htd(r.scoutTele,R.scoutTele)+
         htd(r.hcap,R.hcap)+
@@ -482,6 +536,86 @@
     var el=document.getElementById(id);
     el.textContent=text; el.className='pill '+cls;
   }
+
+  // ── Team detail modal ───────────────────────────────────────────────────────
+  function openTeamModal(team) {
+    var sb      = statboticsData[String(team)] || {};
+    var entries = allData.filter(function(d){ return String(d.t) === String(team); });
+    entries.sort(function(a,b){ return (parseInt(a.m)||0)-(parseInt(b.m)||0); });
+
+    document.getElementById('tm-title').textContent = 'Team ' + team;
+    document.getElementById('tm-sub').innerHTML =
+      'Rank: ' + (sb.rank ? sb.rank + ' / ' + (sb.numTeams||'?') : '—') +
+      ' &nbsp;|&nbsp; <a class="tba" href="https://www.thebluealliance.com/team/'+team+'" target="_blank" style="color:#97c7f0;">View on TBA ↗</a>';
+
+    // Statbotics chips
+    var sbHtml = '';
+    if (sb.sbTotal != null) {
+      function chip(l,v){ return '<div class="tm-sb-chip"><div class="v">'+(v!=null?Math.round(v*10)/10:'—')+'</div><div class="l">'+l+'</div></div>'; }
+      sbHtml = chip('EPA Total',sb.sbTotal) + chip('Auto',sb.sbAuto) + chip('Teleop',sb.sbTele) + chip('Endgame',sb.sbEnd);
+    }
+    document.getElementById('tm-sb').innerHTML = sbHtml;
+
+    // Entry labels
+    var EFS = { '1':'L1 Climb','2':'L2 Climb','3':'L3 Climb','F':'Failed','X':'No Attempt' };
+    var DTA = { 'D':'Defence','P':'Pickup','B':'Both','N':'None' };
+    var ROB = { r1:'Red 1',b1:'Blue 1',r2:'Red 2',b2:'Blue 2',r3:'Red 3',b3:'Blue 3' };
+
+    var listHtml = '';
+    if (!entries.length) {
+      listHtml = '<div class="no-entries">No scouting entries yet for this team.</div>';
+    } else {
+      document.getElementById('tm-entries-hdr').textContent = entries.length + ' Scouting ' + (entries.length===1?'Entry':'Entries');
+      entries.forEach(function(e){
+        var isRed  = (e.r||'').charAt(0)==='r';
+        var robTag = '<span class="m-robot '+(isRed?'red-tag':'blue-tag')+'">'+(ROB[e.r]||e.r||'?')+'</span>';
+        var fields = [
+          ['Auto Shot 1', e.as1||'0'],
+          ['Auto Shot 5', e.as5||'0'],
+          ['Auto Missed', e.amf||'0'],
+          ['Dumps 8',     e.ad8==='1'?'Yes':'No'],
+          ['L1 Climb',    e.ac1==='1'?'Yes':'No'],
+          ['Won Auto',    e.taw==='1'?'Yes':'No'],
+          ['Tele Shot 1', e.ts1||'0'],
+          ['Tele Shot 5', e.ts5||'0'],
+          ['Tele Missed', e.tmf||'0'],
+          ['Hub Cap',     e.hcap||'0'],
+          ['Climb Timer', e.ect||'0'],
+          ['Final Status',EFS[e.efs]||e.efs||'—'],
+          ['Died',        e.die==='1'?'Yes':'No'],
+          ['Tippy',       e.tip==='1'?'Yes':'No'],
+          ['Downtime',    DTA[e.dta]||e.dta||'—'],
+        ].map(function(f){
+          return '<div class="tm-field">'+f[0]+': <span>'+f[1]+'</span></div>';
+        }).join('');
+
+        var comment = e.cmm ? '<div class="tm-comment">"' + e.cmm + '"</div>' : '';
+
+        listHtml +=
+          '<div class="tm-entry">'+
+            '<div class="tm-entry-hdr">'+
+              '<span class="m-num">Match '+( e.m||'?')+'</span>'+
+              robTag+
+              '<span class="m-scout">'+( e.s||'?')+'</span>'+
+            '</div>'+
+            '<div class="tm-fields">'+fields+'</div>'+
+            comment+
+          '</div>';
+      });
+    }
+    document.getElementById('tm-entries-list').innerHTML = listHtml;
+
+    document.getElementById('team-modal').classList.add('open');
+  }
+
+  function closeTeamModal() {
+    document.getElementById('team-modal').classList.remove('open');
+  }
+
+  // Close on backdrop click
+  document.getElementById('team-modal').addEventListener('click', function(e){
+    if (e.target === this) closeTeamModal();
+  });
 
   // ── Boot ────────────────────────────────────────────────────────────────────
   initFirebase();
