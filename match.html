@@ -93,6 +93,15 @@
                 <input type="text" id="input_e" name="e" value="2026ilch" required>
               </td>
             </tr>
+            <!-- TBA Key (stored in localStorage, not submitted) -->
+            <tr>
+              <td class="title" style="font-size:10px;">TBA Key&nbsp;</td>
+              <td class="field">
+                <input type="text" id="tba-key-input" placeholder="paste key for auto-fill"
+                  style="font-size:10px;width:160px;"
+                  onchange="localStorage.setItem('tba_key', this.value.trim()); fetchSchedule();">
+              </td>
+            </tr>
             <!-- Match Level -->
             <tr>
               <td class="title">Match Level&nbsp;</td>

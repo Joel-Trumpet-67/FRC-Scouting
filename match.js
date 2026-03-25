@@ -353,9 +353,9 @@ function fetchSchedule() {
   if (!event || event === scheduleEvent) return;
 
   var statusEl = document.getElementById("tba-status");
-  var key = (typeof TBA_KEY !== "undefined") ? TBA_KEY : "";
+  var key = (typeof TBA_KEY !== "undefined" && TBA_KEY) ? TBA_KEY : (localStorage.getItem("tba_key") || "");
   if (!key) {
-    if (statusEl) statusEl.textContent = "TBA key not set in firebase-config.js";
+    if (statusEl) statusEl.textContent = "Enter your TBA key in the field below to enable auto-fill";
     return;
   }
 
@@ -427,34 +427,41 @@ function showMatchPreview(match) {
   if (!el) return;
   if (!match) { el.innerHTML = ""; return; }
 
-  var red  = (match.alliances.red.team_keys  || []).map(function(k){ return k.replace("frc",""); }).join(", ");
-  var blue = (match.alliances.blue.team_keys || []).map(function(k){ return k.replace("frc",""); }).join(", ");
+  var red  = (match.alliances.red.team_keys  || []).map(function(k){ return k.replace("frc",""); });
+  var blue = (match.alliances.blue.team_keys || []).map(function(k){ return k.replace("frc",""); });
 
   el.innerHTML =
-    '<span style="color:#ff8080;font-weight:600;">&#9632; Red: ' + red  + '</span>' +
-    '&nbsp;&nbsp;|&nbsp;&nbsp;' +
-    '<span style="color:#80c8ff;font-weight:600;">&#9632; Blue: ' + blue + '</span>';
+    '<table style="width:100%;border-collapse:collapse;font-size:13px;font-weight:700;">' +
+    '<tr>' +
+      '<td style="color:#ff6060;padding:3px 8px;">R1: ' + (red[0]||'?')  + '</td>' +
+      '<td style="color:#60b0ff;padding:3px 8px;">B1: ' + (blue[0]||'?') + '</td>' +
+    '</tr><tr>' +
+      '<td style="color:#ff6060;padding:3px 8px;">R2: ' + (red[1]||'?')  + '</td>' +
+      '<td style="color:#60b0ff;padding:3px 8px;">B2: ' + (blue[1]||'?') + '</td>' +
+    '</tr><tr>' +
+      '<td style="color:#ff6060;padding:3px 8px;">R3: ' + (red[2]||'?')  + '</td>' +
+      '<td style="color:#60b0ff;padding:3px 8px;">B3: ' + (blue[2]||'?') + '</td>' +
+    '</tr></table>';
 }
 
 // ===== CLEAR FORM =====
 function clearForm() {
+  // Save robot position so we can restore it for the next match
+  var savedRobotEl  = document.querySelector('input[name="r"]:checked');
+  var savedRobotVal = savedRobotEl ? savedRobotEl.value : null;
+
   var slides = document.getElementById("main-panel-holder").children;
   slides[slide].style.display = "none";
   slide = 0;
   slides[0].style.display = "table";
   window.scrollTo(0, 0);
 
-  // Increment match # (original behavior)
+  // Increment match #
   var matchEl = document.getElementById("input_m");
   if (matchEl) {
     var m = parseInt(matchEl.value);
     matchEl.value = isNaN(m) ? "" : m + 1;
   }
-
-  // Reset robot
-  document.querySelectorAll('input[name="r"]').forEach(r => r.checked = false);
-  var displayR = document.getElementById("display_r");
-  if (displayR) displayR.value = "";
 
   // Clear XY coordinates
   document.querySelectorAll("[id*='XY_']").forEach(e => { e.value = "[]"; });
@@ -502,10 +509,20 @@ function clearForm() {
     }
   });
 
+  // Restore robot position for next match
+  if (savedRobotVal) {
+    var robotInput = document.querySelector('input[name="r"][value="' + savedRobotVal + '"]');
+    if (robotInput) robotInput.checked = true;
+    var displayR = document.getElementById("display_r");
+    if (displayR) displayR.value = savedRobotVal;
+  }
+
   // Reset submit button state
   var submitBtn = document.getElementById("submit");
   if (submitBtn) { submitBtn.setAttribute("value", "Submit"); submitBtn.disabled = false; }
 
+  // Auto-fill team for new match + same robot position
+  autoFillTeam();
   drawFields();
 }
 
@@ -567,6 +584,10 @@ window.onload = function() {
     if (img.complete && img.naturalWidth) initCanvas();
     else img.onload = initCanvas;
   }
+
+  // Restore TBA key from localStorage
+  var tbaKeyEl = document.getElementById("tba-key-input");
+  if (tbaKeyEl) tbaKeyEl.value = localStorage.getItem("tba_key") || "";
 
   // Firebase
   initFirebase();
