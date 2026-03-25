@@ -8,8 +8,13 @@ var slide      = 0;
 var dataFormat = "tsv";
 
 // TBA schedule cache
-var schedule   = null;
+var schedule      = null;
 var scheduleEvent = null;
+
+// Firebase / sync
+var db         = null;
+var syncCode   = null;
+var entriesRef = null;
 
 // ===== NAVIGATION =====
 function swipePage(increment) {
@@ -270,45 +275,53 @@ function updateSummary() {
   table.innerHTML = rows.join("");
 }
 
-// ===== SUBMIT TO SERVER =====
+// ===== FIREBASE SUBMIT =====
 function submitData() {
-  var data    = getDataObject();
+  var data     = getDataObject();
   var statusEl = document.getElementById("submit-status");
   var btn      = document.getElementById("submit");
 
-  // Basic validation
   if (!data.s || !data.m || !data.r || !data.t) {
-    statusEl.textContent = "Please fill in Scouter, Match #, Robot, and Team # before submitting.";
+    statusEl.textContent = "Fill in Scouter, Match #, Robot, and Team # first.";
     statusEl.style.color = "#c0392b";
     return;
   }
 
-  btn.setAttribute("value", "Submitting...");
+  if (!entriesRef) {
+    statusEl.textContent = "No sync code set — enter a code in the banner above.";
+    statusEl.style.color = "#c0392b";
+    return;
+  }
+
+  btn.setAttribute("value", "Submitting…");
   btn.disabled = true;
 
-  fetch("/submit", {
-    method:  "POST",
-    headers: { "Content-Type": "application/json" },
-    body:    JSON.stringify(data)
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(result) {
-    if (result.success) {
-      statusEl.textContent = "✓ Submitted! Total entries: " + result.total;
-      statusEl.style.color = "#27ae60";
-      btn.setAttribute("value", "Submitted ✓");
-    } else {
-      statusEl.textContent = "⚠ " + (result.error || "Unknown error");
+  // Duplicate check then push
+  entriesRef.once("value", function(snapshot) {
+    var existing = snapshot.val() || {};
+    var isDup = Object.values(existing).some(function(d) {
+      return d.s === data.s && d.m === data.m && d.r === data.r && d.e === data.e;
+    });
+    if (isDup) {
+      statusEl.textContent = "⚠ Duplicate — already submitted this match/robot/scouter.";
       statusEl.style.color = "#c0392b";
-      btn.setAttribute("value", "Submit to Server");
+      btn.setAttribute("value", "Submit");
       btn.disabled = false;
+      return;
     }
-  })
-  .catch(function(err) {
-    statusEl.textContent = "✖ Cannot reach server. Is server.js running?  (" + err.message + ")";
-    statusEl.style.color = "#c0392b";
-    btn.setAttribute("value", "Submit to Server");
-    btn.disabled = false;
+    data.timestamp = new Date().toISOString();
+    entriesRef.push(data, function(err) {
+      if (err) {
+        statusEl.textContent = "✖ Firebase error: " + err.message;
+        statusEl.style.color = "#c0392b";
+        btn.setAttribute("value", "Submit");
+        btn.disabled = false;
+      } else {
+        statusEl.textContent = "✓ Saved to sync code: " + syncCode;
+        statusEl.style.color = "#27ae60";
+        btn.setAttribute("value", "Submitted ✓");
+      }
+    });
   });
 }
 
@@ -340,9 +353,17 @@ function fetchSchedule() {
   if (!event || event === scheduleEvent) return;
 
   var statusEl = document.getElementById("tba-status");
+  var key = (typeof TBA_KEY !== "undefined") ? TBA_KEY : "";
+  if (!key) {
+    if (statusEl) statusEl.textContent = "TBA key not set in firebase-config.js";
+    return;
+  }
+
   if (statusEl) statusEl.textContent = "Fetching TBA schedule…";
 
-  fetch("/api/tba/event/" + event + "/matches/simple")
+  fetch("https://www.thebluealliance.com/api/v3/event/" + event + "/matches/simple", {
+    headers: { "X-TBA-Auth-Key": key }
+  })
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (Array.isArray(data)) {
@@ -356,7 +377,7 @@ function fetchSchedule() {
       }
     })
     .catch(function() {
-      if (statusEl) statusEl.textContent = "TBA unavailable (is server.js running?)";
+      if (statusEl) statusEl.textContent = "TBA fetch failed — check TBA_KEY in firebase-config.js";
     });
 }
 
@@ -483,9 +504,59 @@ function clearForm() {
 
   // Reset submit button state
   var submitBtn = document.getElementById("submit");
-  if (submitBtn) { submitBtn.setAttribute("value", "Submit to Server"); submitBtn.disabled = false; }
+  if (submitBtn) { submitBtn.setAttribute("value", "Submit"); submitBtn.disabled = false; }
 
   drawFields();
+}
+
+// ===== FIREBASE + SYNC CODE =====
+function initFirebase() {
+  try {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    db = firebase.database();
+  } catch(e) {
+    console.error("Firebase init failed:", e.message);
+    showSyncBanner("Firebase not configured — edit firebase-config.js", "#c0392b");
+    return;
+  }
+
+  syncCode = localStorage.getItem("scout_sync_code");
+  if (syncCode) {
+    applyCode(syncCode);
+  } else {
+    showCodeModal();
+  }
+}
+
+function applyCode(code) {
+  syncCode   = code;
+  entriesRef = db.ref("sessions/" + code + "/entries");
+  localStorage.setItem("scout_sync_code", code);
+  showSyncBanner("Sync: " + code, "#27ae60");
+  fetchSchedule();
+}
+
+function showCodeModal() {
+  document.getElementById("sync-modal").style.display = "flex";
+}
+
+function joinCode() {
+  var input = document.getElementById("sync-input").value.trim().toUpperCase().replace(/\s+/g, "");
+  if (!input) return;
+  document.getElementById("sync-modal").style.display = "none";
+  applyCode(input);
+}
+
+function changeCode() {
+  document.getElementById("sync-input").value = syncCode || "";
+  document.getElementById("sync-modal").style.display = "flex";
+}
+
+function showSyncBanner(text, color) {
+  var el = document.getElementById("sync-banner");
+  if (!el) return;
+  el.textContent = text;
+  el.style.color = color || "#eee";
 }
 
 // ===== INIT =====
@@ -497,8 +568,8 @@ window.onload = function() {
     else img.onload = initCanvas;
   }
 
-  // TBA: fetch schedule on load (event may already be pre-filled)
-  fetchSchedule();
+  // Firebase
+  initFirebase();
 
   // Re-fetch schedule when event field changes
   var eventEl = document.getElementById("input_e");

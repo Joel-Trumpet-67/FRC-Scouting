@@ -2,11 +2,72 @@
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, maximum-scale=1.0">
-    <title>Rebuilt Match Scouting</title>
+    <title>Match Scouting</title>
     <link rel="stylesheet" href="resources/css/scoutingPASS.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <style>
+      /* Sync code modal */
+      #sync-modal {
+        display: none; position: fixed; inset: 0;
+        background: rgba(0,0,0,0.85); z-index: 999;
+        align-items: center; justify-content: center;
+      }
+      .sync-box {
+        background: #1a1a1a; border: 1px solid #333; border-radius: 10px;
+        padding: 32px 28px; text-align: center; width: 300px;
+      }
+      .sync-box h2 { color: #97c7f0; font-size: 18px; margin-bottom: 6px; }
+      .sync-box p  { color: #777; font-size: 12px; margin-bottom: 18px; }
+      #sync-input  {
+        width: 100%; padding: 10px; font-size: 18px; font-weight: 700;
+        text-align: center; text-transform: uppercase; letter-spacing: 2px;
+        background: #111; border: 1px solid #444; color: #fff;
+        border-radius: 6px; margin-bottom: 14px;
+      }
+      #sync-join {
+        width: 100%; padding: 10px; font-size: 14px; font-weight: 600;
+        background: #1a4a2a; color: #7ef; border: none; border-radius: 6px;
+        cursor: pointer;
+      }
+      #sync-join:hover { filter: brightness(1.2); }
+
+      /* Sync banner (top of form) */
+      #sync-banner-bar {
+        background: #0d0d0d; border-bottom: 1px solid #222;
+        padding: 6px 16px; display: flex; align-items: center;
+        justify-content: space-between; font-size: 12px;
+      }
+      #sync-banner { font-weight: 600; }
+      #change-code-btn {
+        font-size: 11px; color: #555; cursor: pointer; text-decoration: underline;
+        background: none; border: none;
+      }
+      #change-code-btn:hover { color: #aaa; }
+    </style>
   </head>
 
   <body>
+
+    <!-- Sync code modal -->
+    <div id="sync-modal">
+      <div class="sync-box">
+        <h2>Enter Sync Code</h2>
+        <p>Everyone on your scouting team enters the same code to share data live.</p>
+        <input id="sync-input" type="text" placeholder="e.g. FRC3603"
+               onkeydown="if(event.key==='Enter') joinCode()">
+        <button id="sync-join" onclick="joinCode()">Join Session</button>
+      </div>
+    </div>
+
+    <!-- Sync banner -->
+    <div id="sync-banner-bar">
+      <span id="sync-banner" style="color:#555">Not connected…</span>
+      <button id="change-code-btn" onclick="changeCode()">change code</button>
+    </div>
+
     <form id="scoutingForm" onsubmit="return false" name="scoutingForm">
       <div id="main-panel-holder">
 
@@ -321,17 +382,5 @@
     </form>
 
     <script src="match.js"></script>
-    <script>
-      // Show team code branding on the pre-match header
-      fetch('/api/config')
-        .then(function(r){ return r.json(); })
-        .then(function(cfg){
-          if (cfg.team_code) {
-            document.title = cfg.team_code + ' — Match Scouting';
-            var h = document.getElementById('prematchHeader1');
-            if (h) h.textContent = cfg.team_code + ' Scouting';
-          }
-        }).catch(function(){});
-    </script>
   </body>
 </html>

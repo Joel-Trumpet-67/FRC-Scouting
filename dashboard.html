@@ -3,212 +3,164 @@
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FRC Scouting Dashboard</title>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="firebase-config.js"></script>
   <style>
     @font-face {
       font-family: 'Alexis';
       src: url('resources/fonts/alexisv3.ttf') format('truetype');
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0d0d0d; color: #e8e8e8; min-height: 100vh; }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #0d0d0d;
-      color: #e8e8e8;
-      min-height: 100vh;
+    /* ── Sync modal ── */
+    #sync-modal {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.88); z-index: 999;
+      align-items: center; justify-content: center;
     }
+    .sync-box { background:#1a1a1a; border:1px solid #333; border-radius:10px; padding:32px 28px; text-align:center; width:300px; }
+    .sync-box h2 { color:#97c7f0; font-size:18px; margin-bottom:6px; }
+    .sync-box p  { color:#777; font-size:12px; margin-bottom:18px; }
+    #sync-input  { width:100%; padding:10px; font-size:18px; font-weight:700; text-align:center; text-transform:uppercase; letter-spacing:2px; background:#111; border:1px solid #444; color:#fff; border-radius:6px; margin-bottom:14px; }
+    #sync-join   { width:100%; padding:10px; font-size:14px; font-weight:600; background:#1a4a2a; color:#7ef; border:none; border-radius:6px; cursor:pointer; }
+    #sync-join:hover { filter:brightness(1.2); }
 
     /* ── Header ── */
-    header {
-      background: #000;
-      border-bottom: 2px solid #1e1e1e;
-      padding: 16px 28px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    header h1 {
-      font-family: Alexis;
-      font-size: 24px;
-      font-weight: 400;
-      color: #97c7f0;
-      letter-spacing: 2px;
-    }
-    .header-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    header { background:#000; border-bottom:2px solid #1e1e1e; padding:14px 24px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
+    header h1 { font-family:Alexis; font-size:22px; font-weight:400; color:#97c7f0; letter-spacing:2px; }
+    .hright { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 
-    .status-dot {
-      font-size: 12px;
-      padding: 4px 10px;
-      border-radius: 12px;
-      border: 1px solid;
-    }
-    .dot-green { background:#0f2b0f; color:#5dd85d; border-color:#2a5a2a; }
-    .dot-red   { background:#2b0f0f; color:#f88;    border-color:#5a2a2a; }
-    .dot-grey  { background:#1a1a1a; color:#666;    border-color:#333; }
+    .pill { font-size:11px; padding:3px 9px; border-radius:10px; border:1px solid; white-space:nowrap; }
+    .p-green { background:#0f2b0f; color:#5dd85d; border-color:#2a5a2a; }
+    .p-red   { background:#2b0f0f; color:#f88;    border-color:#5a2a2a; }
+    .p-grey  { background:#1a1a1a; color:#666;    border-color:#333; }
+    .p-blue  { background:#0f1a2b; color:#9cf;    border-color:#2a3a5a; }
 
-    .btn {
-      padding: 6px 14px; font-size: 12px; border: none;
-      border-radius: 4px; cursor: pointer; font-family: inherit;
-    }
-    .btn-refresh { background:#1a3a1a; color:#7ef; }
+    .btn { padding:6px 13px; font-size:12px; border:none; border-radius:4px; cursor:pointer; font-family:inherit; }
+    .btn-code    { background:#1a2a3a; color:#9cf; }
     .btn-export  { background:#1a2a4a; color:#9cf; }
     .btn-clear   { background:#3a1010; color:#faa; }
-    .btn:hover   { filter: brightness(1.25); }
+    .btn:hover   { filter:brightness(1.25); }
 
-    /* ── Stats strip ── */
-    .strip {
-      display: flex; gap: 6px; padding: 14px 28px 8px; flex-wrap: wrap;
-    }
-    .chip {
-      background: #141414; border: 1px solid #222; border-radius: 6px;
-      padding: 8px 14px; text-align: center; min-width: 90px;
-    }
-    .chip-val   { font-size: 22px; font-weight: 700; color: #97c7f0; }
-    .chip-label { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+    /* ── Chips ── */
+    .strip { display:flex; gap:6px; padding:12px 24px 6px; flex-wrap:wrap; }
+    .chip { background:#141414; border:1px solid #222; border-radius:6px; padding:8px 14px; text-align:center; min-width:88px; }
+    .chip-val   { font-size:20px; font-weight:700; color:#97c7f0; }
+    .chip-label { font-size:10px; color:#555; text-transform:uppercase; letter-spacing:1px; margin-top:2px; }
 
-    .timestamp { font-size: 11px; color: #444; padding: 2px 28px 10px; }
+    .timestamp { font-size:11px; color:#333; padding:2px 24px 8px; }
 
     /* ── Table ── */
-    .wrap { padding: 0 28px 20px; overflow-x: auto; }
+    .wrap { padding:0 24px 40px; overflow-x:auto; }
 
-    table {
-      width: 100%; border-collapse: collapse;
-      font-size: 13px; min-width: 700px;
-    }
+    table { width:100%; border-collapse:collapse; font-size:13px; min-width:680px; }
 
     thead th {
-      background: #111; color: #888; padding: 10px 10px;
-      text-align: center; white-space: nowrap;
-      border-bottom: 1px solid #222;
-      font-size: 11px; font-weight: 600;
-      text-transform: uppercase; letter-spacing: 0.8px;
-      position: sticky; top: 0; z-index: 1;
-      cursor: pointer; user-select: none;
+      background:#111; color:#777; padding:9px 10px; text-align:center;
+      white-space:nowrap; border-bottom:1px solid #1e1e1e;
+      font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.8px;
+      position:sticky; top:0; z-index:1; cursor:pointer; user-select:none;
     }
-    thead th:hover { color: #ddd; }
-    thead th.sorted-asc::after  { content: ' ▲'; color: #97c7f0; }
-    thead th.sorted-desc::after { content: ' ▼'; color: #97c7f0; }
-    thead th.no-sort { cursor: default; }
+    thead th:hover { color:#ddd; }
+    thead th.sorted-asc::after  { content:' ▲'; color:#97c7f0; }
+    thead th.sorted-desc::after { content:' ▼'; color:#97c7f0; }
+    thead th.no-sort { cursor:default; }
 
-    tbody tr { border-bottom: 1px solid #161616; transition: background 0.1s; }
-    tbody tr:hover { background: #161616; }
-    td { padding: 10px 10px; text-align: center; }
+    tr.sec-hdr th { background:#0a0a0a; font-size:9px; letter-spacing:2px; padding:3px 10px; cursor:default; border-bottom:1px solid #161616; }
+    .lbl-scout { color:#4a7aaa; }
+    .lbl-sb    { color:#8a6a10; }
 
-    /* Rank column */
-    td.rank {
-      font-size: 18px; font-weight: 700; color: #333; min-width: 44px;
-    }
-    td.rank.top3 { color: #f0c060; }
-    td.rank.top10 { color: #888; }
+    tbody tr { border-bottom:1px solid #141414; }
+    tbody tr:hover { background:#161616; }
+    td { padding:10px 10px; text-align:center; }
 
-    /* Team number */
-    td.team {
-      font-size: 18px; font-weight: 700; color: #97c7f0; min-width: 70px;
-    }
-    a.tba { color: inherit; text-decoration: none; }
-    a.tba:hover { text-decoration: underline; }
+    td.rank { font-size:20px; font-weight:700; color:#252525; min-width:40px; }
+    td.rank.top3  { color:#f0c060; }
+    td.rank.top10 { color:#777; }
 
-    /* Scouted data */
-    td.val { color: #ccc; }
-    td.good  { color: #5dd85d; font-weight: 600; }
-    td.ok    { color: #c8e86a; }
-    td.mid   { color: #bbb; }
-    td.low   { color: #666; }
-    td.bad   { color: #f55; font-weight: 600; }
+    td.team { font-size:17px; font-weight:700; color:#97c7f0; }
+    a.tba { color:inherit; text-decoration:none; }
+    a.tba:hover { text-decoration:underline; }
 
-    /* SB EPA */
-    td.sb { color: #f0c060; }
-    td.sb-low { color: #7a6020; }
+    td.good { color:#5dd85d; font-weight:600; }
+    td.ok   { color:#c8e86a; }
+    td.mid  { color:#bbb; }
+    td.low  { color:#555; }
+    td.sb   { color:#f0c060; }
+    td.sb-low { color:#5a4510; }
 
-    /* Overrated flag */
-    td.flag-cell { min-width: 90px; }
-    .flag-over { font-size: 11px; color: #f0c060; font-weight: 600; }
-    .flag-dnp  { font-size: 11px; color: #f55;    font-weight: 600; cursor: pointer; }
-    .flag-ok   { font-size: 11px; color: #2a2a2a; }
+    th.sb-div, td.sb-div { border-left:2px solid #3a2e00; }
 
-    /* Pick list badge */
-    .badge {
-      display: inline-block; padding: 3px 8px; border-radius: 8px;
-      font-size: 11px; font-weight: 600; cursor: pointer;
-      user-select: none; white-space: nowrap; border: 1px solid;
-    }
-    .badge-ok   { background:#0f2b0f; color:#5dd85d; border-color:#2a5a2a; }
-    .badge-over { background:#2b1f00; color:#f0c060; border-color:#6a4a00; }
-    .badge-dnp  { background:#2b0f0f; color:#f88;   border-color:#5a2a2a; }
-    .badge:hover { filter: brightness(1.3); }
+    .badge { display:inline-block; padding:3px 8px; border-radius:8px; font-size:11px; font-weight:600; cursor:pointer; user-select:none; white-space:nowrap; border:1px solid; }
+    .b-ok   { background:#0f2b0f; color:#5dd85d; border-color:#2a5a2a; }
+    .b-over { background:#2b1f00; color:#f0c060; border-color:#6a4a00; }
+    .b-dnp  { background:#2b0f0f; color:#f88;   border-color:#5a2a2a; }
+    .badge:hover { filter:brightness(1.3); }
 
-    /* Matches count */
-    td.m-count { color: #444; font-size: 12px; }
-    td.m-none  { color: #2a2a2a; font-size: 11px; font-style: italic; }
-
-    /* Divider between scouted and sb sections */
-    th.sb-first, td.sb-first { border-left: 2px solid #3a2e00; }
-
-    .no-data-row td { color: #333; text-align: center; padding: 50px; font-size: 14px; }
-
-    /* ── Section label row ── */
-    tr.section-labels th {
-      background: #0a0a0a; font-size: 9px; letter-spacing: 2px;
-      padding: 4px 10px; cursor: default; border-bottom: 1px solid #1a1a1a;
-    }
-    .lbl-scout { color: #4a7aaa; }
-    .lbl-sb    { color: #8a6a10; }
+    .no-data td { color:#333; text-align:center; padding:50px; font-size:14px; }
   </style>
 </head>
 <body>
 
+<!-- Sync code modal -->
+<div id="sync-modal">
+  <div class="sync-box">
+    <h2>Enter Sync Code</h2>
+    <p>Use the same code as your scouts to see their data live.</p>
+    <input id="sync-input" type="text" placeholder="e.g. FRC3603"
+           onkeydown="if(event.key==='Enter') joinCode()">
+    <button id="sync-join" onclick="joinCode()">View Dashboard</button>
+  </div>
+</div>
+
 <header>
-  <h1>FRC Scouting Dashboard</h1>
-  <div class="header-right">
-    <span id="pill-server" class="status-dot dot-grey">⏳ Connecting…</span>
-    <span id="pill-sb"     class="status-dot dot-grey">Statbotics —</span>
-    <button class="btn btn-refresh" onclick="loadData()">Refresh</button>
-    <button class="btn btn-export"  onclick="exportCSV()">Export CSV</button>
-    <button class="btn btn-clear"   onclick="clearAll()">Clear Data</button>
+  <h1 id="page-title">FRC Scouting Dashboard</h1>
+  <div class="hright">
+    <span id="pill-code"   class="pill p-grey">No code</span>
+    <span id="pill-fb"     class="pill p-grey">Firebase —</span>
+    <span id="pill-sb"     class="pill p-grey">Statbotics —</span>
+    <button class="btn btn-code"   onclick="changeCode()">Change Code</button>
+    <button class="btn btn-export" onclick="exportCSV()">Export CSV</button>
+    <button class="btn btn-clear"  onclick="clearAll()">Clear Data</button>
   </div>
 </header>
 
 <div class="strip">
   <div class="chip"><div class="chip-val" id="c-teams">—</div><div class="chip-label">Teams</div></div>
   <div class="chip"><div class="chip-val" id="c-entries">—</div><div class="chip-label">Entries</div></div>
-  <div class="chip"><div class="chip-val" id="c-matches">—</div><div class="chip-label">Matches</div></div>
   <div class="chip"><div class="chip-val" id="c-event">—</div><div class="chip-label">Event</div></div>
   <div class="chip"><div class="chip-val" id="c-sb">—</div><div class="chip-label">SB Teams</div></div>
 </div>
-
-<div class="timestamp" id="timestamp"></div>
+<div class="timestamp" id="ts"></div>
 
 <div class="wrap">
-  <table id="main-table">
+  <table>
     <thead>
-      <tr class="section-labels">
-        <th colspan="2" class="lbl-scout no-sort">EVENT STANDING</th>
-        <th colspan="5" class="lbl-scout no-sort">SCOUTED AVERAGES</th>
-        <th colspan="4" class="sb-first lbl-sb no-sort">STATBOTICS EPA</th>
+      <tr class="sec-hdr">
+        <th colspan="2" class="lbl-scout no-sort">RANKING</th>
+        <th colspan="4" class="lbl-scout no-sort">SCOUTED</th>
+        <th colspan="4" class="sb-div lbl-sb no-sort">STATBOTICS EPA</th>
         <th colspan="1" class="lbl-scout no-sort">PICK LIST</th>
       </tr>
       <tr id="hdr">
         <th onclick="sortBy('sbRank')"    data-col="sbRank">Rank</th>
         <th onclick="sortBy('t')"         data-col="t">Team</th>
-        <!-- Scouted -->
-        <th onclick="sortBy('scoutAuto')" data-col="scoutAuto">Auto<br>pts</th>
-        <th onclick="sortBy('scoutTele')" data-col="scoutTele">Teleop<br>pts</th>
+        <th onclick="sortBy('scoutAuto')" data-col="scoutAuto">Auto<br>avg pts</th>
+        <th onclick="sortBy('scoutTele')" data-col="scoutTele">Teleop<br>avg pts</th>
         <th onclick="sortBy('hcap')"      data-col="hcap">Hub<br>cap</th>
         <th onclick="sortBy('climbRate')" data-col="climbRate">Climb<br>%</th>
-        <th onclick="sortBy('matches')"   data-col="matches">Scouted<br>matches</th>
-        <!-- Statbotics -->
-        <th onclick="sortBy('sbTotal')"   data-col="sbTotal"  class="sb-first">EPA<br>total</th>
-        <th onclick="sortBy('sbAuto')"    data-col="sbAuto">EPA<br>auto</th>
-        <th onclick="sortBy('sbTele')"    data-col="sbTele">EPA<br>teleop</th>
-        <th onclick="sortBy('sbEnd')"     data-col="sbEnd">EPA<br>endgame</th>
-        <!-- Pick list -->
+        <th onclick="sortBy('sbTotal')"   data-col="sbTotal"  class="sb-div">Total</th>
+        <th onclick="sortBy('sbAuto')"    data-col="sbAuto">Auto</th>
+        <th onclick="sortBy('sbTele')"    data-col="sbTele">Teleop</th>
+        <th onclick="sortBy('sbEnd')"     data-col="sbEnd">End</th>
         <th class="no-sort">Status</th>
       </tr>
     </thead>
     <tbody id="tbody">
-      <tr class="no-data-row"><td colspan="12">No data yet — start the server and submit some matches.</td></tr>
+      <tr class="no-data"><td colspan="11">Enter your sync code to load data.</td></tr>
     </tbody>
   </table>
 </div>
@@ -221,34 +173,89 @@
   var sortCol        = 'sbRank';
   var sortDir        = 'asc';
 
-  // ── Load all data ───────────────────────────────────────────────────────────
-  function loadData() {
-    fetch('/data')
-      .then(function(r){ return r.json(); })
-      .then(function(data){
-        allData = data;
-        processData();
-        var event = getEvent();
-        if (event) fetchStatbotics(event);
-        else { renderTable(); updateChips(); }
-        setPill('pill-server', '● Live', 'dot-green');
-        document.getElementById('timestamp').textContent =
-          'Updated: ' + new Date().toLocaleTimeString();
-      })
-      .catch(function(){
-        setPill('pill-server', '✖ Server offline — run: node server.js', 'dot-red');
-        document.getElementById('timestamp').textContent =
-          'Cannot reach server. Open a terminal in the project folder and run: node server.js';
-      });
+  var db          = null;
+  var syncCode    = null;
+  var entriesRef  = null;
+  var picklistRef = null;
+  var fbListener  = null;
+
+  // ── Firebase init ──────────────────────────────────────────────────────────
+  function initFirebase() {
+    try {
+      firebase.initializeApp(FIREBASE_CONFIG);
+      db = firebase.database();
+    } catch(e) {
+      setPill('pill-fb', 'Firebase error — check firebase-config.js', 'p-red');
+      return;
+    }
+    syncCode = localStorage.getItem('scout_sync_code');
+    if (syncCode) {
+      applyCode(syncCode);
+    } else {
+      document.getElementById('sync-modal').style.display = 'flex';
+    }
+  }
+
+  function applyCode(code) {
+    syncCode = code;
+    localStorage.setItem('scout_sync_code', code);
+    document.getElementById('sync-modal').style.display = 'none';
+    setPill('pill-code', 'Code: ' + code, 'p-blue');
+    document.getElementById('page-title').textContent = code + ' — Scouting Dashboard';
+
+    // Detach old listener
+    if (fbListener && entriesRef) entriesRef.off('value', fbListener);
+
+    entriesRef  = db.ref('sessions/' + code + '/entries');
+    picklistRef = db.ref('sessions/' + code + '/picklist');
+
+    // Load picklist once then listen for scouting entries live
+    picklistRef.once('value', function(snap) {
+      picklistData = snap.val() || {};
+      subscribeEntries();
+    });
+
+    // Keep picklist in sync
+    picklistRef.on('value', function(snap) {
+      picklistData = snap.val() || {};
+      renderTable();
+    });
+  }
+
+  function subscribeEntries() {
+    setPill('pill-fb', 'Connecting…', 'p-grey');
+    fbListener = entriesRef.on('value', function(snapshot) {
+      var raw = snapshot.val() || {};
+      allData = Object.values(raw);
+      processData();
+      var event = getEvent();
+      if (event) fetchStatbotics(event);
+      else { renderTable(); updateChips(); }
+      setPill('pill-fb', '● Live (' + allData.length + ' entries)', 'p-green');
+      document.getElementById('ts').textContent = 'Updated: ' + new Date().toLocaleTimeString();
+    }, function() {
+      setPill('pill-fb', 'Firebase error', 'p-red');
+    });
+  }
+
+  function joinCode() {
+    var v = document.getElementById('sync-input').value.trim().toUpperCase().replace(/\s+/g,'');
+    if (!v) return;
+    applyCode(v);
+  }
+
+  function changeCode() {
+    document.getElementById('sync-input').value = syncCode || '';
+    document.getElementById('sync-modal').style.display = 'flex';
   }
 
   // ── Statbotics ──────────────────────────────────────────────────────────────
   function fetchStatbotics(event) {
-    setPill('pill-sb', 'Loading Statbotics…', 'dot-grey');
-    fetch('/api/statbotics?event=' + encodeURIComponent(event))
+    setPill('pill-sb', 'Loading…', 'p-grey');
+    fetch('https://api.statbotics.io/v3/team_events?event=' + encodeURIComponent(event) + '&limit=500')
       .then(function(r){ return r.json(); })
       .then(function(data){
-        if (!Array.isArray(data)) throw new Error(data.error || 'bad response');
+        if (!Array.isArray(data)) throw new Error('bad response');
         statboticsData = {};
         data.forEach(function(d){
           var epa  = d.epa || {};
@@ -268,12 +275,11 @@
         autoFlagOverrated();
         renderTable();
         updateChips();
-        setPill('pill-sb', '✓ Statbotics: ' + data.length + ' teams', 'dot-green');
+        setPill('pill-sb', '✓ SB: ' + data.length + ' teams', 'p-blue');
       })
-      .catch(function(err){
-        renderTable();
-        updateChips();
-        setPill('pill-sb', 'Statbotics unavailable', 'dot-grey');
+      .catch(function(){
+        renderTable(); updateChips();
+        setPill('pill-sb', 'Statbotics unavailable', 'p-grey');
       });
   }
 
@@ -281,7 +287,7 @@
     teamStats = teamStats.map(function(s){
       var sb = statboticsData[s.t] || {};
       return Object.assign({}, s, {
-        sbRank:  sb.rank   != null ? sb.rank   : null,
+        sbRank:  sb.rank    != null ? sb.rank    : null,
         numTeams:sb.numTeams != null ? sb.numTeams : null,
         sbTotal: sb.sbTotal != null ? sb.sbTotal : null,
         sbAuto:  sb.sbAuto  != null ? sb.sbAuto  : null,
@@ -291,45 +297,30 @@
     });
   }
 
-  // ── Process scouting data ───────────────────────────────────────────────────
+  // ── Process entries ─────────────────────────────────────────────────────────
   function processData() {
     var teams = {};
     allData.forEach(function(e){
       var t = String(e.t || '?');
-      if (!teams[t]) teams[t] = {
-        t: t, matches: 0,
-        as1:[], as5:[], amf:[],
-        ts1:[], ts5:[], tmf:[], hcap:[],
-        ect:[], efs:[], die:[], tip:[]
-      };
-      var s = teams[t];
-      s.matches++;
-      s.as1.push(num(e.as1)); s.as5.push(num(e.as5)); s.amf.push(num(e.amf));
-      s.ts1.push(num(e.ts1)); s.ts5.push(num(e.ts5)); s.tmf.push(num(e.tmf));
+      if (!teams[t]) teams[t] = { t:t, matches:0, as1:[], as5:[], ts1:[], ts5:[], hcap:[], efs:[] };
+      var s = teams[t]; s.matches++;
+      s.as1.push(num(e.as1)); s.as5.push(num(e.as5));
+      s.ts1.push(num(e.ts1)); s.ts5.push(num(e.ts5));
       s.hcap.push(num(e.hcap));
-      s.ect.push(num(e.ect)); s.efs.push(e.efs || 'X');
-      s.die.push(num(e.die)); s.tip.push(num(e.tip));
+      s.efs.push(e.efs || 'X');
     });
-
     teamStats = Object.values(teams).map(function(s){
       var climbs = s.efs.filter(function(v){ return v==='1'||v==='2'||v==='3'; });
-      // Approximate point values: 1pt shot = 1, 5pt shot = 5
-      var scoutAuto = avg(s.as1) + avg(s.as5) * 5;
-      var scoutTele = avg(s.ts1) + avg(s.ts5) * 5;
       return {
         t:          s.t,
         matches:    s.matches,
-        scoutAuto:  scoutAuto,
-        scoutTele:  scoutTele,
+        scoutAuto:  avg(s.as1) + avg(s.as5) * 5,
+        scoutTele:  avg(s.ts1) + avg(s.ts5) * 5,
         hcap:       avg(s.hcap),
         climbRate:  s.matches ? climbs.length / s.matches * 100 : 0,
-        die:        pct(s.die),
-        tip:        pct(s.tip),
-        sbRank: null, numTeams: null,
-        sbTotal: null, sbAuto: null, sbTele: null, sbEnd: null,
+        sbRank:null, numTeams:null, sbTotal:null, sbAuto:null, sbTele:null, sbEnd:null,
       };
     });
-
     mergeStatbotics();
   }
 
@@ -337,158 +328,107 @@
   function autoFlagOverrated() {
     var both = teamStats.filter(function(s){ return s.sbTotal != null; });
     if (both.length < 4) return;
-
-    var byScout = both.slice().sort(function(a,b){ return (a.scoutAuto+a.scoutTele) - (b.scoutAuto+b.scoutTele); });
+    var byScout = both.slice().sort(function(a,b){ return (a.scoutAuto+a.scoutTele)-(b.scoutAuto+b.scoutTele); });
     var bySB    = both.slice().sort(function(a,b){ return a.sbTotal - b.sbTotal; });
     var n = both.length - 1;
-
     both.forEach(function(s){
       var key = String(s.t);
       if (picklistData[key] === 'dnp') return;
-      var scoutPct = byScout.findIndex(function(x){ return x.t === s.t; }) / n;
-      var sbPct    = bySB.findIndex(function(x){ return x.t === s.t; }) / n;
-      if (sbPct >= 0.65 && scoutPct <= 0.35) {
-        picklistData[key] = 'overrated';
+      var sp = byScout.findIndex(function(x){ return x.t===s.t; }) / n;
+      var bp = bySB.findIndex(function(x){ return x.t===s.t; }) / n;
+      if (bp >= 0.65 && sp <= 0.35) {
+        if (picklistRef) picklistRef.child(key).set('overrated');
       } else if (picklistData[key] === 'overrated') {
-        picklistData[key] = 'available';
+        if (picklistRef) picklistRef.child(key).set('available');
       }
     });
   }
 
   // ── Render ──────────────────────────────────────────────────────────────────
   function renderTable() {
-    // Sort
-    var rows = teamStats.slice().sort(function(a, b){
-      var va = a[sortCol], vb = b[sortCol];
-      if (va == null && vb == null) return 0;
-      if (va == null) return 1;
-      if (vb == null) return -1;
-      if (sortCol === 't') { va = parseInt(va)||0; vb = parseInt(vb)||0; }
-      return sortDir === 'asc' ? (va > vb ? 1 : va < vb ? -1 : 0)
-                               : (va < vb ? 1 : va > vb ? -1 : 0);
+    var rows = teamStats.slice().sort(function(a,b){
+      var va=a[sortCol], vb=b[sortCol];
+      if (va==null && vb==null) return 0;
+      if (va==null) return 1;
+      if (vb==null) return -1;
+      if (sortCol==='t') { va=parseInt(va)||0; vb=parseInt(vb)||0; }
+      return sortDir==='asc' ? (va>vb?1:va<vb?-1:0) : (va<vb?1:va>vb?-1:0);
     });
 
-    // Update header indicators
     document.querySelectorAll('#hdr th').forEach(function(th){
       th.classList.remove('sorted-asc','sorted-desc');
-      if (th.dataset.col === sortCol)
-        th.classList.add(sortDir === 'asc' ? 'sorted-asc' : 'sorted-desc');
+      if (th.dataset.col===sortCol) th.classList.add(sortDir==='asc'?'sorted-asc':'sorted-desc');
     });
 
     var tbody = document.getElementById('tbody');
     if (!rows.length) {
-      tbody.innerHTML = '<tr class="no-data-row"><td colspan="12">No data yet.</td></tr>';
+      tbody.innerHTML = '<tr class="no-data"><td colspan="11">No entries yet for this sync code.</td></tr>';
       return;
     }
 
-    // Ranges for heat coloring
     function rng(col) {
-      var vals = rows.map(function(r){ return r[col]; }).filter(function(v){ return v != null; });
-      return vals.length ? { min: Math.min.apply(null,vals), max: Math.max.apply(null,vals) } : null;
+      var v=rows.map(function(r){return r[col];}).filter(function(v){return v!=null;});
+      return v.length?{min:Math.min.apply(null,v),max:Math.max.apply(null,v)}:null;
     }
-    var R = {};
-    ['scoutAuto','scoutTele','hcap','climbRate','sbTotal','sbAuto','sbTele','sbEnd'].forEach(function(c){ R[c]=rng(c); });
-
-    var maxTeams = 0;
-    Object.values(statboticsData).forEach(function(d){ if(d.numTeams) maxTeams = Math.max(maxTeams, d.numTeams); });
+    var R={};
+    ['scoutAuto','scoutTele','hcap','climbRate','sbTotal','sbAuto','sbTele','sbEnd'].forEach(function(c){R[c]=rng(c);});
 
     tbody.innerHTML = rows.map(function(r){
-      var tbaUrl = 'https://www.thebluealliance.com/team/' + r.t;
-
-      // Rank cell
-      var rankDisplay = r.sbRank != null ? r.sbRank : '—';
-      var rankCls = r.sbRank != null && r.sbRank <= 3  ? 'rank top3'
-                  : r.sbRank != null && r.sbRank <= 10 ? 'rank top10'
-                  : 'rank';
-
-      // Status badge
+      var url = 'https://www.thebluealliance.com/team/'+r.t;
+      var rankCls = r.sbRank<=3?'rank top3':r.sbRank<=10?'rank top10':'rank';
       var status = picklistData[String(r.t)] || 'available';
-      var bdg, bcls;
-      if (status === 'dnp')       { bdg = '❌ Do Not Pick'; bcls = 'badge badge-dnp'; }
-      else if (status === 'overrated') { bdg = '⚠️ Overrated';   bcls = 'badge badge-over'; }
-      else                        { bdg = '✅ Available';   bcls = 'badge badge-ok'; }
-
-      return '<tr>' +
-        '<td class="' + rankCls + '">' + rankDisplay + '</td>' +
-        '<td class="team"><a class="tba" href="' + tbaUrl + '" target="_blank">' + r.t + '</a></td>' +
-        heatTd(r.scoutAuto, R.scoutAuto, false) +
-        heatTd(r.scoutTele, R.scoutTele, false) +
-        heatTd(r.hcap,      R.hcap,      false) +
-        '<td class="' + climbCls(r.climbRate) + '">' + r.climbRate.toFixed(0) + '%</td>' +
-        '<td class="' + (r.matches > 0 ? 'm-count' : 'm-none') + '">' + (r.matches || '—') + '</td>' +
-        sbTd(r.sbTotal, R.sbTotal, true) +
-        sbTd(r.sbAuto,  R.sbAuto,  false) +
-        sbTd(r.sbTele,  R.sbTele,  false) +
-        sbTd(r.sbEnd,   R.sbEnd,   false) +
-        '<td><span class="' + bcls + '" onclick="toggleStatus(\'' + r.t + '\')">' + bdg + '</span></td>' +
+      var bdg,bcls;
+      if (status==='dnp')       { bdg='❌ Do Not Pick'; bcls='badge b-dnp'; }
+      else if (status==='overrated') { bdg='⚠️ Overrated';   bcls='badge b-over'; }
+      else                      { bdg='✅ Available';   bcls='badge b-ok'; }
+      return '<tr>'+
+        '<td class="'+rankCls+'">'+(r.sbRank!=null?r.sbRank:'—')+'</td>'+
+        '<td class="team"><a class="tba" href="'+url+'" target="_blank">'+r.t+'</a></td>'+
+        htd(r.scoutAuto,R.scoutAuto)+
+        htd(r.scoutTele,R.scoutTele)+
+        htd(r.hcap,R.hcap)+
+        '<td class="'+clsCl(r.climbRate)+'">'+r.climbRate.toFixed(0)+'%</td>'+
+        sbtd(r.sbTotal,R.sbTotal,true)+
+        sbtd(r.sbAuto,R.sbAuto,false)+
+        sbtd(r.sbTele,R.sbTele,false)+
+        sbtd(r.sbEnd,R.sbEnd,false)+
+        '<td><span class="'+bcls+'" onclick="toggleStatus(\''+r.t+'\')">'+bdg+'</span></td>'+
       '</tr>';
     }).join('');
   }
 
-  function heatTd(val, rng, invert) {
-    var display = r1(val);
-    var cls = 'val';
-    if (rng && rng.max !== rng.min) {
-      var n = (val - rng.min) / (rng.max - rng.min);
-      if (invert) n = 1 - n;
-      cls = n >= 0.75 ? 'good' : n >= 0.5 ? 'ok' : n <= 0.25 ? 'low' : 'mid';
-    }
-    return '<td class="' + cls + '">' + display + '</td>';
+  function htd(v,rng) {
+    var cls='mid';
+    if (rng&&rng.max!==rng.min){var n=(v-rng.min)/(rng.max-rng.min);cls=n>=0.75?'good':n>=0.5?'ok':n<=0.25?'low':'mid';}
+    return '<td class="'+cls+'">'+r1(v)+'</td>';
   }
-
-  function sbTd(val, rng, isFirst) {
-    var extra = isFirst ? ' sb-first' : '';
-    if (val == null) return '<td class="sb-low' + extra + '">—</td>';
-    var cls = 'sb';
-    if (rng && rng.max !== rng.min) {
-      var n = (val - rng.min) / (rng.max - rng.min);
-      cls = n <= 0.25 ? 'sb-low' : 'sb';
-    }
-    return '<td class="' + cls + extra + '">' + r1(val) + '</td>';
+  function sbtd(v,rng,first) {
+    var ex=first?' sb-div':'';
+    if (v==null) return '<td class="sb-low'+ex+'">—</td>';
+    var cls='sb';
+    if (rng&&rng.max!==rng.min){var n=(v-rng.min)/(rng.max-rng.min);if(n<=0.25)cls='sb-low';}
+    return '<td class="'+cls+ex+'">'+r1(v)+'</td>';
   }
+  function clsCl(r) { return r>=75?'good':r>=50?'ok':r>=25?'mid':'low'; }
 
-  function climbCls(rate) {
-    return rate >= 75 ? 'good' : rate >= 50 ? 'ok' : rate >= 25 ? 'mid' : 'low';
+  // ── Sort ────────────────────────────────────────────────────────────────────
+  function sortBy(col) {
+    if (sortCol===col) { sortDir=sortDir==='asc'?'desc':'asc'; }
+    else { sortCol=col; sortDir=['sbRank','t'].includes(col)?'asc':'desc'; }
+    renderTable();
   }
 
   // ── Pick list ───────────────────────────────────────────────────────────────
   function toggleStatus(team) {
     var cur  = picklistData[String(team)] || 'available';
-    var next = (cur === 'available' || cur === 'overrated') ? 'dnp' : 'available';
-    picklistData[String(team)] = next;
-    fetch('/picklist', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ team: String(team), status: next })
-    }).catch(function(){});
-    renderTable();
-  }
-
-  function loadPicklist() {
-    fetch('/picklist')
-      .then(function(r){ return r.json(); })
-      .then(function(d){ picklistData = d || {}; })
-      .catch(function(){});
-  }
-
-  // ── Sort ────────────────────────────────────────────────────────────────────
-  var ASC_COLS = ['sbRank','t','die','tip'];
-  function sortBy(col) {
-    if (sortCol === col) {
-      sortDir = sortDir === 'asc' ? 'desc' : 'asc';
-    } else {
-      sortCol = col;
-      sortDir = ASC_COLS.includes(col) ? 'asc' : 'desc';
-    }
-    renderTable();
+    var next = (cur==='available'||cur==='overrated') ? 'dnp' : 'available';
+    if (picklistRef) picklistRef.child(String(team)).set(next);
   }
 
   // ── Chips ───────────────────────────────────────────────────────────────────
   function updateChips() {
     document.getElementById('c-teams').textContent   = teamStats.length || '—';
     document.getElementById('c-entries').textContent = allData.length   || '—';
-    var uniq = new Set(allData.map(function(d){ return d.m+'_'+d.l+'_'+d.e; }));
-    document.getElementById('c-matches').textContent = uniq.size        || '—';
     document.getElementById('c-event').textContent   = getEvent()       || '—';
     document.getElementById('c-sb').textContent      = Object.keys(statboticsData).length || '—';
   }
@@ -496,54 +436,40 @@
   // ── Export ──────────────────────────────────────────────────────────────────
   function exportCSV() {
     if (!allData.length) { alert('No data.'); return; }
-    var h = Object.keys(allData[0]);
-    var csv = [h.join(',')].concat(allData.map(function(r){
-      return h.map(function(k){ return JSON.stringify(r[k] != null ? r[k] : ''); }).join(',');
+    var h=Object.keys(allData[0]);
+    var csv=[h.join(',')].concat(allData.map(function(r){
+      return h.map(function(k){return JSON.stringify(r[k]!=null?r[k]:'');}).join(',');
     })).join('\n');
-    var a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
-    a.download = 'scouting_' + (getEvent()||'export') + '_' + new Date().toISOString().slice(0,10) + '.csv';
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+    a.download='scouting_'+(getEvent()||'export')+'_'+new Date().toISOString().slice(0,10)+'.csv';
     a.click();
   }
 
   // ── Clear ───────────────────────────────────────────────────────────────────
   function clearAll() {
-    if (!confirm('Delete ALL scouting data?')) return;
-    fetch('/data', {method:'DELETE'})
-      .then(function(){ allData=[]; teamStats=[]; statboticsData={}; renderTable(); updateChips(); })
-      .catch(function(err){ alert('Error: '+err.message); });
+    if (!confirm('Delete ALL scouting data for code: ' + syncCode + '?')) return;
+    if (!entriesRef) return;
+    entriesRef.remove().catch(function(e){ alert('Error: '+e.message); });
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
-  function num(v)   { return parseFloat(v) || 0; }
-  function avg(arr) { return arr.length ? arr.reduce(function(a,b){return a+b;},0)/arr.length : 0; }
-  function pct(arr) { return arr.length ? arr.filter(function(v){return v>0;}).length/arr.length*100 : 0; }
-  function r1(v)    { return Math.round(v * 10) / 10; }
-  function setPill(id, text, cls) {
-    var el = document.getElementById(id);
-    el.textContent = text; el.className = 'status-dot ' + cls;
-  }
+  function num(v)   { return parseFloat(v)||0; }
+  function avg(arr) { return arr.length?arr.reduce(function(a,b){return a+b;},0)/arr.length:0; }
+  function r1(v)    { return Math.round(v*10)/10; }
   function getEvent() {
-    var counts = {};
-    allData.forEach(function(d){ if(d.e) counts[d.e] = (counts[d.e]||0)+1; });
-    var keys = Object.keys(counts);
-    return keys.length ? keys.sort(function(a,b){ return counts[b]-counts[a]; })[0] : null;
+    var c={};
+    allData.forEach(function(d){if(d.e)c[d.e]=(c[d.e]||0)+1;});
+    var k=Object.keys(c);
+    return k.length?k.sort(function(a,b){return c[b]-c[a];})[0]:null;
   }
-
-  // ── Team code branding ──────────────────────────────────────────────────────
-  fetch('/api/config')
-    .then(function(r){ return r.json(); })
-    .then(function(cfg){
-      if (cfg.team_code) {
-        document.title = cfg.team_code + ' Scouting Dashboard';
-        document.querySelector('header h1').textContent = cfg.team_code + ' — Scouting Dashboard';
-      }
-    }).catch(function(){});
+  function setPill(id,text,cls) {
+    var el=document.getElementById(id);
+    el.textContent=text; el.className='pill '+cls;
+  }
 
   // ── Boot ────────────────────────────────────────────────────────────────────
-  loadPicklist();
-  loadData();
-  setInterval(loadData, 20000);
+  initFirebase();
 </script>
 </body>
 </html>
