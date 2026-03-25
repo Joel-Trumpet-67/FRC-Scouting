@@ -585,10 +585,6 @@ window.onload = function() {
     else img.onload = initCanvas;
   }
 
-  // Restore TBA key from localStorage
-  var tbaKeyEl = document.getElementById("tba-key-input");
-  if (tbaKeyEl) tbaKeyEl.value = localStorage.getItem("tba_key") || "";
-
   // Firebase
   initFirebase();
 
