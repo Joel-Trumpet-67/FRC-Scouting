@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FRC Scouting Dashboard — 2026</title>
+  <title>FRC Scouting Dashboard</title>
   <style>
     @font-face {
       font-family: 'Alexis';
@@ -13,261 +13,148 @@
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #111;
-      color: #eee;
+      background: #0d0d0d;
+      color: #e8e8e8;
       min-height: 100vh;
     }
 
     /* ── Header ── */
     header {
       background: #000;
-      border-bottom: 2px solid #333;
-      padding: 14px 24px;
+      border-bottom: 2px solid #1e1e1e;
+      padding: 16px 28px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
       gap: 10px;
     }
-
     header h1 {
       font-family: Alexis;
-      font-size: 26px;
+      font-size: 24px;
       font-weight: 400;
       color: #97c7f0;
       letter-spacing: 2px;
     }
+    .header-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .pill {
-      font-size: 11px;
-      padding: 3px 9px;
-      border-radius: 10px;
+    .status-dot {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 12px;
       border: 1px solid;
-      white-space: nowrap;
     }
-    .pill-green  { background:#1a3a1a; color:#6fcf6f; border-color:#3a6a3a; }
-    .pill-red    { background:#3a1a1a; color:#faa;    border-color:#6a3a3a; }
-    .pill-blue   { background:#1a2a3a; color:#9cf;    border-color:#3a5a7a; }
-    .pill-grey   { background:#222;    color:#888;    border-color:#444; }
+    .dot-green { background:#0f2b0f; color:#5dd85d; border-color:#2a5a2a; }
+    .dot-red   { background:#2b0f0f; color:#f88;    border-color:#5a2a2a; }
+    .dot-grey  { background:#1a1a1a; color:#666;    border-color:#333; }
 
     .btn {
-      padding: 6px 13px;
-      font-size: 12px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-family: inherit;
+      padding: 6px 14px; font-size: 12px; border: none;
+      border-radius: 4px; cursor: pointer; font-family: inherit;
     }
-    .btn-refresh { background:#2a4a2a; color:#9ef; }
-    .btn-export  { background:#2c5f8a; color:#fff; }
-    .btn-clear   { background:#5a1a1a; color:#faa; }
-    .btn:hover   { filter: brightness(1.2); }
+    .btn-refresh { background:#1a3a1a; color:#7ef; }
+    .btn-export  { background:#1a2a4a; color:#9cf; }
+    .btn-clear   { background:#3a1010; color:#faa; }
+    .btn:hover   { filter: brightness(1.25); }
 
-    /* ── Cards ── */
-    .cards {
-      display: flex;
-      gap: 10px;
-      padding: 14px 24px 4px;
-      flex-wrap: wrap;
+    /* ── Stats strip ── */
+    .strip {
+      display: flex; gap: 6px; padding: 14px 28px 8px; flex-wrap: wrap;
     }
-    .card {
-      background: #1a1a1a;
-      border: 1px solid #333;
-      border-radius: 6px;
-      padding: 10px 16px;
-      min-width: 110px;
-      text-align: center;
+    .chip {
+      background: #141414; border: 1px solid #222; border-radius: 6px;
+      padding: 8px 14px; text-align: center; min-width: 90px;
     }
-    .card-val   { font-size: 26px; font-weight: 700; color: #97c7f0; }
-    .card-label { font-size: 10px; color: #777; margin-top: 2px; text-transform: uppercase; letter-spacing: 1px; }
+    .chip-val   { font-size: 22px; font-weight: 700; color: #97c7f0; }
+    .chip-label { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
 
-    /* ── Filter bar ── */
-    .filter-bar {
-      padding: 10px 24px 8px;
-      display: flex;
-      gap: 14px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-    .filter-bar label { font-size: 12px; color: #aaa; display:flex; align-items:center; gap:6px; }
-    .filter-bar select, .filter-bar input[type=text] {
-      background: #1e1e1e;
-      border: 1px solid #444;
-      color: #eee;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 12px;
-    }
-    .filter-bar input[type=checkbox] { width:14px; height:14px; cursor:pointer; }
-
-    .last-update { font-size: 11px; color: #555; padding: 2px 24px 10px; }
+    .timestamp { font-size: 11px; color: #444; padding: 2px 28px 10px; }
 
     /* ── Table ── */
-    .table-wrap { padding: 0 24px 40px; overflow-x: auto; }
+    .wrap { padding: 0 28px 20px; overflow-x: auto; }
 
     table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 12px;
-      min-width: 1100px;
+      width: 100%; border-collapse: collapse;
+      font-size: 13px; min-width: 700px;
     }
 
     thead th {
-      background: #1a1a1a;
-      color: #bbb;
-      padding: 9px 7px;
-      text-align: center;
-      cursor: pointer;
-      user-select: none;
-      white-space: nowrap;
-      border-bottom: 2px solid #333;
-      position: sticky;
-      top: 0;
-      z-index: 1;
+      background: #111; color: #888; padding: 10px 10px;
+      text-align: center; white-space: nowrap;
+      border-bottom: 1px solid #222;
+      font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.8px;
+      position: sticky; top: 0; z-index: 1;
+      cursor: pointer; user-select: none;
     }
-    thead th:hover { background: #242424; color: #fff; }
-    thead th.no-sort { cursor: default; }
+    thead th:hover { color: #ddd; }
     thead th.sorted-asc::after  { content: ' ▲'; color: #97c7f0; }
     thead th.sorted-desc::after { content: ' ▼'; color: #97c7f0; }
+    thead th.no-sort { cursor: default; }
 
-    thead tr.section-row th {
-      background: #0d0d0d;
-      font-size: 9px;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      padding: 3px 7px;
-      cursor: default;
-      border-bottom: 1px solid #1e1e1e;
+    tbody tr { border-bottom: 1px solid #161616; transition: background 0.1s; }
+    tbody tr:hover { background: #161616; }
+    td { padding: 10px 10px; text-align: center; }
+
+    /* Rank column */
+    td.rank {
+      font-size: 18px; font-weight: 700; color: #333; min-width: 44px;
     }
-    .sec-scout  { color: #7baacc; }
-    .sec-auton  { color: #aaa; }
-    .sec-teleop { color: #aaa; }
-    .sec-end    { color: #aaa; }
-    .sec-rely   { color: #aaa; }
-    .sec-sb     { color: #f0c060; }
+    td.rank.top3 { color: #f0c060; }
+    td.rank.top10 { color: #888; }
 
-    /* Statbotics columns get a subtle gold left border */
-    th.sb-col, td.sb-col { border-left: 1px solid #2e2200; }
-    th.sb-col-first, td.sb-col-first { border-left: 2px solid #6e4a00; }
-
-    tbody tr { border-bottom: 1px solid #1c1c1c; }
-    tbody tr:hover { background: #1c1c1c; }
-
-    td { padding: 8px 7px; text-align: center; color: #ddd; }
-
-    td.team-num {
-      font-weight: 700;
-      font-size: 14px;
-      color: #97c7f0;
-      min-width: 60px;
-      cursor: pointer;
+    /* Team number */
+    td.team {
+      font-size: 18px; font-weight: 700; color: #97c7f0; min-width: 70px;
     }
-    td.team-num:hover { text-decoration: underline; }
-    td.match-count { color: #888; }
+    a.tba { color: inherit; text-decoration: none; }
+    a.tba:hover { text-decoration: underline; }
 
-    /* Heat colors */
-    td.h-great { color: #4caf50; font-weight: 700; }
-    td.h-good  { color: #8bc34a; }
-    td.h-mid   { color: #ccc; }
-    td.h-low   { color: #888; }
-    td.h-bad   { color: #ef5350; font-weight: 600; }
+    /* Scouted data */
+    td.val { color: #ccc; }
+    td.good  { color: #5dd85d; font-weight: 600; }
+    td.ok    { color: #c8e86a; }
+    td.mid   { color: #bbb; }
+    td.low   { color: #666; }
+    td.bad   { color: #f55; font-weight: 600; }
 
-    /* Climb level */
-    td.c3 { color: #4caf50; font-weight: 700; }
-    td.c2 { color: #8bc34a; font-weight: 600; }
-    td.c1 { color: #cddc39; }
-    td.cX { color: #555; }
+    /* SB EPA */
+    td.sb { color: #f0c060; }
+    td.sb-low { color: #7a6020; }
 
-    /* Statbotics rank */
-    td.sb-rank-top { color: #ffd700; font-weight: 700; }
-    td.sb-rank-mid { color: #ccc; }
-    td.sb-rank-low { color: #888; }
+    /* Overrated flag */
+    td.flag-cell { min-width: 90px; }
+    .flag-over { font-size: 11px; color: #f0c060; font-weight: 600; }
+    .flag-dnp  { font-size: 11px; color: #f55;    font-weight: 600; cursor: pointer; }
+    .flag-ok   { font-size: 11px; color: #2a2a2a; }
 
-    .comments-cell {
-      text-align: left;
-      max-width: 160px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      color: #888;
-      font-size: 11px;
-    }
-
-    .no-data {
-      text-align: center;
-      padding: 50px;
-      color: #444;
-      font-size: 15px;
-    }
-
-    /* TBA link on team number */
-    a.tba-link { color: inherit; text-decoration: none; }
-    a.tba-link:hover { text-decoration: underline; }
-
-    /* ── Pick list section ── */
-    .picklist-wrap {
-      padding: 0 24px 40px;
-    }
-    .picklist-wrap h2 {
-      font-size: 15px;
-      color: #97c7f0;
-      letter-spacing: 1px;
-      margin-bottom: 10px;
-      font-weight: 600;
-      border-bottom: 1px solid #333;
-      padding-bottom: 6px;
-    }
-    .picklist-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-      max-width: 800px;
-    }
-    .picklist-table th {
-      background: #1a1a1a;
-      color: #bbb;
-      padding: 8px 10px;
-      text-align: left;
-      border-bottom: 2px solid #333;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-    .picklist-table td {
-      padding: 8px 10px;
-      border-bottom: 1px solid #1c1c1c;
-      text-align: left;
-    }
-    .picklist-table tr:hover td { background: #1c1c1c; }
-
+    /* Pick list badge */
     .badge {
-      display: inline-block;
-      padding: 3px 9px;
-      border-radius: 10px;
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      user-select: none;
-      white-space: nowrap;
+      display: inline-block; padding: 3px 8px; border-radius: 8px;
+      font-size: 11px; font-weight: 600; cursor: pointer;
+      user-select: none; white-space: nowrap; border: 1px solid;
     }
-    .badge-available { background:#1a3a1a; color:#6fcf6f; border:1px solid #3a6a3a; }
-    .badge-overrated { background:#3a2a00; color:#f0c060; border:1px solid #7a5a00; }
-    .badge-dnp       { background:#3a1a1a; color:#faa;    border:1px solid #6a3a3a; }
-    .badge:hover     { filter: brightness(1.3); }
+    .badge-ok   { background:#0f2b0f; color:#5dd85d; border-color:#2a5a2a; }
+    .badge-over { background:#2b1f00; color:#f0c060; border-color:#6a4a00; }
+    .badge-dnp  { background:#2b0f0f; color:#f88;   border-color:#5a2a2a; }
+    .badge:hover { filter: brightness(1.3); }
 
-    .pl-rank   { color:#888; font-size:12px; min-width:28px; }
-    .pl-team   { font-weight:700; color:#97c7f0; font-size:14px; min-width:60px; }
-    .pl-score  { color:#ccc; }
-    .pl-sb     { color:#f0c060; }
-    .pl-flag   { font-size:11px; color:#f0c060; }
-    .pl-dnp    { opacity: 0.45; }
+    /* Matches count */
+    td.m-count { color: #444; font-size: 12px; }
+    td.m-none  { color: #2a2a2a; font-size: 11px; font-style: italic; }
+
+    /* Divider between scouted and sb sections */
+    th.sb-first, td.sb-first { border-left: 2px solid #3a2e00; }
+
+    .no-data-row td { color: #333; text-align: center; padding: 50px; font-size: 14px; }
+
+    /* ── Section label row ── */
+    tr.section-labels th {
+      background: #0a0a0a; font-size: 9px; letter-spacing: 2px;
+      padding: 4px 10px; cursor: default; border-bottom: 1px solid #1a1a1a;
+    }
+    .lbl-scout { color: #4a7aaa; }
+    .lbl-sb    { color: #8a6a10; }
   </style>
 </head>
 <body>
@@ -275,110 +162,53 @@
 <header>
   <h1>FRC Scouting Dashboard</h1>
   <div class="header-right">
-    <span class="pill pill-grey"  id="pill-server">⏳ Loading…</span>
-    <span class="pill pill-grey"  id="pill-sb">Statbotics —</span>
+    <span id="pill-server" class="status-dot dot-grey">⏳ Connecting…</span>
+    <span id="pill-sb"     class="status-dot dot-grey">Statbotics —</span>
     <button class="btn btn-refresh" onclick="loadData()">Refresh</button>
     <button class="btn btn-export"  onclick="exportCSV()">Export CSV</button>
-    <button class="btn btn-clear"   onclick="clearAllData()">Clear All Data</button>
+    <button class="btn btn-clear"   onclick="clearAll()">Clear Data</button>
   </div>
 </header>
 
-<div class="cards">
-  <div class="card"><div class="card-val" id="c-entries">—</div><div class="card-label">Entries</div></div>
-  <div class="card"><div class="card-val" id="c-teams">—</div><div class="card-label">Teams Scouted</div></div>
-  <div class="card"><div class="card-val" id="c-matches">—</div><div class="card-label">Matches</div></div>
-  <div class="card"><div class="card-val" id="c-event">—</div><div class="card-label">Event</div></div>
-  <div class="card"><div class="card-val" id="c-sb">—</div><div class="card-label">Statbotics Teams</div></div>
+<div class="strip">
+  <div class="chip"><div class="chip-val" id="c-teams">—</div><div class="chip-label">Teams</div></div>
+  <div class="chip"><div class="chip-val" id="c-entries">—</div><div class="chip-label">Entries</div></div>
+  <div class="chip"><div class="chip-val" id="c-matches">—</div><div class="chip-label">Matches</div></div>
+  <div class="chip"><div class="chip-val" id="c-event">—</div><div class="chip-label">Event</div></div>
+  <div class="chip"><div class="chip-val" id="c-sb">—</div><div class="chip-label">SB Teams</div></div>
 </div>
 
-<div class="filter-bar">
-  <label>Team:
-    <input type="text" id="filter-team" placeholder="e.g. 3603" oninput="renderTable()" style="width:72px;">
-  </label>
-  <label>Min matches:
-    <select id="filter-min" onchange="renderTable()">
-      <option value="1">1+</option>
-      <option value="2">2+</option>
-      <option value="3">3+</option>
-      <option value="5">5+</option>
-    </select>
-  </label>
-  <label>
-    <input type="checkbox" id="filter-sb-only" onchange="renderTable()">
-    Statbotics teams only
-  </label>
-</div>
+<div class="timestamp" id="timestamp"></div>
 
-<div class="last-update" id="last-update"></div>
-
-<div class="table-wrap">
-  <table id="rankings-table">
+<div class="wrap">
+  <table id="main-table">
     <thead>
-      <tr class="section-row">
-        <th colspan="2"  class="sec-scout">SCOUTED</th>
-        <th colspan="4"  class="sec-auton">AUTON</th>
-        <th colspan="4"  class="sec-teleop">TELEOP</th>
-        <th colspan="3"  class="sec-end">ENDGAME</th>
-        <th colspan="2"  class="sec-rely">RELIABILITY</th>
-        <th colspan="1"  class="sec-scout"></th>
-        <th colspan="5"  class="sec-sb sb-col-first">STATBOTICS EPA</th>
+      <tr class="section-labels">
+        <th colspan="2" class="lbl-scout no-sort">EVENT STANDING</th>
+        <th colspan="5" class="lbl-scout no-sort">SCOUTED AVERAGES</th>
+        <th colspan="4" class="sb-first lbl-sb no-sort">STATBOTICS EPA</th>
+        <th colspan="1" class="lbl-scout no-sort">PICK LIST</th>
       </tr>
-      <tr id="header-row">
-        <th onclick="sortBy('t')"          data-col="t">Team</th>
-        <th onclick="sortBy('matches')"    data-col="matches">Matches</th>
-        <!-- Auton -->
-        <th onclick="sortBy('as1')"        data-col="as1">Shot 1<br><small>avg</small></th>
-        <th onclick="sortBy('as5')"        data-col="as5">Shot 5<br><small>avg</small></th>
-        <th onclick="sortBy('amf')"        data-col="amf">Missed<br><small>avg</small></th>
-        <th onclick="sortBy('ac1')"        data-col="ac1">L1 Climb<br><small>%</small></th>
-        <!-- Teleop -->
-        <th onclick="sortBy('ts1')"        data-col="ts1">Shot 1<br><small>avg</small></th>
-        <th onclick="sortBy('ts5')"        data-col="ts5">Shot 5<br><small>avg</small></th>
-        <th onclick="sortBy('tmf')"        data-col="tmf">Missed<br><small>avg</small></th>
-        <th onclick="sortBy('hcap')"       data-col="hcap">Hub Cap<br><small>avg</small></th>
-        <!-- Endgame -->
-        <th onclick="sortBy('climbRate')"  data-col="climbRate">Climb %</th>
-        <th onclick="sortBy('climbLevel')" data-col="climbLevel">Avg Level</th>
-        <th onclick="sortBy('ect')"        data-col="ect">Time<br><small>avg (s)</small></th>
-        <!-- Reliability -->
-        <th onclick="sortBy('die')"        data-col="die">Died %</th>
-        <th onclick="sortBy('tip')"        data-col="tip">Tippy %</th>
-        <!-- Comment -->
-        <th class="no-sort"                data-col="cmm">Comment</th>
+      <tr id="hdr">
+        <th onclick="sortBy('sbRank')"    data-col="sbRank">Rank</th>
+        <th onclick="sortBy('t')"         data-col="t">Team</th>
+        <!-- Scouted -->
+        <th onclick="sortBy('scoutAuto')" data-col="scoutAuto">Auto<br>pts</th>
+        <th onclick="sortBy('scoutTele')" data-col="scoutTele">Teleop<br>pts</th>
+        <th onclick="sortBy('hcap')"      data-col="hcap">Hub<br>cap</th>
+        <th onclick="sortBy('climbRate')" data-col="climbRate">Climb<br>%</th>
+        <th onclick="sortBy('matches')"   data-col="matches">Scouted<br>matches</th>
         <!-- Statbotics -->
-        <th onclick="sortBy('sbRank')"     data-col="sbRank"  class="sb-col-first">Rank</th>
-        <th onclick="sortBy('sbTotal')"    data-col="sbTotal" class="sb-col">EPA<br><small>total</small></th>
-        <th onclick="sortBy('sbAuto')"     data-col="sbAuto"  class="sb-col">EPA<br><small>auto</small></th>
-        <th onclick="sortBy('sbTele')"     data-col="sbTele"  class="sb-col">EPA<br><small>teleop</small></th>
-        <th onclick="sortBy('sbEnd')"      data-col="sbEnd"   class="sb-col">EPA<br><small>endgame</small></th>
+        <th onclick="sortBy('sbTotal')"   data-col="sbTotal"  class="sb-first">EPA<br>total</th>
+        <th onclick="sortBy('sbAuto')"    data-col="sbAuto">EPA<br>auto</th>
+        <th onclick="sortBy('sbTele')"    data-col="sbTele">EPA<br>teleop</th>
+        <th onclick="sortBy('sbEnd')"     data-col="sbEnd">EPA<br>endgame</th>
+        <!-- Pick list -->
+        <th class="no-sort">Status</th>
       </tr>
     </thead>
-    <tbody id="table-body">
-      <tr><td colspan="21" class="no-data">No data yet — submit some matches first.</td></tr>
-    </tbody>
-  </table>
-</div>
-
-<!-- ── Alliance Pick List ── -->
-<div class="picklist-wrap">
-  <h2>Alliance Pick List</h2>
-  <p style="font-size:12px;color:#666;margin-bottom:12px;">
-    Teams auto-flagged as <span style="color:#f0c060">Overrated</span> when Statbotics ranks them in the top 35% but scouted data puts them in the bottom 35%.
-    Click a badge to toggle status.
-  </p>
-  <table class="picklist-table">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Team</th>
-        <th>Scouted Score</th>
-        <th>SB EPA</th>
-        <th>Matches</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody id="picklist-body">
-      <tr><td colspan="6" style="color:#444;text-align:center;padding:30px;">No data yet.</td></tr>
+    <tbody id="tbody">
+      <tr class="no-data-row"><td colspan="12">No data yet — start the server and submit some matches.</td></tr>
     </tbody>
   </table>
 </div>
@@ -386,82 +216,73 @@
 <script>
   var allData        = [];
   var teamStats      = [];
-  var statboticsData = {};  // keyed by team number string
-  var picklistData   = {};  // keyed by team string, values: 'available'|'overrated'|'dnp'
-  var sortCol        = 't';
+  var statboticsData = {};
+  var picklistData   = {};
+  var sortCol        = 'sbRank';
   var sortDir        = 'asc';
 
-  // ── Load scouting data ─────────────────────────────────────────────────────
+  // ── Load all data ───────────────────────────────────────────────────────────
   function loadData() {
     fetch('/data')
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
+      .then(function(r){ return r.json(); })
+      .then(function(data){
         allData = data;
         processData();
-        renderTable();
-        updateCards();
-
-        setPill('pill-server', '● Live', 'pill-green');
-        document.getElementById('last-update').textContent =
-          'Last updated: ' + new Date().toLocaleTimeString();
-
-        // Auto-detect event and fetch Statbotics
         var event = getEvent();
         if (event) fetchStatbotics(event);
-
-        renderPicklist();
+        else { renderTable(); updateChips(); }
+        setPill('pill-server', '● Live', 'dot-green');
+        document.getElementById('timestamp').textContent =
+          'Updated: ' + new Date().toLocaleTimeString();
       })
-      .catch(function() {
-        setPill('pill-server', '✖ Server offline', 'pill-red');
-        document.getElementById('last-update').textContent =
-          'Cannot reach server — is server.js running?';
+      .catch(function(){
+        setPill('pill-server', '✖ Server offline — run: node server.js', 'dot-red');
+        document.getElementById('timestamp').textContent =
+          'Cannot reach server. Open a terminal in the project folder and run: node server.js';
       });
   }
 
-  // ── Statbotics ─────────────────────────────────────────────────────────────
+  // ── Statbotics ──────────────────────────────────────────────────────────────
   function fetchStatbotics(event) {
-    setPill('pill-sb', 'Statbotics loading…', 'pill-grey');
-
+    setPill('pill-sb', 'Loading Statbotics…', 'dot-grey');
     fetch('/api/statbotics?event=' + encodeURIComponent(event))
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
+      .then(function(r){ return r.json(); })
+      .then(function(data){
         if (!Array.isArray(data)) throw new Error(data.error || 'bad response');
-
         statboticsData = {};
-        data.forEach(function(d) {
-          var epa  = d.epa       || {};
+        data.forEach(function(d){
+          var epa  = d.epa || {};
           var tp   = epa.total_points || {};
           var brk  = epa.breakdown   || {};
           var qual = (d.record && d.record.qual) || {};
-
           statboticsData[String(d.team)] = {
             rank:     qual.rank      || null,
             numTeams: qual.num_teams || null,
-            sbTotal:  tp.mean  != null ? tp.mean              : null,
+            sbTotal:  tp.mean != null ? tp.mean : null,
             sbAuto:   brk.auto_points    != null ? brk.auto_points    : null,
             sbTele:   brk.teleop_points  != null ? brk.teleop_points  : null,
             sbEnd:    brk.endgame_points != null ? brk.endgame_points : null,
           };
         });
-
-        // Merge into existing teamStats and re-render
         mergeStatbotics();
         autoFlagOverrated();
         renderTable();
-        renderPicklist();
-        updateCards();
-        setPill('pill-sb', '✓ Statbotics: ' + data.length + ' teams', 'pill-blue');
+        updateChips();
+        setPill('pill-sb', '✓ Statbotics: ' + data.length + ' teams', 'dot-green');
       })
-      .catch(function(err) {
-        setPill('pill-sb', 'Statbotics: ' + (err.message || 'unavailable'), 'pill-grey');
+      .catch(function(err){
+        renderTable();
+        updateChips();
+        setPill('pill-sb', 'Statbotics unavailable', 'dot-grey');
       });
   }
 
   function mergeStatbotics() {
-    teamStats = teamStats.map(function(s) {
+    teamStats = teamStats.map(function(s){
       var sb = statboticsData[s.t] || {};
       return Object.assign({}, s, {
         sbRank:  sb.rank   != null ? sb.rank   : null,
+        numTeams:sb.numTeams != null ? sb.numTeams : null,
         sbTotal: sb.sbTotal != null ? sb.sbTotal : null,
         sbAuto:  sb.sbAuto  != null ? sb.sbAuto  : null,
         sbTele:  sb.sbTele  != null ? sb.sbTele  : null,
@@ -470,365 +291,248 @@
     });
   }
 
-  // ── Process scouting data into per-team stats ──────────────────────────────
+  // ── Process scouting data ───────────────────────────────────────────────────
   function processData() {
     var teams = {};
-    allData.forEach(function(e) {
+    allData.forEach(function(e){
       var t = String(e.t || '?');
       if (!teams[t]) teams[t] = {
         t: t, matches: 0,
-        as1:[], as5:[], amf:[], ac1:[],
+        as1:[], as5:[], amf:[],
         ts1:[], ts5:[], tmf:[], hcap:[],
-        ect:[], efs:[],
-        die:[], tip:[], cmm:[]
+        ect:[], efs:[], die:[], tip:[]
       };
       var s = teams[t];
       s.matches++;
-      s.as1.push(num(e.as1)); s.as5.push(num(e.as5));
-      s.amf.push(num(e.amf)); s.ac1.push(num(e.ac1));
-      s.ts1.push(num(e.ts1)); s.ts5.push(num(e.ts5));
-      s.tmf.push(num(e.tmf)); s.hcap.push(num(e.hcap));
-      s.ect.push(num(e.ect));
-      s.efs.push(e.efs || 'X');
+      s.as1.push(num(e.as1)); s.as5.push(num(e.as5)); s.amf.push(num(e.amf));
+      s.ts1.push(num(e.ts1)); s.ts5.push(num(e.ts5)); s.tmf.push(num(e.tmf));
+      s.hcap.push(num(e.hcap));
+      s.ect.push(num(e.ect)); s.efs.push(e.efs || 'X');
       s.die.push(num(e.die)); s.tip.push(num(e.tip));
-      if (e.cmm && e.cmm.trim()) s.cmm.push(e.cmm.trim());
     });
 
-    teamStats = Object.values(teams).map(function(s) {
-      var climbs  = s.efs.filter(function(v){ return v==='1'||v==='2'||v==='3'; });
-      var levels  = climbs.map(function(v){ return parseInt(v); });
+    teamStats = Object.values(teams).map(function(s){
+      var climbs = s.efs.filter(function(v){ return v==='1'||v==='2'||v==='3'; });
+      // Approximate point values: 1pt shot = 1, 5pt shot = 5
+      var scoutAuto = avg(s.as1) + avg(s.as5) * 5;
+      var scoutTele = avg(s.ts1) + avg(s.ts5) * 5;
       return {
         t:          s.t,
         matches:    s.matches,
-        as1:        avg(s.as1), as5: avg(s.as5),
-        amf:        avg(s.amf), ac1: pct(s.ac1),
-        ts1:        avg(s.ts1), ts5: avg(s.ts5),
-        tmf:        avg(s.tmf), hcap: avg(s.hcap),
-        ect:        avg(s.ect.filter(function(v){ return v > 0; })),
+        scoutAuto:  scoutAuto,
+        scoutTele:  scoutTele,
+        hcap:       avg(s.hcap),
         climbRate:  s.matches ? climbs.length / s.matches * 100 : 0,
-        climbLevel: levels.length ? avg(levels) : 0,
         die:        pct(s.die),
         tip:        pct(s.tip),
-        cmm:        s.cmm[s.cmm.length - 1] || '',
-        // Statbotics (null until fetched)
-        sbRank: null, sbTotal: null, sbAuto: null, sbTele: null, sbEnd: null,
+        sbRank: null, numTeams: null,
+        sbTotal: null, sbAuto: null, sbTele: null, sbEnd: null,
       };
     });
 
-    // Re-apply any already-loaded Statbotics data
     mergeStatbotics();
   }
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
-  function num(v)   { return parseFloat(v) || 0; }
-  function avg(arr) { return arr.length ? arr.reduce(function(a,b){return a+b;},0)/arr.length : 0; }
-  function pct(arr) { return arr.length ? arr.filter(function(v){return v>0;}).length/arr.length*100 : 0; }
-  function r1(v)    { return Math.round(v * 10) / 10; }
-  function esc(s)   {
-    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
-                        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  function getEvent() {
-    var events = allData.map(function(d){ return d.e; }).filter(Boolean);
-    if (!events.length) return null;
-    // Most frequent event
-    var counts = {};
-    events.forEach(function(e){ counts[e] = (counts[e]||0)+1; });
-    return Object.keys(counts).sort(function(a,b){ return counts[b]-counts[a]; })[0];
-  }
-
-  // ── Sort ───────────────────────────────────────────────────────────────────
-  var ASC_DEFAULT = ['t','amf','tmf','die','tip','sbRank'];
-
-  function sortBy(col) {
-    if (sortCol === col) {
-      sortDir = sortDir === 'asc' ? 'desc' : 'asc';
-    } else {
-      sortCol = col;
-      sortDir = ASC_DEFAULT.includes(col) ? 'asc' : 'desc';
-    }
-    renderTable();
-  }
-
-  // ── Render ─────────────────────────────────────────────────────────────────
-  function renderTable() {
-    var minMatches = parseInt(document.getElementById('filter-min').value) || 1;
-    var filterTeam = document.getElementById('filter-team').value.trim().toLowerCase();
-    var sbOnly     = document.getElementById('filter-sb-only').checked;
-
-    var rows = teamStats.filter(function(s) {
-      return s.matches >= minMatches
-        && (filterTeam === '' || s.t.toLowerCase().includes(filterTeam))
-        && (!sbOnly || s.sbTotal != null);
-    });
-
-    rows.sort(function(a, b) {
-      var va = a[sortCol], vb = b[sortCol];
-      // Nulls always go last
-      if (va == null && vb == null) return 0;
-      if (va == null) return 1;
-      if (vb == null) return -1;
-      if (sortCol === 't') { va = parseInt(va)||0; vb = parseInt(vb)||0; }
-      return sortDir === 'asc' ? (va > vb ? 1 : va < vb ? -1 : 0)
-                                : (va < vb ? 1 : va > vb ? -1 : 0);
-    });
-
-    // Update sort indicators
-    document.querySelectorAll('#header-row th').forEach(function(th) {
-      th.classList.remove('sorted-asc','sorted-desc');
-      if (th.dataset.col === sortCol)
-        th.classList.add(sortDir === 'asc' ? 'sorted-asc' : 'sorted-desc');
-    });
-
-    var tbody = document.getElementById('table-body');
-
-    if (rows.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="21" class="no-data">No matching data.</td></tr>';
-      return;
-    }
-
-    // Column ranges for heat-map (only from rows with values)
-    function range(col) {
-      var vals = rows.map(function(r){ return r[col]; }).filter(function(v){ return v != null; });
-      return vals.length ? { min: Math.min.apply(null,vals), max: Math.max.apply(null,vals) } : null;
-    }
-
-    var ranges = {};
-    ['as1','as5','amf','ts1','ts5','tmf','hcap','climbRate','climbLevel','ect',
-     'die','tip','sbTotal','sbAuto','sbTele','sbEnd'].forEach(function(c){
-      ranges[c] = range(c);
-    });
-
-    // Statbotics rank range (lower = better, need total teams)
-    var numTeams = 0;
-    Object.values(statboticsData).forEach(function(d){ if(d.numTeams) numTeams = Math.max(numTeams, d.numTeams); });
-
-    tbody.innerHTML = rows.map(function(r) {
-      var tbaUrl = 'https://www.thebluealliance.com/team/' + r.t;
-      return '<tr>' +
-        '<td class="team-num"><a class="tba-link" href="' + tbaUrl + '" target="_blank">' + r.t + '</a></td>' +
-        '<td class="match-count">' + r.matches + '</td>' +
-        // Auton
-        heat(r.as1,  ranges.as1,  false) +
-        heat(r.as5,  ranges.as5,  false) +
-        heat(r.amf,  ranges.amf,  true)  +
-        '<td>' + r.ac1.toFixed(0) + '%</td>' +
-        // Teleop
-        heat(r.ts1,  ranges.ts1,  false) +
-        heat(r.ts5,  ranges.ts5,  false) +
-        heat(r.tmf,  ranges.tmf,  true)  +
-        heat(r.hcap, ranges.hcap, false) +
-        // Endgame
-        heat(r.climbRate, ranges.climbRate, false, '%') +
-        climbLevelTd(r.climbLevel) +
-        heat(r.ect, ranges.ect, false, 's') +
-        // Reliability
-        heat(r.die, ranges.die, true, '%') +
-        heat(r.tip, ranges.tip, true, '%') +
-        // Comment
-        '<td class="comments-cell" title="' + esc(r.cmm) + '">' + esc(r.cmm) + '</td>' +
-        // Statbotics
-        sbRankTd(r.sbRank, numTeams) +
-        sbHeat(r.sbTotal, ranges.sbTotal, ' sb-col') +
-        sbHeat(r.sbAuto,  ranges.sbAuto,  ' sb-col') +
-        sbHeat(r.sbTele,  ranges.sbTele,  ' sb-col') +
-        sbHeat(r.sbEnd,   ranges.sbEnd,   ' sb-col') +
-      '</tr>';
-    }).join('');
-  }
-
-  // ── Cell renderers ─────────────────────────────────────────────────────────
-  function heat(val, rng, invert, suffix) {
-    var display = (val === 0 && suffix === 's') ? '—' : r1(val) + (suffix||'');
-    var cls = 'h-mid';
-    if (rng && rng.max !== rng.min) {
-      var n = (val - rng.min) / (rng.max - rng.min);
-      if (invert) n = 1 - n;
-      cls = n >= 0.75 ? 'h-great' : n >= 0.5 ? 'h-good' : n <= 0.25 ? 'h-low' : 'h-mid';
-    }
-    return '<td class="' + cls + '">' + display + '</td>';
-  }
-
-  function sbHeat(val, rng, extraCls) {
-    if (val == null) return '<td class="h-low' + (extraCls||'') + '">—</td>';
-    var display = r1(val);
-    var cls = 'h-mid';
-    if (rng && rng.max !== rng.min) {
-      var n = (val - rng.min) / (rng.max - rng.min);
-      cls = n >= 0.75 ? 'h-great' : n >= 0.5 ? 'h-good' : n <= 0.25 ? 'h-low' : 'h-mid';
-    }
-    return '<td class="' + cls + (extraCls||'') + '">' + display + '</td>';
-  }
-
-  function climbLevelTd(level) {
-    if (!level) return '<td class="cX">—</td>';
-    var cls = level >= 2.5 ? 'c3' : level >= 1.5 ? 'c2' : 'c1';
-    return '<td class="' + cls + '">' + r1(level) + '</td>';
-  }
-
-  function sbRankTd(rank, numTeams) {
-    if (rank == null) return '<td class="h-low sb-col-first">—</td>';
-    var display = rank + (numTeams ? '/' + numTeams : '');
-    var pct = numTeams ? rank / numTeams : 0.5;
-    var cls = pct <= 0.15 ? 'sb-rank-top' : pct <= 0.5 ? 'sb-rank-mid' : 'sb-rank-low';
-    return '<td class="' + cls + ' sb-col-first">' + display + '</td>';
-  }
-
-  // ── Summary cards ──────────────────────────────────────────────────────────
-  function updateCards() {
-    document.getElementById('c-entries').textContent = allData.length;
-    document.getElementById('c-teams').textContent   = teamStats.length;
-    var unique = new Set(allData.map(function(d){ return d.m+'_'+d.l+'_'+d.e; }));
-    document.getElementById('c-matches').textContent = unique.size;
-    document.getElementById('c-event').textContent   = getEvent() || '—';
-    document.getElementById('c-sb').textContent      = Object.keys(statboticsData).length || '—';
-  }
-
-  // ── Export CSV ─────────────────────────────────────────────────────────────
-  function exportCSV() {
-    if (!allData.length) { alert('No data to export.'); return; }
-    var headers = Object.keys(allData[0]);
-    var rows    = allData.map(function(r){
-      return headers.map(function(h){ return JSON.stringify(r[h] != null ? r[h] : ''); }).join(',');
-    });
-    var csv  = [headers.join(',')].concat(rows).join('\n');
-    var blob = new Blob([csv], { type:'text/csv' });
-    var a    = document.createElement('a');
-    a.href   = URL.createObjectURL(blob);
-    a.download = 'scouting_' + (getEvent()||'export') + '_' + new Date().toISOString().slice(0,10) + '.csv';
-    a.click();
-  }
-
-  // ── Clear data ─────────────────────────────────────────────────────────────
-  function clearAllData() {
-    if (!confirm('Delete ALL scouting data? This cannot be undone.')) return;
-    fetch('/data', { method:'DELETE' })
-      .then(function(r){ return r.json(); })
-      .then(function(){ allData=[]; teamStats=[]; statboticsData={}; renderTable(); updateCards(); })
-      .catch(function(err){ alert('Error: ' + err.message); });
-  }
-
-  // ── Pill helper ────────────────────────────────────────────────────────────
-  function setPill(id, text, cls) {
-    var el = document.getElementById(id);
-    el.textContent = text;
-    el.className   = 'pill ' + cls;
-  }
-
-  // ── Pick list ──────────────────────────────────────────────────────────────
-  function loadPicklist() {
-    fetch('/picklist')
-      .then(function(r){ return r.json(); })
-      .then(function(data){ picklistData = data || {}; renderPicklist(); })
-      .catch(function(){});
-  }
-
-  function savePicklistEntry(team, status) {
-    fetch('/picklist', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ team: String(team), status: status })
-    }).catch(function(){});
-  }
-
-  function toggleStatus(team) {
-    var current = picklistData[String(team)] || 'available';
-    var next = current === 'available' ? 'dnp'
-             : current === 'overrated' ? 'dnp'
-             : 'available';
-    picklistData[String(team)] = next;
-    savePicklistEntry(team, next);
-    renderPicklist();
-  }
-
-  // Auto-flag teams as overrated (only if not manually overridden to dnp/available)
+  // ── Overrated detection ─────────────────────────────────────────────────────
   function autoFlagOverrated() {
-    if (!teamStats.length) return;
+    var both = teamStats.filter(function(s){ return s.sbTotal != null; });
+    if (both.length < 4) return;
 
-    // Compute a simple "scouted score" for each team
-    // = auton shots + teleop shots (weighted by value) - missed penalty
-    var withScore = teamStats.map(function(s) {
-      return {
-        t: s.t,
-        score: (s.as1 + s.as5 * 5 + s.ts1 + s.ts5 * 5) - (s.amf + s.tmf) * 0.5,
-        sbTotal: s.sbTotal
-      };
-    });
+    var byScout = both.slice().sort(function(a,b){ return (a.scoutAuto+a.scoutTele) - (b.scoutAuto+b.scoutTele); });
+    var bySB    = both.slice().sort(function(a,b){ return a.sbTotal - b.sbTotal; });
+    var n = both.length - 1;
 
-    var teamsWithBoth = withScore.filter(function(s){ return s.sbTotal != null; });
-    if (teamsWithBoth.length < 4) return; // not enough data
-
-    var sorted_scout = teamsWithBoth.slice().sort(function(a,b){ return a.score - b.score; });
-    var sorted_sb    = teamsWithBoth.slice().sort(function(a,b){ return a.sbTotal - b.sbTotal; });
-
-    teamsWithBoth.forEach(function(s) {
-      var scoutPct = sorted_scout.indexOf(sorted_scout.find(function(x){ return x.t === s.t; })) / (sorted_scout.length - 1);
-      var sbPct    = sorted_sb.indexOf(sorted_sb.find(function(x){ return x.t === s.t; }))    / (sorted_sb.length - 1);
-
+    both.forEach(function(s){
       var key = String(s.t);
-      // Only auto-flag if not manually set
-      if (picklistData[key] === 'dnp') return; // scout overrode
+      if (picklistData[key] === 'dnp') return;
+      var scoutPct = byScout.findIndex(function(x){ return x.t === s.t; }) / n;
+      var sbPct    = bySB.findIndex(function(x){ return x.t === s.t; }) / n;
       if (sbPct >= 0.65 && scoutPct <= 0.35) {
         picklistData[key] = 'overrated';
       } else if (picklistData[key] === 'overrated') {
-        // No longer meets threshold — clear auto flag
         picklistData[key] = 'available';
       }
     });
   }
 
-  function renderPicklist() {
-    var tbody = document.getElementById('picklist-body');
-    if (!teamStats.length) {
-      tbody.innerHTML = '<tr><td colspan="6" style="color:#444;text-align:center;padding:30px;">No data yet.</td></tr>';
+  // ── Render ──────────────────────────────────────────────────────────────────
+  function renderTable() {
+    // Sort
+    var rows = teamStats.slice().sort(function(a, b){
+      var va = a[sortCol], vb = b[sortCol];
+      if (va == null && vb == null) return 0;
+      if (va == null) return 1;
+      if (vb == null) return -1;
+      if (sortCol === 't') { va = parseInt(va)||0; vb = parseInt(vb)||0; }
+      return sortDir === 'asc' ? (va > vb ? 1 : va < vb ? -1 : 0)
+                               : (va < vb ? 1 : va > vb ? -1 : 0);
+    });
+
+    // Update header indicators
+    document.querySelectorAll('#hdr th').forEach(function(th){
+      th.classList.remove('sorted-asc','sorted-desc');
+      if (th.dataset.col === sortCol)
+        th.classList.add(sortDir === 'asc' ? 'sorted-asc' : 'sorted-desc');
+    });
+
+    var tbody = document.getElementById('tbody');
+    if (!rows.length) {
+      tbody.innerHTML = '<tr class="no-data-row"><td colspan="12">No data yet.</td></tr>';
       return;
     }
 
-    // Score each team for pick list ordering
-    var rows = teamStats.map(function(s) {
-      var score = (s.as1 + s.as5 * 5 + s.ts1 + s.ts5 * 5) - (s.amf + s.tmf) * 0.5
-               + s.climbRate * 0.2 + s.climbLevel * 2;
-      return Object.assign({}, s, { plScore: score });
-    });
+    // Ranges for heat coloring
+    function rng(col) {
+      var vals = rows.map(function(r){ return r[col]; }).filter(function(v){ return v != null; });
+      return vals.length ? { min: Math.min.apply(null,vals), max: Math.max.apply(null,vals) } : null;
+    }
+    var R = {};
+    ['scoutAuto','scoutTele','hcap','climbRate','sbTotal','sbAuto','sbTele','sbEnd'].forEach(function(c){ R[c]=rng(c); });
 
-    // Sort: available/overrated first by score, dnp last
-    rows.sort(function(a, b) {
-      var sa = picklistData[a.t] || 'available';
-      var sb = picklistData[b.t] || 'available';
-      var aDnp = sa === 'dnp', bDnp = sb === 'dnp';
-      if (aDnp !== bDnp) return aDnp ? 1 : -1;
-      return b.plScore - a.plScore;
-    });
+    var maxTeams = 0;
+    Object.values(statboticsData).forEach(function(d){ if(d.numTeams) maxTeams = Math.max(maxTeams, d.numTeams); });
 
-    tbody.innerHTML = rows.map(function(r, i) {
-      var status = picklistData[String(r.t)] || 'available';
-      var isDnp  = status === 'dnp';
-      var rowCls = isDnp ? ' class="pl-dnp"' : '';
-      var badge, badgeCls;
-      if (status === 'dnp') {
-        badge = '❌ Do Not Pick'; badgeCls = 'badge-dnp';
-      } else if (status === 'overrated') {
-        badge = '⚠️ Overrated'; badgeCls = 'badge-overrated';
-      } else {
-        badge = '✅ Available'; badgeCls = 'badge-available';
-      }
-      var sbDisplay = r.sbTotal != null ? r1(r.sbTotal) : '—';
+    tbody.innerHTML = rows.map(function(r){
       var tbaUrl = 'https://www.thebluealliance.com/team/' + r.t;
-      return '<tr' + rowCls + '>' +
-        '<td class="pl-rank">' + (i + 1) + '</td>' +
-        '<td class="pl-team"><a class="tba-link" href="' + tbaUrl + '" target="_blank">' + r.t + '</a></td>' +
-        '<td class="pl-score">' + r1(r.plScore) + '</td>' +
-        '<td class="pl-sb">' + sbDisplay + '</td>' +
-        '<td style="color:#888">' + r.matches + '</td>' +
-        '<td><span class="badge ' + badgeCls + '" onclick="toggleStatus(\'' + r.t + '\')" title="Click to toggle">' + badge + '</span></td>' +
-        '</tr>';
+
+      // Rank cell
+      var rankDisplay = r.sbRank != null ? r.sbRank : '—';
+      var rankCls = r.sbRank != null && r.sbRank <= 3  ? 'rank top3'
+                  : r.sbRank != null && r.sbRank <= 10 ? 'rank top10'
+                  : 'rank';
+
+      // Status badge
+      var status = picklistData[String(r.t)] || 'available';
+      var bdg, bcls;
+      if (status === 'dnp')       { bdg = '❌ Do Not Pick'; bcls = 'badge badge-dnp'; }
+      else if (status === 'overrated') { bdg = '⚠️ Overrated';   bcls = 'badge badge-over'; }
+      else                        { bdg = '✅ Available';   bcls = 'badge badge-ok'; }
+
+      return '<tr>' +
+        '<td class="' + rankCls + '">' + rankDisplay + '</td>' +
+        '<td class="team"><a class="tba" href="' + tbaUrl + '" target="_blank">' + r.t + '</a></td>' +
+        heatTd(r.scoutAuto, R.scoutAuto, false) +
+        heatTd(r.scoutTele, R.scoutTele, false) +
+        heatTd(r.hcap,      R.hcap,      false) +
+        '<td class="' + climbCls(r.climbRate) + '">' + r.climbRate.toFixed(0) + '%</td>' +
+        '<td class="' + (r.matches > 0 ? 'm-count' : 'm-none') + '">' + (r.matches || '—') + '</td>' +
+        sbTd(r.sbTotal, R.sbTotal, true) +
+        sbTd(r.sbAuto,  R.sbAuto,  false) +
+        sbTd(r.sbTele,  R.sbTele,  false) +
+        sbTd(r.sbEnd,   R.sbEnd,   false) +
+        '<td><span class="' + bcls + '" onclick="toggleStatus(\'' + r.t + '\')">' + bdg + '</span></td>' +
+      '</tr>';
     }).join('');
   }
 
-  // ── Start ──────────────────────────────────────────────────────────────────
-  loadData();
+  function heatTd(val, rng, invert) {
+    var display = r1(val);
+    var cls = 'val';
+    if (rng && rng.max !== rng.min) {
+      var n = (val - rng.min) / (rng.max - rng.min);
+      if (invert) n = 1 - n;
+      cls = n >= 0.75 ? 'good' : n >= 0.5 ? 'ok' : n <= 0.25 ? 'low' : 'mid';
+    }
+    return '<td class="' + cls + '">' + display + '</td>';
+  }
+
+  function sbTd(val, rng, isFirst) {
+    var extra = isFirst ? ' sb-first' : '';
+    if (val == null) return '<td class="sb-low' + extra + '">—</td>';
+    var cls = 'sb';
+    if (rng && rng.max !== rng.min) {
+      var n = (val - rng.min) / (rng.max - rng.min);
+      cls = n <= 0.25 ? 'sb-low' : 'sb';
+    }
+    return '<td class="' + cls + extra + '">' + r1(val) + '</td>';
+  }
+
+  function climbCls(rate) {
+    return rate >= 75 ? 'good' : rate >= 50 ? 'ok' : rate >= 25 ? 'mid' : 'low';
+  }
+
+  // ── Pick list ───────────────────────────────────────────────────────────────
+  function toggleStatus(team) {
+    var cur  = picklistData[String(team)] || 'available';
+    var next = (cur === 'available' || cur === 'overrated') ? 'dnp' : 'available';
+    picklistData[String(team)] = next;
+    fetch('/picklist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ team: String(team), status: next })
+    }).catch(function(){});
+    renderTable();
+  }
+
+  function loadPicklist() {
+    fetch('/picklist')
+      .then(function(r){ return r.json(); })
+      .then(function(d){ picklistData = d || {}; })
+      .catch(function(){});
+  }
+
+  // ── Sort ────────────────────────────────────────────────────────────────────
+  var ASC_COLS = ['sbRank','t','die','tip'];
+  function sortBy(col) {
+    if (sortCol === col) {
+      sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      sortCol = col;
+      sortDir = ASC_COLS.includes(col) ? 'asc' : 'desc';
+    }
+    renderTable();
+  }
+
+  // ── Chips ───────────────────────────────────────────────────────────────────
+  function updateChips() {
+    document.getElementById('c-teams').textContent   = teamStats.length || '—';
+    document.getElementById('c-entries').textContent = allData.length   || '—';
+    var uniq = new Set(allData.map(function(d){ return d.m+'_'+d.l+'_'+d.e; }));
+    document.getElementById('c-matches').textContent = uniq.size        || '—';
+    document.getElementById('c-event').textContent   = getEvent()       || '—';
+    document.getElementById('c-sb').textContent      = Object.keys(statboticsData).length || '—';
+  }
+
+  // ── Export ──────────────────────────────────────────────────────────────────
+  function exportCSV() {
+    if (!allData.length) { alert('No data.'); return; }
+    var h = Object.keys(allData[0]);
+    var csv = [h.join(',')].concat(allData.map(function(r){
+      return h.map(function(k){ return JSON.stringify(r[k] != null ? r[k] : ''); }).join(',');
+    })).join('\n');
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+    a.download = 'scouting_' + (getEvent()||'export') + '_' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click();
+  }
+
+  // ── Clear ───────────────────────────────────────────────────────────────────
+  function clearAll() {
+    if (!confirm('Delete ALL scouting data?')) return;
+    fetch('/data', {method:'DELETE'})
+      .then(function(){ allData=[]; teamStats=[]; statboticsData={}; renderTable(); updateChips(); })
+      .catch(function(err){ alert('Error: '+err.message); });
+  }
+
+  // ── Helpers ─────────────────────────────────────────────────────────────────
+  function num(v)   { return parseFloat(v) || 0; }
+  function avg(arr) { return arr.length ? arr.reduce(function(a,b){return a+b;},0)/arr.length : 0; }
+  function pct(arr) { return arr.length ? arr.filter(function(v){return v>0;}).length/arr.length*100 : 0; }
+  function r1(v)    { return Math.round(v * 10) / 10; }
+  function setPill(id, text, cls) {
+    var el = document.getElementById(id);
+    el.textContent = text; el.className = 'status-dot ' + cls;
+  }
+  function getEvent() {
+    var counts = {};
+    allData.forEach(function(d){ if(d.e) counts[d.e] = (counts[d.e]||0)+1; });
+    var keys = Object.keys(counts);
+    return keys.length ? keys.sort(function(a,b){ return counts[b]-counts[a]; })[0] : null;
+  }
+
+  // ── Boot ────────────────────────────────────────────────────────────────────
   loadPicklist();
+  loadData();
   setInterval(loadData, 20000);
 </script>
 </body>
