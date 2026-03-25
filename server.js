@@ -13,8 +13,9 @@ const path  = require('path');
 const os    = require('os');
 
 const PORT        = 3000;
-const DATA_FILE   = path.join(__dirname, 'scouting_data.json');
-const CONFIG_FILE = path.join(__dirname, 'config.json');
+const DATA_FILE     = path.join(__dirname, 'scouting_data.json');
+const CONFIG_FILE   = path.join(__dirname, 'config.json');
+const PICKLIST_FILE = path.join(__dirname, 'picklist.json');
 
 // ── In-memory cache for external API calls (2 min TTL) ────────────────────────
 const apiCache = {};
@@ -45,6 +46,18 @@ function readData() {
 }
 function writeData(data) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+}
+
+// ── Picklist data ──────────────────────────────────────────────────────────────
+function readPicklist() {
+  try {
+    if (fs.existsSync(PICKLIST_FILE))
+      return JSON.parse(fs.readFileSync(PICKLIST_FILE, 'utf8'));
+  } catch (e) { console.error('Picklist read error:', e.message); }
+  return {};
+}
+function writePicklist(data) {
+  fs.writeFileSync(PICKLIST_FILE, JSON.stringify(data, null, 2));
 }
 
 // ── External HTTPS helper ─────────────────────────────────────────────────────
@@ -160,6 +173,28 @@ const server = http.createServer(async (req, res) => {
       setCache(cacheKey, data);
       console.log(`[${ts()}] TBA fetched: ${tbaPath}`);
       respond(res, 200, data);
+      return;
+    }
+
+    // ── GET /picklist ──────────────────────────────────────────────────────────
+    if (req.method === 'GET' && urlPath === '/picklist') {
+      respond(res, 200, readPicklist());
+      return;
+    }
+
+    // ── POST /picklist ─────────────────────────────────────────────────────────
+    // body: { team: "3603", status: "removed"|"included"|"dnp" }
+    if (req.method === 'POST' && urlPath === '/picklist') {
+      const body = await readBody(req);
+      const { team, status } = JSON.parse(body);
+      if (!team || !['removed', 'included', 'dnp'].includes(status)) {
+        respond(res, 400, { error: 'Invalid team or status' });
+        return;
+      }
+      const pl = readPicklist();
+      pl[String(team)] = status;
+      writePicklist(pl);
+      respond(res, 200, { success: true });
       return;
     }
 
