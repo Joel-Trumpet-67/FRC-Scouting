@@ -1,0 +1,161 @@
+/* ============================================================
+   dashboard.css — Live rankings dashboard styles
+   Used by: dashboard.html
+
+   TODO: consider a light mode option — the current dark theme is hard to
+         read in bright competition venues under fluorescent lights.
+
+   TODO: add print styles (@media print) so coaches can print the rankings
+         table before alliance selection without the dark background.
+============================================================ */
+
+@font-face {
+  font-family: 'Alexis';
+  src: url('../assets/fonts/alexisv3.ttf') format('truetype');
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0d0d0d; color: #e8e8e8; min-height: 100vh; }
+
+/* ── Sync modal ─────────────────────────────────────────── */
+#sync-modal {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.88); z-index: 999;
+  align-items: center; justify-content: center;
+}
+.sync-box { background:#1a1a1a; border:1px solid #333; border-radius:10px; padding:32px 28px; text-align:center; width:300px; }
+.sync-box h2 { color:#97c7f0; font-size:18px; margin-bottom:6px; }
+.sync-box p  { color:#777; font-size:12px; margin-bottom:18px; }
+#sync-input  { width:100%; padding:10px; font-size:18px; font-weight:700; text-align:center; text-transform:uppercase; letter-spacing:2px; background:#111; border:1px solid #444; color:#fff; border-radius:6px; margin-bottom:14px; }
+#sync-join   { width:100%; padding:10px; font-size:14px; font-weight:600; background:#1a4a2a; color:#7ef; border:none; border-radius:6px; cursor:pointer; }
+#sync-join:hover { filter:brightness(1.2); }
+
+/* ── Header ─────────────────────────────────────────────── */
+header { background:#000; border-bottom:2px solid #1e1e1e; padding:14px 24px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
+header h1 { font-family:Alexis; font-size:22px; font-weight:400; color:#97c7f0; letter-spacing:2px; }
+.hright { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+
+/* ── Status pills ───────────────────────────────────────── */
+.pill { font-size:11px; padding:3px 9px; border-radius:10px; border:1px solid; white-space:nowrap; }
+.p-green { background:#0f2b0f; color:#5dd85d; border-color:#2a5a2a; }
+.p-red   { background:#2b0f0f; color:#f88;    border-color:#5a2a2a; }
+.p-grey  { background:#1a1a1a; color:#666;    border-color:#333; }
+.p-blue  { background:#0f1a2b; color:#9cf;    border-color:#2a3a5a; }
+
+/* ── Header buttons ─────────────────────────────────────── */
+.btn { padding:6px 13px; font-size:12px; border:none; border-radius:4px; cursor:pointer; font-family:inherit; }
+.btn-code   { background:#1a2a3a; color:#9cf; }
+.btn-export { background:#1a2a4a; color:#9cf; }
+.btn-clear  { background:#3a1010; color:#faa; }
+.btn:hover  { filter:brightness(1.25); }
+
+/* ── Summary chips (Teams, Entries, Event, SB Teams) ────── */
+.strip { display:flex; gap:6px; padding:12px 24px 6px; flex-wrap:wrap; }
+.chip { background:#141414; border:1px solid #222; border-radius:6px; padding:8px 14px; text-align:center; min-width:88px; }
+.chip-val   { font-size:20px; font-weight:700; color:#97c7f0; }
+.chip-label { font-size:10px; color:#555; text-transform:uppercase; letter-spacing:1px; margin-top:2px; }
+
+.timestamp { font-size:11px; color:#333; padding:2px 24px 8px; }
+
+/* ── Rankings table ─────────────────────────────────────── */
+.wrap { padding:0 24px 40px; overflow-x:auto; }
+
+table { width:100%; border-collapse:collapse; font-size:13px; min-width:680px; }
+
+thead th {
+  background:#111; color:#777; padding:9px 10px; text-align:center;
+  white-space:nowrap; border-bottom:1px solid #1e1e1e;
+  font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.8px;
+  position:sticky; top:0; z-index:1; cursor:pointer; user-select:none;
+}
+thead th:hover { color:#ddd; }
+thead th.sorted-asc::after  { content:' ▲'; color:#97c7f0; }
+thead th.sorted-desc::after { content:' ▼'; color:#97c7f0; }
+thead th.no-sort { cursor:default; }
+
+/* Section header row (SCOUTED / STATBOTICS EPA labels) */
+tr.sec-hdr th { background:#0a0a0a; font-size:9px; letter-spacing:2px; padding:3px 10px; cursor:default; border-bottom:1px solid #161616; }
+.lbl-scout { color:#4a7aaa; }
+.lbl-sb    { color:#8a6a10; }
+
+tbody tr { border-bottom:1px solid #141414; }
+tbody tr:hover { background:#161616; }
+td { padding:10px 10px; text-align:center; }
+
+/* Rank column */
+td.rank        { font-size:20px; font-weight:700; color:#252525; min-width:40px; }
+td.rank.top3   { color:#f0c060; }
+td.rank.top10  { color:#777; }
+
+/* Team number column (clickable → opens detail modal) */
+td.team { font-size:17px; font-weight:700; color:#97c7f0; }
+a.tba { color:inherit; text-decoration:none; }
+a.tba:hover { text-decoration:underline; }
+
+/* Scouted data color tiers (percentile-based, set in dashboard.js) */
+td.good { color:#5dd85d; font-weight:600; }
+td.ok   { color:#c8e86a; }
+td.mid  { color:#bbb; }
+td.low  { color:#555; }
+
+/* Statbotics EPA color tiers */
+td.sb     { color:#f0c060; }
+td.sb-low { color:#5a4510; }
+
+/* Visual separator between Scouted and SB columns */
+th.sb-div, td.sb-div { border-left:2px solid #3a2e00; }
+
+/* Pick list badges */
+.badge { display:inline-block; padding:3px 8px; border-radius:8px; font-size:11px; font-weight:600; cursor:pointer; user-select:none; white-space:nowrap; border:1px solid; }
+.b-ok   { background:#0f2b0f; color:#5dd85d; border-color:#2a5a2a; }
+.b-over { background:#2b1f00; color:#f0c060; border-color:#6a4a00; }
+.b-dnp  { background:#2b0f0f; color:#f88;   border-color:#5a2a2a; }
+.badge:hover { filter:brightness(1.3); }
+
+.no-data td { color:#333; text-align:center; padding:50px; font-size:14px; }
+
+/* ── Team detail modal ──────────────────────────────────── */
+#team-modal {
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,0.88); z-index:998;
+  align-items:flex-start; justify-content:center;
+  padding:20px 12px; overflow-y:auto;
+}
+#team-modal.open { display:flex; }
+
+.tm-box {
+  background:#111; border:1px solid #222; border-radius:10px;
+  width:100%; max-width:760px; padding:24px; position:relative;
+}
+.tm-close {
+  position:absolute; top:14px; right:16px; background:none; border:none;
+  color:#555; font-size:22px; cursor:pointer; line-height:1;
+}
+.tm-close:hover { color:#fff; }
+.tm-title { font-size:22px; font-weight:700; color:#97c7f0; margin-bottom:4px; }
+.tm-sub   { font-size:12px; color:#555; margin-bottom:18px; }
+
+/* Statbotics chips inside modal */
+.tm-sb { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px; }
+.tm-sb-chip { background:#1a1500; border:1px solid #3a2e00; border-radius:6px; padding:8px 14px; text-align:center; }
+.tm-sb-chip .v { font-size:16px; font-weight:700; color:#f0c060; }
+.tm-sb-chip .l { font-size:10px; color:#777; margin-top:2px; }
+
+/* Scouting entry cards inside modal */
+.tm-entries h3 { font-size:12px; color:#555; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; }
+.tm-entry {
+  background:#161616; border:1px solid #1e1e1e; border-radius:6px;
+  padding:12px 14px; margin-bottom:10px;
+}
+.tm-entry-hdr { display:flex; gap:10px; align-items:center; margin-bottom:8px; flex-wrap:wrap; }
+.tm-entry-hdr .m-num   { font-size:16px; font-weight:700; color:#fff; }
+.tm-entry-hdr .m-robot { font-size:12px; padding:2px 8px; border-radius:8px; font-weight:600; }
+.red-tag  { background:#3a0808; color:#ff8080; }
+.blue-tag { background:#08083a; color:#8080ff; }
+.m-scout  { font-size:11px; color:#444; margin-left:auto; }
+
+.tm-fields { display:flex; flex-wrap:wrap; gap:6px 16px; }
+.tm-field  { font-size:12px; color:#888; }
+.tm-field span { color:#ccc; font-weight:600; }
+.tm-comment { margin-top:8px; font-size:13px; color:#aaa; font-style:italic; border-top:1px solid #222; padding-top:8px; }
+.no-entries { color:#333; text-align:center; padding:30px; font-size:14px; }

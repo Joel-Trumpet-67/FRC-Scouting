@@ -1,11 +1,33 @@
+/* ============================================================
+   scouting.css — Match scouting form styles
+   Used by: match.html
+   ============================================================
+
+   COLOR SCHEME BY PAGE:
+     Pre-Match  → black background, white text
+     Auton      → light blue   (#7ba8b8)
+     Teleop     → light green  (#afd7a3)
+     Endgame    → light purple (#c6bade)
+     Post-Match → dark blue    (#59 86a8)
+     Submit     → white
+
+   TODO: consider switching to CSS variables for the page colors so they
+         can all be changed in one place at the top of this file.
+         e.g. --color-auton: #7ba8b8;
+
+   TODO: the button IDs (#nextButton1 through #nextButton10, etc.) are brittle —
+         adding or removing a page requires renumbering all of them.
+         Consider switching to class-based selectors instead.
+============================================================ */
+
 @font-face {
     font-family: 'Alexis';
     font-style: normal;
     font-weight: normal;
-    src: url("../fonts/alexisv3.ttf") format('truetype');
+    src: url("../assets/fonts/alexisv3.ttf") format('truetype');
 }
 
-html, body{
+html, body {
     height: 100%;
     width: 100%;
     margin: 0;
@@ -15,7 +37,7 @@ html, body{
 }
 
 #prematch_table, #postmatch_table {
-    font-family : -apple-system, BlinkMacSystemFont, Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif !important;
+    font-family: -apple-system, BlinkMacSystemFont, Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif !important;
     text-align: center;
     color: white;
     font-size: 13px;
@@ -26,7 +48,7 @@ html, body{
 }
 
 #auton_table, #endgame_table, #teleop_table {
-    font-family : -apple-system, BlinkMacSystemFont, Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif !important;
+    font-family: -apple-system, BlinkMacSystemFont, Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif !important;
     color: black;
     font-size: 13px;
     font-style: bold;
@@ -45,18 +67,18 @@ html, body{
     font-size: 16px;
 }
 
-#autonHeader, #endgameHeader, #teleopHeader1, #teleopHeader2{
+#autonHeader, #endgameHeader, #teleopHeader1, #teleopHeader2 {
     color: black;
     border-color: black;
     border-width: 4px;
 }
 
-#postmatchHeader{
+#postmatchHeader {
     border-width: 4px;
     border-color: white;
 }
 
-#prematchHeader1, #prematchHeader2{
+#prematchHeader1, #prematchHeader2 {
     color: white;
     border-color: white;
     border-width: 4px;
@@ -70,12 +92,13 @@ html, body{
     margin: 2vw;
 }
 
-.field-image-src{
+.field-image-src {
     background-position: center;
     border: 1px solid;
 }
 
-.main-panel{
+/* Each scouting page is an absolutely-positioned panel — only one shown at a time */
+.main-panel {
     display: none;
     height: 100%;
     min-height: 100%;
@@ -85,20 +108,21 @@ html, body{
     top: 0;
     color: white;
     background-color: black;
-    font-family : -apple-system, BlinkMacSystemFont, Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif !important;
+    font-family: -apple-system, BlinkMacSystemFont, Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif !important;
     text-align: justify;
 }
 
-#prematch{
+/* Pre-Match is the first page — shown by default */
+#prematch {
     display: table;
 }
 
-#qr-code{
-  text-align: center;
-  color: black;
+#qr-code {
+    text-align: center;
+    color: black;
 }
 
-h1{
+h1 {
     font-family: Alexis;
     text-align: center;
     border-style: groove;
@@ -113,7 +137,7 @@ h1{
     color: black;
 }
 
-h2{
+h2 {
     font-family: Alexis;
     text-align: center;
     font-size: 30px;
@@ -121,18 +145,18 @@ h2{
     font-style: italic;
 }
 
-.match-label{
+.match-label {
     text-align: center;
 }
 
-.half-button-l{
+.half-button-l {
     width: 48%;
     margin: 1vw;
     height: 100%;
     font: roboto;
 }
 
-.half-button-r{
+.half-button-r {
     flex-grow: 1;
     height: 100%;
     width: 48%;
@@ -140,10 +164,11 @@ h2{
     font: roboto;
 }
 
-.half-button-container{
+.half-button-container {
     display: flex;
 }
 
+/* Light blue buttons (used on white/light background pages) */
 #nextButton1, #nextButton2, #nextButton9, #nextButton10, .clearForm, .submitForm, #displayButton, #copyButton {
     font-family: Alexis;
     padding: 10px;
@@ -152,6 +177,7 @@ h2{
     display: inline-block;
 }
 
+/* Dark buttons (used on dark background pages) */
 #nextButton3, #nextButton4, #nextButton5, #nextButton6, #nextButton7, #nextButton8 {
     font-family: Alexis;
     background-color: black;
@@ -167,20 +193,20 @@ h2{
     margin-left: 20px;
 }
 
-#prevButton7, #prevButton8, #prevButton9{
+#prevButton7, #prevButton8, #prevButton9 {
     font-family: Alexis;
     background-color: rgb(151, 199, 240);
     padding: 10px;
 }
 
-#prevButton1, #prevButton2, #prevButton3, #prevButton4, #prevButton5, #prevButton6{
+#prevButton1, #prevButton2, #prevButton3, #prevButton4, #prevButton5, #prevButton6 {
     font-family: Alexis;
     background-color: black;
     padding: 10px;
     color: white;
 }
 
-#prematch_table{
+#prematch_table {
     font: Alexis;
     text-align: center;
 }
@@ -229,8 +255,9 @@ input {
     background-color: white;
 }
 
+/* Raw data display (backup copy button) */
 #data {
-    font-family:'Lucida Console', 'monospace';
+    font-family: 'Lucida Console', 'monospace';
     text-align: justify;
 }
 

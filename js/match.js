@@ -1,9 +1,31 @@
+// ============================================================
+// match.js — Scout form logic
+// ============================================================
+//
+//  HOW IT WORKS:
+//    1. Scout opens match.html on their phone
+//    2. They enter a shared sync code (e.g. "FRC3603") to join the session
+//    3. TBA schedule is fetched to auto-fill team numbers
+//    4. On submit, data is pushed to Firebase → dashboard reads it live
+//
+//  TO ADD OR CHANGE GAME FIELDS (each new season):
+//    1. Add/remove <input> elements in match.html (give each a name="xx" id="input_xx")
+//    2. Add the field label to FIELD_LABELS below (so the summary page shows it)
+//    3. Add friendly display logic to friendlyValue() if needed
+//    The rest (data collection, submit, clear) is fully automatic.
+//
+//  FILES THIS DEPENDS ON (loaded before this script in match.html):
+//    - config/event-config.js   (EVENT_CODE, TBA_KEY)
+//    - config/firebase-config.js (FIREBASE_CONFIG)
+//
+// ============================================================
+
 // Touch swipe support
 document.addEventListener("touchstart", startTouch, false);
 document.addEventListener("touchend",   moveTouch,  false);
 
 var initialX   = null;
-var xThreshold = 0.3;
+var xThreshold = 0.3;   // fraction of screen width required to trigger swipe
 var slide      = 0;
 var dataFormat = "tsv";
 
@@ -16,7 +38,10 @@ var db         = null;
 var syncCode   = null;
 var entriesRef = null;
 
-// ===== NAVIGATION =====
+// ============================================================
+// NAVIGATION
+// ============================================================
+
 function swipePage(increment) {
   var slides = document.getElementById("main-panel-holder").children;
   var next = slide + increment;
@@ -49,7 +74,14 @@ function moveTouch(e) {
   initialX = null;
 }
 
-// ===== COUNTER =====
+// TODO: add per-page validation before allowing swipe forward.
+//       Example: block leaving Pre-Match until Scouter + Match # are filled in.
+//       This prevents scouts from accidentally advancing with missing data.
+
+// ============================================================
+// COUNTER (increment/decrement buttons)
+// ============================================================
+
 function counter(element, step) {
   var ctr = element.getElementsByClassName("counter")[0];
   var result = parseInt(ctr.value) + step;
@@ -57,7 +89,10 @@ function counter(element, step) {
   ctr.value = result >= 0 ? result : 0;
 }
 
-// ===== TIMER =====
+// ============================================================
+// TIMER (climb timer with 0.1s precision)
+// ============================================================
+
 function getIdBase(name) {
   return name.slice(name.indexOf("_"), name.length);
 }
@@ -103,7 +138,13 @@ function resetTimer(element) {
   startButton.setAttribute("value", "Start");
 }
 
-// ===== FIELD IMAGE (CANVAS) =====
+// TODO: add a "lap" button to the climb timer so scouts can record when each
+//       level was reached (L1 time, L2 time, L3 time) during a multi-stage climb.
+
+// ============================================================
+// FIELD IMAGE (auto-start position canvas)
+// ============================================================
+
 function initCanvas() {
   var img    = document.getElementById("img_as");
   var canvas = document.getElementById("canvas_as");
@@ -187,7 +228,14 @@ function flip(element) {
   drawFields();
 }
 
-// ===== DATA COLLECTION =====
+// TODO: each season, replace assets/images/2026/field_image.png with the new field image.
+//       Update the <img src="..."> in match.html to point to the new path.
+//       The canvas logic above doesn't need changes — it's position-independent.
+
+// ============================================================
+// DATA COLLECTION
+// ============================================================
+
 // Returns a plain object with all named form fields
 function getDataObject() {
   var Form = document.forms.scoutingForm;
@@ -217,7 +265,13 @@ function getData() {
   return Object.values(getDataObject()).join(",");
 }
 
-// ===== SUBMIT PAGE SUMMARY =====
+// ============================================================
+// SUBMIT PAGE — SUMMARY TABLE
+// ============================================================
+
+// Add an entry here for every named field in match.html.
+// key = the name="xx" attribute on the input, value = display label.
+// TODO: update this table each season when game fields change.
 var FIELD_LABELS = {
   s:   "Scouter",
   e:   "Event",
@@ -234,6 +288,7 @@ var FIELD_LABELS = {
   ts1: "Teleop Shot 1",
   ts5: "Teleop Shot 5",
   tmf: "Teleop Missed",
+  hcap:"Hub Capacity",
   ect: "Climb Timer (s)",
   efs: "Final Status",
   die: "Died/Immobilized",
@@ -242,8 +297,9 @@ var FIELD_LABELS = {
   cmm: "Comments"
 };
 
-var EFS_LABELS = { "1":"Level 1 Climb", "2":"Level 2 Climb", "3":"Level 3 Climb", "F":"Failed Climb", "X":"Not attempted" };
-var DTA_LABELS = { "D":"Defence", "P":"Pickup Fuel", "B":"Both", "N":"No Actions" };
+// TODO: update these label maps when game-specific options change each season.
+var EFS_LABELS   = { "1":"Level 1 Climb", "2":"Level 2 Climb", "3":"Level 3 Climb", "F":"Failed Climb", "X":"Not attempted" };
+var DTA_LABELS   = { "D":"Defence", "P":"Pickup Fuel", "B":"Both", "N":"No Actions" };
 var ROBOT_LABELS = { r1:"Red-1", b1:"Blue-1", r2:"Red-2", b2:"Blue-2", r3:"Red-3", b3:"Blue-3" };
 var LEVEL_LABELS = { qm:"Quals", sf:"Semifinals", f:"Finals" };
 
@@ -275,12 +331,16 @@ function updateSummary() {
   table.innerHTML = rows.join("");
 }
 
-// ===== FIREBASE SUBMIT =====
+// ============================================================
+// FIREBASE SUBMIT
+// ============================================================
+
 function submitData() {
   var data     = getDataObject();
   var statusEl = document.getElementById("submit-status");
   var btn      = document.getElementById("submit");
 
+  // Basic validation — must have the 4 core fields
   if (!data.s || !data.m || !data.r || !data.t) {
     statusEl.textContent = "Fill in Scouter, Match #, Robot, and Team # first.";
     statusEl.style.color = "#c0392b";
@@ -296,7 +356,8 @@ function submitData() {
   btn.setAttribute("value", "Submitting…");
   btn.disabled = true;
 
-  // Duplicate check then push
+  // Duplicate check: same scouter + match # + robot + event = already submitted
+  // TODO: add a "force submit anyway" button for cases where a re-scout is intentional
   entriesRef.once("value", function(snapshot) {
     var existing = snapshot.val() || {};
     var isDup = Object.values(existing).some(function(d) {
@@ -326,7 +387,10 @@ function submitData() {
   });
 }
 
-// ===== DISPLAY / COPY (backup) =====
+// ============================================================
+// DISPLAY / COPY (backup, in case Firebase is down)
+// ============================================================
+
 function displayData() {
   document.getElementById("data").innerHTML = getData();
 }
@@ -336,7 +400,13 @@ function copyData() {
   document.getElementById("copyButton").setAttribute("value", "Copied");
 }
 
-// ===== MATCH START (updates display_r) =====
+// TODO: if Firebase is unavailable, queue submissions in localStorage and
+//       retry when the connection is restored. This would let scouts work offline.
+
+// ============================================================
+// MATCH START (updates robot display label, triggers TBA auto-fill)
+// ============================================================
+
 function updateMatchStart() {
   var robotMap = { r1:"Red-1", b1:"Blue-1", r2:"Red-2", b2:"Blue-2", r3:"Red-3", b3:"Blue-3" };
   var robotField = document.forms.scoutingForm.r;
@@ -344,19 +414,23 @@ function updateMatchStart() {
     var displayR = document.getElementById("display_r");
     if (displayR) displayR.value = robotMap[robotField.value] || "";
   }
-  // Also try to auto-fill team from TBA
   autoFillTeam();
 }
 
-// ===== TBA SCHEDULE INTEGRATION =====
+// ============================================================
+// TBA SCHEDULE INTEGRATION
+// ============================================================
+
 function fetchSchedule() {
   var event = (document.getElementById("input_e").value || "").trim();
   if (!event || event === scheduleEvent) return;
 
   var statusEl = document.getElementById("tba-status");
-  var key = (typeof TBA_KEY !== "undefined" && TBA_KEY) ? TBA_KEY : (localStorage.getItem("tba_key") || "");
+
+  // TBA_KEY comes from config/event-config.js
+  var key = (typeof TBA_KEY !== "undefined" && TBA_KEY) ? TBA_KEY : "";
   if (!key) {
-    if (statusEl) statusEl.textContent = "Enter your TBA key in the field below to enable auto-fill";
+    if (statusEl) statusEl.textContent = "TBA_KEY missing — set it in config/event-config.js";
     return;
   }
 
@@ -373,15 +447,16 @@ function fetchSchedule() {
         if (statusEl) statusEl.textContent = "✓ TBA: " + data.length + " matches loaded";
         autoFillTeam();
       } else {
-        if (statusEl) statusEl.textContent = "TBA: " + (data.error || "No data");
+        if (statusEl) statusEl.textContent = "TBA: " + (data.error || "No data — check EVENT_CODE in config/event-config.js");
         schedule = null;
       }
     })
     .catch(function() {
-      if (statusEl) statusEl.textContent = "TBA fetch failed — check TBA_KEY in firebase-config.js";
+      if (statusEl) statusEl.textContent = "TBA fetch failed — check TBA_KEY in config/event-config.js";
     });
 }
 
+// Reads match level + number + robot position and auto-fills the team number field.
 function autoFillTeam() {
   if (!schedule) return;
   var matchNumEl = document.getElementById("input_m");
@@ -393,13 +468,13 @@ function autoFillTeam() {
   var level    = levelEl.value;   // qm | sf | f
   var robot    = robotEl.value;   // r1 | b1 | r2 | b2 | r3 | b3
 
-  // Build the expected TBA match key, e.g. "2026mimus_qm12"
+  // Build the expected TBA match key, e.g. "2026milac_qm12"
   var event    = (document.getElementById("input_e").value || "").trim();
   var matchKey = event + "_" + level + matchNum;
 
   var match = schedule.find(function(m) {
     if (level === "qm") return m.key === matchKey;
-    // For sf/f, match_number alone isn't unique; just match comp_level + match_number
+    // For sf/f, match_number alone isn't unique — match by comp_level + match_number
     return m.comp_level === level && m.match_number === matchNum;
   });
 
@@ -408,7 +483,7 @@ function autoFillTeam() {
     return;
   }
 
-  // Auto-fill team number
+  // Auto-fill team number from the correct alliance + position
   var allianceKey = robot.charAt(0) === "r" ? "red" : "blue";
   var pos         = parseInt(robot.charAt(1)) - 1;
   var alliance    = match.alliances[allianceKey];
@@ -423,6 +498,7 @@ function autoFillTeam() {
   showMatchPreview(match);
 }
 
+// Renders a 2-row grid showing all 6 match positions (Red 1-3 / Blue 1-3)
 function showMatchPreview(match) {
   var el = document.getElementById("match-preview");
   if (!el) return;
@@ -450,7 +526,10 @@ function showMatchPreview(match) {
     '</tr></table>';
 }
 
-// ===== CLEAR FORM =====
+// ============================================================
+// CLEAR FORM (after submit, reset for next match)
+// ============================================================
+
 function clearForm() {
   // Save robot position so we can restore it for the next match
   var savedRobotEl  = document.querySelector('input[name="r"]:checked');
@@ -462,17 +541,18 @@ function clearForm() {
   slides[0].style.display = "table";
   window.scrollTo(0, 0);
 
-  // Increment match #
+  // Increment match # automatically
   var matchEl = document.getElementById("input_m");
   if (matchEl) {
     var m = parseInt(matchEl.value);
     matchEl.value = isNaN(m) ? "" : m + 1;
   }
 
-  // Clear XY coordinates
+  // Clear XY coordinates (field canvas)
   document.querySelectorAll("[id*='XY_']").forEach(e => { e.value = "[]"; });
 
-  // Clear all input_ elements
+  // Clear all input_ elements (counters, timers, text, checkboxes, radios)
+  // Skips: match # (m), event (e), scouter (s) — these persist between matches
   document.querySelectorAll("[id*='input_']").forEach(function(e) {
     var code = e.id.substring(6);
     if (code === "m" || code === "e" || code === "s") return;
@@ -498,9 +578,9 @@ function clearForm() {
         if (e.className === "counter" || e.className === "timer") {
           e.value = 0;
           if (e.className === "timer") {
-            var intF  = document.getElementById("intervalId_" + code);
-            var statF = document.getElementById("status_"     + code);
-            var startB = document.getElementById("start_"     + code);
+            var intF   = document.getElementById("intervalId_" + code);
+            var statF  = document.getElementById("status_"     + code);
+            var startB = document.getElementById("start_"      + code);
             if (intF && intF.value !== "") clearInterval(intF.value);
             if (intF)   intF.value  = "";
             if (statF)  statF.value = "stopped";
@@ -515,7 +595,7 @@ function clearForm() {
     }
   });
 
-  // Restore robot position for next match
+  // Restore robot position for next match (scouts stay on the same robot)
   if (savedRobotVal) {
     var robotInput = document.querySelector('input[name="r"][value="' + savedRobotVal + '"]');
     if (robotInput) robotInput.checked = true;
@@ -532,14 +612,17 @@ function clearForm() {
   drawFields();
 }
 
-// ===== FIREBASE + SYNC CODE =====
+// ============================================================
+// FIREBASE + SYNC CODE
+// ============================================================
+
 function initFirebase() {
   try {
     firebase.initializeApp(FIREBASE_CONFIG);
     db = firebase.database();
   } catch(e) {
     console.error("Firebase init failed:", e.message);
-    showSyncBanner("Firebase not configured — edit firebase-config.js", "#c0392b");
+    showSyncBanner("Firebase not configured — check config/firebase-config.js", "#c0392b");
     return;
   }
 
@@ -582,9 +665,21 @@ function showSyncBanner(text, color) {
   el.style.color = color || "#eee";
 }
 
-// ===== INIT =====
+// TODO: show entry count in the sync banner so scouts can confirm their data went through.
+//       e.g. "Sync: FRC3603 (12 entries)"  — listen on entriesRef and count.
+
+// ============================================================
+// INIT
+// ============================================================
+
 window.onload = function() {
-  // Field image canvas
+  // Set event code from config/event-config.js (so scouts don't have to type it)
+  var eventEl = document.getElementById("input_e");
+  if (eventEl && typeof EVENT_CODE !== "undefined" && EVENT_CODE) {
+    eventEl.value = EVENT_CODE;
+  }
+
+  // Field image canvas setup
   var img = document.getElementById("img_as");
   if (img) {
     if (img.complete && img.naturalWidth) initCanvas();
@@ -595,7 +690,6 @@ window.onload = function() {
   initFirebase();
 
   // Re-fetch schedule when event field changes
-  var eventEl = document.getElementById("input_e");
   if (eventEl) {
     eventEl.addEventListener("change", fetchSchedule);
     eventEl.addEventListener("blur",   fetchSchedule);

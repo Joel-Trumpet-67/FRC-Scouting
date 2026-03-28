@@ -14,43 +14,37 @@ All scouting data syncs in real time across devices using a shared room code (Fi
 2. Enter the same **sync code** (e.g. `FRC3603`) on every device
 3. Fill out the scouting form for your assigned robot each match
 4. Hit **Submit** — data instantly appears on the dashboard
-5. The dashboard shows all teams ranked with Statbotics EPA comparison
+5. The dashboard shows all teams ranked with scouted averages + Statbotics EPA
 
 ---
 
 ## Changing the Event (Each Competition)
 
-Open `firebase-config.js` and update the event code:
+Open **`config/event-config.js`** — this is the only file you need to edit:
 
 ```js
-const TBA_KEY = "your_key_here";  // one-time setup, don't change
+const EVENT_CODE = "2026milac";   // ← change this to the new event code
+const TBA_KEY    = "your_key";    // ← only change if your key expires
 ```
 
-Then open `match.html` and find:
+Event codes follow the format `YEAR` + `event_id` — find yours at [thebluealliance.com](https://thebluealliance.com) (it's the last part of the event URL).
 
-```html
-<input type="text" id="input_e" name="e" value="2026milac" required>
-```
-
-Change `2026milac` to the new event key (e.g. `2026ilch`).
-Event keys follow the format: `YEAR` + `event_code` — find yours at [thebluealliance.com](https://thebluealliance.com).
-
-> **Note:** See `TODO.md` — this will soon move to a single `config.js` file so you only need to edit one place.
+Also replace `assets/images/2026/field_image.png` with the new season's field image if it changed.
 
 ---
 
-## Setup (One-Time)
+## Setup (One-Time, Already Done for This Project)
 
 ### 1. Firebase Realtime Database
 1. Go to [console.firebase.google.com](https://console.firebase.google.com)
-2. Create a project → Add a web app → copy the config
+2. Create a project → Add a web app → copy the config object
 3. Build → Realtime Database → Create database → **Start in test mode**
-4. Paste your config into `firebase-config.js`
+4. Paste your config into `config/firebase-config.js`
 
 ### 2. TBA API Key
 1. Go to [thebluealliance.com/account](https://thebluealliance.com/account)
-2. Generate a read API key
-3. Paste it into `firebase-config.js` as `TBA_KEY`
+2. Generate a read-only API key
+3. Paste it into `config/event-config.js` as `TBA_KEY`
 
 ### 3. GitHub Pages
 1. Repo → Settings → Pages → Branch: `main` / `(root)` → Save
@@ -62,25 +56,41 @@ Event keys follow the format: `YEAR` + `event_code` — find yours at [theblueal
 
 | Page | What You Scout |
 |------|----------------|
-| Pre-Match | Scouter, event, match #, robot position (auto-fills team from TBA) |
+| Pre-Match | Scouter initials, event, match #, robot position (auto-fills team # from TBA) |
 | Auton | Dumps, shots (1pt / 5pt), missed fuel, L1 climb |
 | Teleop | Won auto, shots (1pt / 5pt), missed fuel, hub capacity |
 | Endgame | Climb timer, final climb status (L1 / L2 / L3 / Failed / None) |
 | Misc | Died, tippy, downtime actions, comments |
-| Submit | Summary review → submit to Firebase |
+| Submit | Review summary → submit to Firebase → auto-advances to next match |
 
 ---
 
-## Files
+## Project Structure
 
-| File | Purpose |
-|------|---------|
-| `match.html` | Scouting form (scouts use this) |
-| `match.js` | Form logic, TBA auto-fill, Firebase submit |
-| `dashboard.html` | Live rankings dashboard |
-| `firebase-config.js` | **Edit this** — Firebase config + TBA key |
-| `TODO.md` | Planned improvements |
-| `resources/` | CSS, fonts, field image |
+```
+FRC-Scouting/
+├── match.html              ← Scout form (open on phones during matches)
+├── dashboard.html          ← Live rankings (open on laptop at pit/stands)
+│
+├── config/
+│   ├── event-config.js     ← EDIT THIS EACH EVENT (EVENT_CODE + TBA_KEY)
+│   └── firebase-config.js  ← Firebase credentials (one-time setup)
+│
+├── js/
+│   ├── match.js            ← Scout form logic
+│   └── dashboard.js        ← Dashboard logic
+│
+├── css/
+│   ├── scouting.css        ← Scout form styles
+│   └── dashboard.css       ← Dashboard styles
+│
+└── assets/
+    ├── fonts/              ← Alexis font
+    ├── images/2026/        ← Field image (replace each season)
+    └── lib/                ← Third-party JS libraries
+```
+
+See `TODO.md` for the pre-event checklist and planned improvements.
 
 ---
 
