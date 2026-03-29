@@ -155,23 +155,17 @@ var FIELD_LABELS = {
   pnotes: "Notes"
 };
 
-// TODO: update these label maps each season for new game options.
-var SRC_LABELS = { pit:"Pit Visit",      vid:"Reveal Video",  past:"Past Matches",    multi:"Multiple Sources" };
-var DRV_LABELS = { swerve:"Swerve",      tank:"Tank",         mec:"Mecanum",          other:"Other" };
-var PAL_LABELS = { none:"None",          basic:"Basic (L1)",  scores:"Scores pieces", full:"Full (Score+Climb)" };
-var PAC_LABELS = { unrel:"Unreliable",   incon:"Inconsistent", rel:"Reliable" };
-var PEC_LABELS = { none:"None",          l1:"Level 1",        l2:"Level 2",           l3:"Level 3" };
-var PER_LABELS = { unrel:"Unreliable",   incon:"Inconsistent", rel:"Reliable" };
-var POT_LABELS = { weak:"Weak",          avg:"Average",       strong:"Strong",        elite:"Elite" };
+// Label maps live in js/labels.js (shared with dashboard.js Pre-Comp tab).
+// TODO: update js/labels.js each season when game options change.
 
 function friendlyValue(key, val) {
-  if (key === "src") return SRC_LABELS[val] || val;
-  if (key === "drv") return DRV_LABELS[val] || val;
-  if (key === "pal") return PAL_LABELS[val] || val;
-  if (key === "pac") return PAC_LABELS[val] || val;
-  if (key === "pec") return PEC_LABELS[val] || val;
-  if (key === "per") return PER_LABELS[val] || val;
-  if (key === "pot") return POT_LABELS[val] || val;
+  if (key === "src") return LABEL_SRC[val] || val;
+  if (key === "drv") return LABEL_DRV[val] || val;
+  if (key === "pal") return LABEL_PAL[val] || val;
+  if (key === "pac") return LABEL_PAC[val] || val;
+  if (key === "pec") return LABEL_PEC[val] || val;
+  if (key === "per") return LABEL_PER[val] || val;
+  if (key === "pot") return LABEL_POT[val] || val;
   if (key === "ptl" || key === "pth" || key === "ptd")
     return val === "1" ? "Yes" : "No";
   return val || "—";
@@ -348,11 +342,6 @@ function clearForm() {
   // Uncheck all radio buttons
   document.querySelectorAll('input[type="radio"]').forEach(function(r) {
     r.checked = false;
-  });
-
-  // Clear hidden display_ fields (used to track radio selections)
-  document.querySelectorAll("[id*='display_']").forEach(function(el) {
-    el.value = "";
   });
 
   // Clear team name display

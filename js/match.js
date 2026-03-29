@@ -27,7 +27,6 @@ document.addEventListener("touchend",   moveTouch,  false);
 var initialX   = null;
 var xThreshold = 0.3;   // fraction of screen width required to trigger swipe
 var slide      = 0;
-var dataFormat = "tsv";
 
 // TBA schedule cache
 var schedule      = null;

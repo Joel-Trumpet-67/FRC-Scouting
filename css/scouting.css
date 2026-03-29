@@ -266,3 +266,11 @@ canvas.field-image-src {
     max-width: 96vw;
     height: auto;
 }
+
+/* Counter number display (used by match.html and precomp.html) */
+input.counter {
+    background-color: black;
+    color: white;
+    border: none;
+    text-align: center;
+}

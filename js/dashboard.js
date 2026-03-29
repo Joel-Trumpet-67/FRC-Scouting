@@ -31,12 +31,15 @@ var sortDir        = 'asc';
 // Pre-comp data (sessions/{code}/precomp — one entry per team, set by precomp.html)
 var precompData = {};   // keyed by team number string
 
-var db          = null;
-var syncCode    = null;
-var entriesRef  = null;
-var picklistRef = null;
-var precompRef  = null;
-var fbListener  = null;
+var db              = null;
+var syncCode        = null;
+var entriesRef      = null;
+var picklistRef     = null;
+var precompRef      = null;
+var fbListener      = null;
+var picklistListener = null;
+var precompListener  = null;
+var sbEvent          = null;   // last event we fetched Statbotics data for (cache key)
 
 // ============================================================
 // FIREBASE INIT
@@ -65,8 +68,13 @@ function applyCode(code) {
   setPill('pill-code', 'Code: ' + code, 'p-blue');
   document.getElementById('page-title').textContent = code + ' — Scouting Dashboard';
 
-  // Detach old Firebase listener before attaching new one
-  if (fbListener && entriesRef) entriesRef.off('value', fbListener);
+  // Detach all old listeners before switching to a new sync code
+  if (fbListener      && entriesRef)  entriesRef.off('value',  fbListener);
+  if (picklistListener && picklistRef) picklistRef.off('value', picklistListener);
+  if (precompListener  && precompRef)  precompRef.off('value',  precompListener);
+
+  // Reset Statbotics cache so it re-fetches for the new code's event
+  sbEvent = null;
 
   entriesRef  = db.ref('sessions/' + code + '/entries');
   picklistRef = db.ref('sessions/' + code + '/picklist');
@@ -79,10 +87,11 @@ function applyCode(code) {
   });
 
   // Keep picklist in sync (scouts/coaches can update from any device)
-  picklistRef.on('value', function(snap) {
+  picklistListener = function(snap) {
     picklistData = snap.val() || {};
     renderTable();
-  });
+  };
+  picklistRef.on('value', picklistListener);
 
   // Subscribe to pre-comp data (updates whenever precomp.html submits a team)
   subscribePrecomp();
@@ -123,6 +132,16 @@ function changeCode() {
 // ============================================================
 
 function fetchStatbotics(event) {
+  // Only hit the API when the event changes — every scout entry fires this,
+  // so without a cache check we'd make a network call on every submission.
+  if (event === sbEvent) {
+    mergeStatbotics();
+    autoFlagOverrated();
+    renderTable();
+    updateChips();
+    return;
+  }
+  sbEvent = event;
   setPill('pill-sb', 'Loading…', 'p-grey');
   fetch('https://api.statbotics.io/v3/team_events?event=' + encodeURIComponent(event) + '&limit=500')
     .then(function(r){ return r.json(); })
@@ -393,23 +412,18 @@ function exportCSV() {
 
 // Subscribes to pre-comp data written by precomp.html.
 // Updates the pre-comp table live whenever a scout submits a team.
+// The listener reference is stored so it can be detached in applyCode() on code change.
 function subscribePrecomp() {
   if (!precompRef) return;
-  precompRef.on('value', function(snap) {
+  precompListener = function(snap) {
     precompData = snap.val() || {};
     renderPrecompTable();
-  });
+  };
+  precompRef.on('value', precompListener);
 }
 
-// Label maps for pre-comp fields.
-// TODO: update these each season if capability questions change in precomp.html.
-var PC_SRC = { pit:'Pit Visit',    vid:'Reveal Video',   past:'Past Matches',    multi:'Multiple' };
-var PC_DRV = { swerve:'Swerve',    tank:'Tank',          mec:'Mecanum',          other:'Other' };
-var PC_PAL = { none:'None',        basic:'Basic',        scores:'Scores',        full:'Score+Climb' };
-var PC_PAC = { unrel:'Unreliable', incon:'Inconsistent', rel:'Reliable' };
-var PC_PEC = { none:'None',        l1:'L1',              l2:'L2',                l3:'L3' };
-var PC_PER = { unrel:'Unreliable', incon:'Inconsistent', rel:'Reliable' };
-var PC_POT = { weak:'Weak',        avg:'Average',        strong:'Strong',        elite:'Elite' };
+// Label maps come from js/labels.js (shared with precomp.js) — no duplication needed.
+// TODO: update js/labels.js each season when game options change.
 
 // Returns a CSS class name for the overall tier column so it's color-coded.
 function tierCls(tier) {
@@ -447,13 +461,13 @@ function renderPrecompTable() {
       '<td class="team">' +
         '<a class="tba" href="#" onclick="openTeamModal(\'' + e.t + '\');return false;">' + (e.t || '?') + '</a>' +
       '</td>' +
-      '<td>' + (PC_SRC[e.src] || e.src || '—') + '</td>' +
-      '<td>' + (PC_DRV[e.drv] || e.drv || '—') + '</td>' +
-      '<td>' + (PC_PAL[e.pal] || e.pal || '—') + '</td>' +
-      '<td>' + (PC_PAC[e.pac] || e.pac || '—') + '</td>' +
-      '<td>' + (PC_PEC[e.pec] || e.pec || '—') + '</td>' +
-      '<td>' + (PC_PER[e.per] || e.per || '—') + '</td>' +
-      '<td class="' + tierCls(tier) + '">' + (PC_POT[tier] || tier || '—') + '</td>' +
+      '<td>' + (LABEL_SRC[e.src] || e.src || '—') + '</td>' +
+      '<td>' + (LABEL_DRV[e.drv] || e.drv || '—') + '</td>' +
+      '<td>' + (LABEL_PAL[e.pal] || e.pal || '—') + '</td>' +
+      '<td>' + (LABEL_PAC[e.pac] || e.pac || '—') + '</td>' +
+      '<td>' + (LABEL_PEC[e.pec] || e.pec || '—') + '</td>' +
+      '<td>' + (LABEL_PER[e.per] || e.per || '—') + '</td>' +
+      '<td class="' + tierCls(tier) + '">' + (LABEL_POT[tier] || tier || '—') + '</td>' +
       '<td style="text-align:left; font-size:12px; color:#888;">' + (e.pnotes || '') + '</td>' +
     '</tr>';
   }).join('');

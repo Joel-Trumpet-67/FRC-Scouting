@@ -10,6 +10,8 @@
     <!-- Config: edit config/event-config.js to change event code + TBA key each season -->
     <script src="config/event-config.js"></script>
     <script src="config/firebase-config.js"></script>
+    <!-- Shared label maps (also used by dashboard.html Pre-Comp tab) -->
+    <script src="js/labels.js"></script>
     <style>
       /* ── Sync code modal (same as match.html) ─────────────── */
       #sync-modal {
@@ -163,7 +165,6 @@
                 <input type="radio" name="src" value="vid">Reveal Video<br>
                 <input type="radio" name="src" value="past">Past Matches<br>
                 <input type="radio" name="src" value="multi">Multiple Sources
-                <input type="hidden" id="display_src" value="">
               </td>
             </tr>
             <!-- Drive Type -->
@@ -174,7 +175,6 @@
                 <input type="radio" name="drv" value="tank">Tank<br>
                 <input type="radio" name="drv" value="mec">Mecanum<br>
                 <input type="radio" name="drv" value="other">Other
-                <input type="hidden" id="display_drv" value="">
               </td>
             </tr>
           </table>
@@ -205,7 +205,6 @@
                 <input type="radio" name="pal" value="basic">Basic (L1 only)<br>
                 <input type="radio" name="pal" value="scores">Scores game pieces<br>
                 <input type="radio" name="pal" value="full">Full (Score + Climb)
-                <input type="hidden" id="display_pal" value="">
               </td>
             </tr>
             <!-- Estimated auto 1-point shots -->
@@ -214,8 +213,7 @@
               <td class="field">
                 <input type="button" class="btn-dark" value="-" onclick="counter(this.parentElement,-1)">
                 <input class="counter" id="input_pa1" type="text" name="pa1"
-                       disabled value="0" size="2" maxlength="2"
-                       style="background-color:black;color:white;border:none;text-align:center;">
+                       disabled value="0" size="2" maxlength="2">
                 <input type="button" class="btn-dark" value="+" onclick="counter(this.parentElement,1)">
               </td>
             </tr>
@@ -225,8 +223,7 @@
               <td class="field">
                 <input type="button" class="btn-dark" value="-" onclick="counter(this.parentElement,-1)">
                 <input class="counter" id="input_pa5" type="text" name="pa5"
-                       disabled value="0" size="2" maxlength="2"
-                       style="background-color:black;color:white;border:none;text-align:center;">
+                       disabled value="0" size="2" maxlength="2">
                 <input type="button" class="btn-dark" value="+" onclick="counter(this.parentElement,1)">
               </td>
             </tr>
@@ -237,7 +234,6 @@
                 <input type="radio" name="pac" value="unrel">Unreliable<br>
                 <input type="radio" name="pac" value="incon">Inconsistent<br>
                 <input type="radio" name="pac" value="rel">Reliable
-                <input type="hidden" id="display_pac" value="">
               </td>
             </tr>
           </table>
@@ -278,8 +274,7 @@
               <td class="field">
                 <input type="button" class="btn-dark" value="-" onclick="counter(this.parentElement,-1)">
                 <input class="counter" id="input_pt1" type="text" name="pt1"
-                       disabled value="0" size="2" maxlength="2"
-                       style="background-color:black;color:white;border:none;text-align:center;">
+                       disabled value="0" size="2" maxlength="2">
                 <input type="button" class="btn-dark" value="+" onclick="counter(this.parentElement,1)">
               </td>
             </tr>
@@ -289,8 +284,7 @@
               <td class="field">
                 <input type="button" class="btn-dark" value="-" onclick="counter(this.parentElement,-1)">
                 <input class="counter" id="input_pt5" type="text" name="pt5"
-                       disabled value="0" size="2" maxlength="2"
-                       style="background-color:black;color:white;border:none;text-align:center;">
+                       disabled value="0" size="2" maxlength="2">
                 <input type="button" class="btn-dark" value="+" onclick="counter(this.parentElement,1)">
               </td>
             </tr>
@@ -327,7 +321,6 @@
                 <input type="radio" name="pec" value="l1">Level 1<br>
                 <input type="radio" name="pec" value="l2">Level 2<br>
                 <input type="radio" name="pec" value="l3">Level 3
-                <input type="hidden" id="display_pec" value="">
               </td>
             </tr>
             <!-- How reliable is their climb? -->
@@ -337,7 +330,6 @@
                 <input type="radio" name="per" value="unrel">Unreliable<br>
                 <input type="radio" name="per" value="incon">Inconsistent<br>
                 <input type="radio" name="per" value="rel">Reliable
-                <input type="hidden" id="display_per" value="">
               </td>
             </tr>
           </table>
@@ -366,7 +358,6 @@
                 <input type="radio" name="pot" value="avg">Average<br>
                 <input type="radio" name="pot" value="strong">Strong<br>
                 <input type="radio" name="pot" value="elite">Elite
-                <input type="hidden" id="display_pot" value="">
               </td>
             </tr>
             <!-- Free-text notes — keep brief -->
