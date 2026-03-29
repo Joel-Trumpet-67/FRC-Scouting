@@ -47,6 +47,16 @@ function swipePage(increment) {
   var next = slide + increment;
   if (next < 0 || next >= slides.length) return;
 
+  // Block forward navigation if the current page fails validation.
+  if (increment > 0) {
+    var err = validatePage(slide);
+    if (err) {
+      showPageError(slide, err);
+      return;
+    }
+  }
+  clearPageError(slide);
+
   slides[slide].style.display = "none";
   slide = next;
   window.scrollTo(0, 0);
@@ -74,9 +84,36 @@ function moveTouch(e) {
   initialX = null;
 }
 
-// TODO: add per-page validation before allowing swipe forward.
-//       Example: block leaving Pre-Match until Scouter + Match # are filled in.
-//       This prevents scouts from accidentally advancing with missing data.
+// ── Page validation ───────────────────────────────────────────
+// Returns an error string if the page is incomplete, null if ok.
+// Add cases here as needed for other pages.
+function validatePage(pageIndex) {
+  if (pageIndex === 0) {
+    var s = (document.getElementById('input_s').value || '').trim();
+    var m = (document.getElementById('input_m').value || '').trim();
+    var r = document.querySelector('input[name="r"]:checked');
+    var t = (document.getElementById('input_t').value || '').trim();
+    if (!s) return 'Enter Scouter Initials before continuing.';
+    if (!m) return 'Enter a Match # before continuing.';
+    if (!r) return 'Select a Robot position before continuing.';
+    if (!t) return 'Team # is missing — check TBA auto-fill or enter manually.';
+  }
+  return null;
+}
+
+function showPageError(pageIndex, msg) {
+  var el = document.getElementById('page-error-' + pageIndex);
+  if (!el) return;
+  el.textContent = '\u26A0 ' + msg;
+  el.style.display = 'block';
+}
+
+function clearPageError(pageIndex) {
+  var el = document.getElementById('page-error-' + pageIndex);
+  if (!el) return;
+  el.textContent = '';
+  el.style.display = 'none';
+}
 
 // ============================================================
 // COUNTER (increment/decrement buttons)
