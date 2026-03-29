@@ -199,34 +199,27 @@ function mergeStatbotics() {
 // ============================================================
 
 // Summarizes raw scouting entries into per-team averages.
-// TODO: add more computed fields here as needed (e.g. defence rate, auto leave %).
-//       Just push values into the array in the teams loop, then average them below.
+// Scoring formula and field list live in season/game-fields.js — edit that, not this.
 function processData() {
   var teams = {};
   allData.forEach(function(e){
     var t = String(e.t || '?');
-    if (!teams[t]) teams[t] = { t:t, matches:0, as1:[], as5:[], ts1:[], ts5:[], hcap:[], efs:[] };
-    var s = teams[t]; s.matches++;
-    s.as1.push(num(e.as1));  s.as5.push(num(e.as5));
-    s.ts1.push(num(e.ts1));  s.ts5.push(num(e.ts5));
-    s.hcap.push(num(e.hcap));
-    s.efs.push(e.efs || 'X');
+    if (!teams[t]) {
+      teams[t] = { t:t, matches:0 };
+      SEASON_SCORING.numericFields.forEach(function(f){ teams[t][f] = []; });
+      SEASON_SCORING.rawFields.forEach(function(f){ teams[t][f] = []; });
+    }
+    var s = teams[t];
+    s.matches++;
+    SEASON_SCORING.numericFields.forEach(function(f){ s[f].push(num(e[f])); });
+    SEASON_SCORING.rawFields.forEach(function(f){ s[f].push(e[f] || ''); });
   });
 
   teamStats = Object.values(teams).map(function(s){
-    var climbs = s.efs.filter(function(v){ return v==='1'||v==='2'||v==='3'; });
-    return {
-      t:          s.t,
-      matches:    s.matches,
-      // Auto points: Shot1 × 1pt + Shot5 × 5pts (average across matches)
-      scoutAuto:  avg(s.as1) + avg(s.as5) * 5,
-      // Teleop points: same scoring
-      scoutTele:  avg(s.ts1) + avg(s.ts5) * 5,
-      hcap:       avg(s.hcap),
-      climbRate:  s.matches ? climbs.length / s.matches * 100 : 0,
-      // Statbotics fields filled in by mergeStatbotics()
+    var stats = SEASON_SCORING.computeStats(s);
+    return Object.assign({ t:s.t, matches:s.matches }, stats, {
       sbRank:null, numTeams:null, sbTotal:null, sbAuto:null, sbTele:null, sbEnd:null,
-    };
+    });
   });
   mergeStatbotics();
 }
@@ -565,12 +558,7 @@ function openTeamModal(team) {
   }
   document.getElementById('tm-sb').innerHTML = sbHtml;
 
-  // Friendly label maps
-  // TODO: update these each season to match the new game's endgame/downtime options.
-  var EFS = { '1':'L1 Climb','2':'L2 Climb','3':'L3 Climb','F':'Failed','X':'No Attempt' };
-  var DTA = { 'D':'Defence','P':'Pickup','B':'Both','N':'None' };
-  var ROB = { r1:'Red 1',b1:'Blue 1',r2:'Red 2',b2:'Blue 2',r3:'Red 3',b3:'Blue 3' };
-
+  // Field list and label maps come from season/game-fields.js — edit that, not this.
   var listHtml = '';
   if (!entries.length) {
     listHtml = '<div class="no-entries">No scouting entries yet for this team.</div>';
@@ -578,25 +566,11 @@ function openTeamModal(team) {
     document.getElementById('tm-entries-hdr').textContent = entries.length + ' Scouting ' + (entries.length===1?'Entry':'Entries');
     entries.forEach(function(e){
       var isRed  = (e.r||'').charAt(0)==='r';
-      var robTag = '<span class="m-robot '+(isRed?'red-tag':'blue-tag')+'">'+(ROB[e.r]||e.r||'?')+'</span>';
-      var fields = [
-        ['Auto Shot 1', e.as1||'0'],
-        ['Auto Shot 5', e.as5||'0'],
-        ['Auto Missed', e.amf||'0'],
-        ['Dumps 8',     e.ad8==='1'?'Yes':'No'],
-        ['L1 Climb',    e.ac1==='1'?'Yes':'No'],
-        ['Won Auto',    e.taw==='1'?'Yes':'No'],
-        ['Tele Shot 1', e.ts1||'0'],
-        ['Tele Shot 5', e.ts5||'0'],
-        ['Tele Missed', e.tmf||'0'],
-        ['Hub Cap',     e.hcap||'0'],
-        ['Climb Timer', e.ect||'0'],
-        ['Final Status',EFS[e.efs]||e.efs||'—'],
-        ['Died',        e.die==='1'?'Yes':'No'],
-        ['Tippy',       e.tip==='1'?'Yes':'No'],
-        ['Downtime',    DTA[e.dta]||e.dta||'—'],
-      ].map(function(f){
-        return '<div class="tm-field">'+f[0]+': <span>'+f[1]+'</span></div>';
+      var robTag = '<span class="m-robot '+(isRed?'red-tag':'blue-tag')+'">'+(ROBOT_LABELS[e.r]||e.r||'?')+'</span>';
+      var fields = MODAL_FIELDS.map(function(f){
+        var raw = e[f.key];
+        var display = f.fn ? f.fn(raw) : (raw||'0');
+        return '<div class="tm-field">'+f.label+': <span>'+display+'</span></div>';
       }).join('');
 
       var comment = e.cmm ? '<div class="tm-comment">"' + e.cmm + '"</div>' : '';

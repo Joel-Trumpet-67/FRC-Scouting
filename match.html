@@ -178,6 +178,12 @@
           </p>
         </div>
 
+        <!-- ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+             GAME-SPECIFIC PAGES — UPDATE EACH NEW SEASON
+             Also update season/game-fields.js to match.
+             Pages above (Pre-Match) and below (Misc + Submit) are game-agnostic.
+             ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑ -->
+
         <!-- ===================== AUTON ===================== -->
         <div id="auton" class="main-panel" style="background-color: rgb(123, 168, 184);">
           <h2 id="autonHeader2">Auton</h2>
@@ -307,6 +313,8 @@
           </p>
         </div>
 
+        <!-- END GAME-SPECIFIC PAGES -->
+
         <!-- ===================== POST-MATCH (MISC) ===================== -->
         <div id="post-match" class="main-panel" style="background-color: rgb(89, 134, 168);">
           <h2>Miscellaneous</h2>
@@ -387,6 +395,8 @@
       </div><!-- #main-panel-holder -->
     </form>
 
+    <!-- season/game-fields.js must load before match.js -->
+    <script src="season/game-fields.js"></script>
     <script src="js/match.js"></script>
   </body>
 </html>

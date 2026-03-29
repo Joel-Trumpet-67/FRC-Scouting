@@ -306,50 +306,9 @@ function getData() {
 // SUBMIT PAGE — SUMMARY TABLE
 // ============================================================
 
-// Add an entry here for every named field in match.html.
-// key = the name="xx" attribute on the input, value = display label.
-// TODO: update this table each season when game fields change.
-var FIELD_LABELS = {
-  s:   "Scouter",
-  e:   "Event",
-  l:   "Match Level",
-  m:   "Match #",
-  r:   "Robot",
-  t:   "Team #",
-  ad8: "Dumps 8",
-  as1: "Auton Shot 1",
-  as5: "Auton Shot 5",
-  amf: "Auton Missed",
-  ac1: "Auton L1 Climb",
-  taw: "Won Auto?",
-  ts1: "Teleop Shot 1",
-  ts5: "Teleop Shot 5",
-  tmf: "Teleop Missed",
-  hcap:"Hub Capacity",
-  ect: "Climb Timer (s)",
-  efs: "Final Status",
-  die: "Died/Immobilized",
-  tip: "Tippy",
-  dta: "Downtime Actions",
-  cmm: "Comments"
-};
-
-// TODO: update these label maps when game-specific options change each season.
-var EFS_LABELS   = { "1":"Level 1 Climb", "2":"Level 2 Climb", "3":"Level 3 Climb", "F":"Failed Climb", "X":"Not attempted" };
-var DTA_LABELS   = { "D":"Defence", "P":"Pickup Fuel", "B":"Both", "N":"No Actions" };
-var ROBOT_LABELS = { r1:"Red-1", b1:"Blue-1", r2:"Red-2", b2:"Blue-2", r3:"Red-3", b3:"Blue-3" };
-var LEVEL_LABELS = { qm:"Quals", sf:"Semifinals", f:"Finals" };
-
-function friendlyValue(key, val) {
-  if (key === "efs") return EFS_LABELS[val] || val;
-  if (key === "dta") return DTA_LABELS[val] || val;
-  if (key === "r")   return ROBOT_LABELS[val] || val;
-  if (key === "l")   return LEVEL_LABELS[val] || val;
-  if (key === "ad8" || key === "ac1" || key === "taw" ||
-      key === "die" || key === "tip")
-    return val === "1" ? "Yes" : "No";
-  return val || "—";
-}
+// FIELD_LABELS, EFS_LABELS, DTA_LABELS, ROBOT_LABELS, LEVEL_LABELS,
+// and friendlyValue() all live in season/game-fields.js.
+// Edit that file — not this one — when the game changes.
 
 function updateSummary() {
   var data  = getDataObject();
