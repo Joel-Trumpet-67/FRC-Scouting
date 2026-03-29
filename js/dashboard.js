@@ -35,6 +35,8 @@ var picklistRef     = null;
 var fbListener      = null;
 var picklistListener = null;
 var sbEvent          = null;   // last event we fetched Statbotics data for (cache key)
+var scheduleMatches  = [];     // TBA qual match schedule (array of match objects)
+var scheduleEvent    = null;   // event code the schedule was fetched for (cache key)
 
 // ============================================================
 // FIREBASE INIT
@@ -95,7 +97,7 @@ function subscribeEntries() {
     allData = Object.values(raw);
     processData();
     var event = getEvent();
-    if (event) fetchStatbotics(event);
+    if (event) { fetchStatbotics(event); fetchMatchSchedule(event); }
     else { renderTable(); renderAllianceTable(); updateChips(); }
     setPill('pill-fb', '● Live (' + allData.length + ' entries)', 'p-green');
     document.getElementById('ts').textContent = 'Updated: ' + new Date().toLocaleTimeString();
@@ -477,6 +479,104 @@ function updateChips() {
   document.getElementById('c-entries').textContent = allData.length   || '—';
   document.getElementById('c-event').textContent   = getEvent()       || '—';
   document.getElementById('c-sb').textContent      = Object.keys(statboticsData).length || '—';
+}
+
+// ============================================================
+// MISSING MATCH TRACKER
+// ============================================================
+
+// Fetches the qual match schedule from TBA once per event (cached).
+// Calls checkMissingMatches() when the schedule is ready.
+function fetchMatchSchedule(event) {
+  if (!event) return;
+  var key = (typeof TBA_KEY !== 'undefined') ? TBA_KEY : null;
+  if (!key) return;
+
+  // Already have the schedule for this event — just recheck
+  if (event === scheduleEvent && scheduleMatches.length) {
+    checkMissingMatches();
+    return;
+  }
+
+  fetch('https://www.thebluealliance.com/api/v3/event/' + event + '/matches/simple', {
+    headers: { 'X-TBA-Auth-Key': key }
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(matches) {
+      if (!Array.isArray(matches)) return;
+      scheduleEvent   = event;
+      scheduleMatches = matches
+        .filter(function(m) { return m.comp_level === 'qm'; })
+        .sort(function(a, b) { return a.match_number - b.match_number; });
+      checkMissingMatches();
+    })
+    .catch(function() { /* TBA unavailable — silent, tracker just won't show */ });
+}
+
+// Compares scouted entries against the schedule.
+// Only checks matches ≤ the highest match we've already scouted,
+// so future unplayed matches never show as gaps.
+function checkMissingMatches() {
+  var chip  = document.getElementById('missing-chip');
+  var panel = document.getElementById('missing-panel');
+  if (!chip || !scheduleMatches.length || !allData.length) {
+    if (chip) chip.style.display = 'none';
+    return;
+  }
+
+  // Build set of scouted (matchNum_position) combinations
+  var scouted = {};
+  allData.forEach(function(e) {
+    if (e.m && e.r) scouted[String(e.m) + '_' + e.r] = true;
+  });
+
+  // Only check up to the highest match number we have any entry for
+  var maxScouted = Math.max.apply(null, allData.map(function(e) { return parseInt(e.m) || 0; }));
+
+  var positions = ['r1','r2','r3','b1','b2','b3'];
+  var gaps = {};
+
+  scheduleMatches
+    .filter(function(m) { return m.match_number <= maxScouted; })
+    .forEach(function(match) {
+      var missing = positions.filter(function(p) {
+        return !scouted[match.match_number + '_' + p];
+      });
+      if (missing.length) gaps[match.match_number] = missing;
+    });
+
+  var matchNums = Object.keys(gaps).sort(function(a, b) { return parseInt(a) - parseInt(b); });
+
+  if (!matchNums.length) {
+    chip.style.display = 'none';
+    if (panel) panel.style.display = 'none';
+    return;
+  }
+
+  // Show the chip
+  chip.style.display = '';
+  document.getElementById('c-missing').textContent = matchNums.length;
+
+  // Build the panel content (don't show it — user clicks to open)
+  if (panel) {
+    panel.innerHTML =
+      '<div class="missing-header">' +
+        '<span>Missing entries — ' + matchNums.length + ' match' + (matchNums.length > 1 ? 'es' : '') + ' incomplete</span>' +
+        '<button class="missing-close" onclick="toggleMissingPanel()">✕</button>' +
+      '</div>' +
+      '<table class="missing-table">' +
+        '<tr><th>Match</th><th>Missing positions</th></tr>' +
+        matchNums.map(function(m) {
+          return '<tr><td>Q' + m + '</td><td>' + gaps[m].join(', ') + '</td></tr>';
+        }).join('') +
+      '</table>';
+  }
+}
+
+function toggleMissingPanel() {
+  var panel = document.getElementById('missing-panel');
+  if (!panel) return;
+  panel.style.display = panel.style.display === 'none' ? '' : 'none';
 }
 
 // ============================================================

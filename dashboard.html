@@ -45,8 +45,14 @@
   <div class="chip"><div class="chip-val" id="c-entries">—</div><div class="chip-label">Entries</div></div>
   <div class="chip"><div class="chip-val" id="c-event">—</div><div class="chip-label">Event</div></div>
   <div class="chip"><div class="chip-val" id="c-sb">—</div><div class="chip-label">SB Teams</div></div>
+  <div class="chip chip-warn" id="missing-chip" style="display:none;" onclick="toggleMissingPanel()" title="Click to see which matches are incomplete">
+    <div class="chip-val" id="c-missing">0</div>
+    <div class="chip-label">⚠ Gaps</div>
+  </div>
 </div>
 <div class="timestamp" id="ts"></div>
+<!-- Missing matches panel — only visible when gaps exist -->
+<div id="missing-panel" style="display:none;"></div>
 
 <!-- Tab bar -->
 <div class="tab-bar">

@@ -54,6 +54,40 @@ header h1 { font-family:Alexis; font-size:22px; font-weight:400; color:#97c7f0; 
 .chip { background:#141414; border:1px solid #222; border-radius:6px; padding:8px 14px; text-align:center; min-width:88px; }
 .chip-val   { font-size:20px; font-weight:700; color:#97c7f0; }
 .chip-label { font-size:10px; color:#555; text-transform:uppercase; letter-spacing:1px; margin-top:2px; }
+.chip-warn  { border-color:#b8860b; cursor:pointer; }
+.chip-warn .chip-val   { color:#f5a623; }
+.chip-warn .chip-label { color:#b8860b; }
+.chip-warn:hover { background:#1e1600; }
+
+/* ── Missing matches panel ───────────────────────────────── */
+#missing-panel {
+  background: #1a1200;
+  border: 1px solid #b8860b;
+  border-radius: 6px;
+  margin: 0 20px 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+}
+.missing-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #f5a623;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.missing-close {
+  background: none;
+  border: none;
+  color: #f5a623;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0 4px;
+}
+.missing-table { width: 100%; border-collapse: collapse; }
+.missing-table th { color: #888; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; text-align: left; padding: 2px 8px 4px 0; }
+.missing-table td { color: #ccc; padding: 3px 8px 3px 0; border-top: 1px solid #2a2000; }
+.missing-table td:first-child { color: #f5a623; font-weight: 600; width: 60px; }
 
 .timestamp { font-size:11px; color:#333; padding:2px 24px 8px; }
 
