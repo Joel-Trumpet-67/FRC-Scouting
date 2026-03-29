@@ -11,9 +11,6 @@
   <!-- Config: edit config/event-config.js to change event code + TBA key each season -->
   <script src="config/event-config.js"></script>
   <script src="config/firebase-config.js"></script>
-  <!-- Shared label maps (also used by precomp.html) -->
-  <script src="js/labels.js"></script>
-
   <!-- Dashboard styles -->
   <link rel="stylesheet" href="css/dashboard.css">
 </head>
@@ -51,12 +48,6 @@
 </div>
 <div class="timestamp" id="ts"></div>
 
-<!-- Tab bar — toggle between live match data and pre-comp capability data -->
-<div class="tab-bar">
-  <button class="tab tab-active" id="tab-match"   onclick="switchTab('match')">Match Data</button>
-  <button class="tab"            id="tab-precomp" onclick="switchTab('precomp')">Pre-Comp</button>
-</div>
-
 <!-- ── Match data table ─────────────────────────────────────────── -->
 <div id="match-data-wrap" class="wrap">
   <table>
@@ -91,38 +82,6 @@
   </table>
 </div><!-- #match-data-wrap -->
 
-<!-- ── Pre-comp capability table ─────────────────────────────────── -->
-<!-- Shown when scouts click the "Pre-Comp" tab above.               -->
-<!-- Data comes from sessions/{code}/precomp in Firebase.            -->
-<!-- One row per team — filled out before the event via precomp.html -->
-<div id="precomp-wrap" class="wrap" style="display:none;">
-  <p style="font-size:12px; color:#444; margin-bottom:10px;">
-    Pre-comp data is entered at
-    <a href="precomp.html" style="color:#97c7f0;">precomp.html</a>
-    before the event — no match schedule needed.
-    Re-scouting a team overwrites the previous entry.
-  </p>
-  <table id="precomp-table">
-    <thead>
-      <!-- TODO: add onclick sortBy() to pre-comp columns if you want sortable headers -->
-      <tr>
-        <th>Team</th>
-        <th>Drive</th>
-        <th>Avg Auto<br>Pts</th>
-        <th>Avg Tele<br>Pts</th>
-        <th>Auto Level</th>
-        <th>Max Climb</th>
-        <th>Pick</th>
-        <th style="text-align:left;">Notes</th>
-      </tr>
-    </thead>
-    <tbody id="precomp-tbody">
-      <tr class="no-data">
-        <td colspan="9">No pre-comp data for this sync code yet. Open precomp.html to scout teams.</td>
-      </tr>
-    </tbody>
-  </table>
-</div><!-- #precomp-wrap -->
 
 <!-- Team detail modal (populated by openTeamModal() in js/dashboard.js) -->
 <div id="team-modal">

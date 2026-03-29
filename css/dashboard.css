@@ -137,12 +137,6 @@ th.sb-div, td.sb-div { border-left:2px solid #3a2e00; }
 .tab:hover { color: #999; }
 .tab.tab-active { color: #97c7f0; border-bottom-color: #97c7f0; }
 
-/* ── Pre-comp table overrides ────────────────────────────── */
-/* Most styles are inherited from the main table rules above. */
-#precomp-table { min-width: 700px; }
-#precomp-table thead th { cursor: default; }  /* not sortable yet — see TODO */
-#precomp-table td { font-size: 12px; }
-
 /* ── Team detail modal ──────────────────────────────────── */
 #team-modal {
   display:none; position:fixed; inset:0;

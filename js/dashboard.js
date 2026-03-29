@@ -28,17 +28,12 @@ var picklistData   = {};   // keyed by team number string: "available" | "overra
 var sortCol        = 'sbRank';
 var sortDir        = 'asc';
 
-// Pre-comp data (sessions/{code}/precomp — one entry per team, set by precomp.html)
-var precompData = {};   // keyed by team number string
-
 var db              = null;
 var syncCode        = null;
 var entriesRef      = null;
 var picklistRef     = null;
-var precompRef      = null;
 var fbListener      = null;
 var picklistListener = null;
-var precompListener  = null;
 var sbEvent          = null;   // last event we fetched Statbotics data for (cache key)
 
 // ============================================================
@@ -69,16 +64,14 @@ function applyCode(code) {
   document.getElementById('page-title').textContent = code + ' — Scouting Dashboard';
 
   // Detach all old listeners before switching to a new sync code
-  if (fbListener      && entriesRef)  entriesRef.off('value',  fbListener);
+  if (fbListener       && entriesRef)  entriesRef.off('value',  fbListener);
   if (picklistListener && picklistRef) picklistRef.off('value', picklistListener);
-  if (precompListener  && precompRef)  precompRef.off('value',  precompListener);
 
   // Reset Statbotics cache so it re-fetches for the new code's event
   sbEvent = null;
 
   entriesRef  = db.ref('sessions/' + code + '/entries');
   picklistRef = db.ref('sessions/' + code + '/picklist');
-  precompRef  = db.ref('sessions/' + code + '/precomp');
 
   // Load picklist once, then subscribe to live entries
   picklistRef.once('value', function(snap) {
@@ -92,9 +85,6 @@ function applyCode(code) {
     renderTable();
   };
   picklistRef.on('value', picklistListener);
-
-  // Subscribe to pre-comp data (updates whenever precomp.html submits a team)
-  subscribePrecomp();
 }
 
 function subscribeEntries() {
@@ -405,102 +395,6 @@ function exportCSV() {
 
 // TODO: add an "Export Pick List" button that exports just the picklist with
 //       each team's scouted + SB data next to their pick status.
-
-// ============================================================
-// PRE-COMP TAB
-// ============================================================
-
-// Subscribes to pre-comp data written by precomp.html.
-// Updates the pre-comp table live whenever a scout submits a team.
-// The listener reference is stored so it can be detached in applyCode() on code change.
-function subscribePrecomp() {
-  if (!precompRef) return;
-  precompListener = function(snap) {
-    precompData = snap.val() || {};
-    renderPrecompTable();
-  };
-  precompRef.on('value', precompListener);
-}
-
-// Label maps come from js/labels.js (shared with precomp.js) — no duplication needed.
-// TODO: update js/labels.js each season when game options change.
-
-// Returns a CSS class name for the pick recommendation column so it's color-coded.
-function pickCls(ppr) {
-  if (ppr === 'p1')  return 'good';
-  if (ppr === 'p2')  return 'ok';
-  if (ppr === 'dnp') return 'low';
-  if (ppr === 'def') return 'mid';
-  return '';
-}
-
-// Renders the pre-comp capability table.
-// Sorted by pick recommendation (1st pick first), then by avg total pts desc.
-function renderPrecompTable() {
-  var tbody = document.getElementById('precomp-tbody');
-  if (!tbody) return;
-
-  var entries = Object.values(precompData);
-  if (!entries.length) {
-    tbody.innerHTML = '<tr class="no-data"><td colspan="9">No pre-comp data yet. Open precomp.html to scout teams.</td></tr>';
-    return;
-  }
-
-  // Sort: best pick first, then by estimated total pts (auto + tele) descending
-  var pickOrder = { p1:0, p2:1, def:2, dnp:3 };
-  entries.sort(function(a, b) {
-    var pa = pickOrder[a.ppr] != null ? pickOrder[a.ppr] : 99;
-    var pb = pickOrder[b.ppr] != null ? pickOrder[b.ppr] : 99;
-    if (pa !== pb) return pa - pb;
-    var ptsa = (parseFloat(a.pap) || 0) + (parseFloat(a.ptp) || 0);
-    var ptsb = (parseFloat(b.pap) || 0) + (parseFloat(b.ptp) || 0);
-    return ptsb - ptsa;
-  });
-
-  tbody.innerHTML = entries.map(function(e) {
-    var ppr = e.ppr || '';
-    return '<tr>' +
-      '<td class="team">' +
-        '<a class="tba" href="#" onclick="openTeamModal(\'' + e.t + '\');return false;">' + (e.t || '?') + '</a>' +
-      '</td>' +
-      '<td>' + (LABEL_DRV[e.drv] || e.drv || '—') + '</td>' +
-      '<td style="text-align:center;">' + (e.pap || '—') + '</td>' +
-      '<td style="text-align:center;">' + (e.ptp || '—') + '</td>' +
-      '<td>' + (LABEL_PAL[e.pal] || e.pal || '—') + '</td>' +
-      '<td>' + (LABEL_PEC[e.pec] || e.pec || '—') + '</td>' +
-      '<td class="' + pickCls(ppr) + '" style="font-weight:600;">' + (LABEL_PPR[ppr] || ppr || '—') + '</td>' +
-      '<td style="text-align:left; font-size:12px; color:#888;">' + (e.pnotes || '') + '</td>' +
-    '</tr>';
-  }).join('');
-}
-
-// TODO: add "Export Pre-Comp CSV" button that exports just precompData.
-// TODO: merge pre-comp tier data into the match data table as an extra column
-//       so coaches can see expected vs actual side by side.
-
-// ============================================================
-// TAB SWITCHING (Match Data ↔ Pre-Comp)
-// ============================================================
-
-function switchTab(name) {
-  var matchWrap   = document.getElementById('match-data-wrap');
-  var precompWrap = document.getElementById('precomp-wrap');
-  var tabMatch    = document.getElementById('tab-match');
-  var tabPrecomp  = document.getElementById('tab-precomp');
-  if (!matchWrap || !precompWrap) return;
-
-  if (name === 'match') {
-    matchWrap.style.display   = '';
-    precompWrap.style.display = 'none';
-    tabMatch.classList.add('tab-active');
-    tabPrecomp.classList.remove('tab-active');
-  } else {
-    matchWrap.style.display   = 'none';
-    precompWrap.style.display = '';
-    tabMatch.classList.remove('tab-active');
-    tabPrecomp.classList.add('tab-active');
-  }
-}
 
 // ============================================================
 // CLEAR ALL DATA
