@@ -366,12 +366,13 @@ function initFirebase() {
     return;
   }
 
-  syncCode = localStorage.getItem("scout_sync_code");
-  if (syncCode) {
-    applyCode(syncCode);
-  } else {
-    showCodeModal();
+  // Always show the modal on load so scouts can confirm/change the code.
+  // Pre-fill with the saved code if there is one.
+  var saved = localStorage.getItem("scout_sync_code");
+  if (saved) {
+    document.getElementById("sync-input").value = saved;
   }
+  showCodeModal();
 }
 
 function applyCode(code) {
