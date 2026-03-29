@@ -33,9 +33,10 @@ var schedule      = null;
 var scheduleEvent = null;
 
 // Firebase / sync
-var db         = null;
-var syncCode   = null;
-var entriesRef = null;
+var db          = null;
+var syncCode    = null;
+var entriesRef  = null;
+var isConnected = false;   // live Firebase connection state
 
 // ============================================================
 // NAVIGATION
@@ -346,43 +347,65 @@ function submitData() {
     return;
   }
 
-  if (!entriesRef) {
+  if (!syncCode) {
     statusEl.textContent = "No sync code set — enter a code in the banner above.";
     statusEl.style.color = "#c0392b";
     return;
   }
 
-  btn.setAttribute("value", "Submitting…");
+  data.timestamp = new Date().toISOString();
+
+  // ── OFFLINE PATH ─────────────────────────────────────────────
+  // If Firebase is disconnected, skip the network entirely and
+  // queue locally. The queue flushes automatically on reconnect.
+  if (!isConnected || !entriesRef) {
+    queueAdd("sessions/" + syncCode + "/entries", data);
+    statusEl.textContent = "\uD83D\uDCF5 Saved offline \u2014 will sync when connected.";
+    statusEl.style.color = "#e67e22";
+    btn.setAttribute("value", "Queued \u2713");
+    setTimeout(clearForm, 1500);
+    return;
+  }
+
+  // ── ONLINE PATH ──────────────────────────────────────────────
+  btn.setAttribute("value", "Submitting\u2026");
   btn.disabled = true;
 
   // Duplicate check: same scouter + match # + robot + event = already submitted
-  // TODO: add a "force submit anyway" button for cases where a re-scout is intentional
   entriesRef.once("value", function(snapshot) {
     var existing = snapshot.val() || {};
     var isDup = Object.values(existing).some(function(d) {
       return d.s === data.s && d.m === data.m && d.r === data.r && d.e === data.e;
     });
     if (isDup) {
-      statusEl.textContent = "⚠ Duplicate — already submitted this match/robot/scouter.";
+      statusEl.textContent = "\u26A0 Duplicate \u2014 already submitted this match/robot/scouter.";
       statusEl.style.color = "#c0392b";
       btn.setAttribute("value", "Submit");
       btn.disabled = false;
       return;
     }
-    data.timestamp = new Date().toISOString();
     entriesRef.push(data, function(err) {
       if (err) {
-        statusEl.textContent = "✖ Firebase error: " + err.message;
-        statusEl.style.color = "#c0392b";
-        btn.setAttribute("value", "Submit");
-        btn.disabled = false;
+        // Firebase push failed — queue it so data isn't lost.
+        queueAdd("sessions/" + syncCode + "/entries", data);
+        statusEl.textContent = "\uD83D\uDCF5 Firebase error \u2014 saved offline, will retry.";
+        statusEl.style.color = "#e67e22";
+        btn.setAttribute("value", "Queued \u2713");
+        setTimeout(clearForm, 1500);
       } else {
-        statusEl.textContent = "✓ Saved! Advancing to next match…";
+        statusEl.textContent = "\u2713 Saved! Advancing to next match\u2026";
         statusEl.style.color = "#27ae60";
-        btn.setAttribute("value", "Submitted ✓");
+        btn.setAttribute("value", "Submitted \u2713");
         setTimeout(clearForm, 1500);
       }
     });
+  }, function(err) {
+    // Duplicate check itself failed (lost connection mid-submit) — queue it.
+    queueAdd("sessions/" + syncCode + "/entries", data);
+    statusEl.textContent = "\uD83D\uDCF5 Lost connection \u2014 saved offline, will retry.";
+    statusEl.style.color = "#e67e22";
+    btn.setAttribute("value", "Queued \u2713");
+    setTimeout(clearForm, 1500);
   });
 }
 
@@ -399,8 +422,82 @@ function copyData() {
   document.getElementById("copyButton").setAttribute("value", "Copied");
 }
 
-// TODO: if Firebase is unavailable, queue submissions in localStorage and
-//       retry when the connection is restored. This would let scouts work offline.
+// ============================================================
+// OFFLINE QUEUE
+// ============================================================
+//
+//  When Firebase is unreachable (bad competition wifi), submissions are saved
+//  to localStorage instead of being lost. When the connection returns, the
+//  queue is flushed automatically and the banner updates.
+//
+//  Queue format (localStorage key: 'scout_offline_queue'):
+//    [ { id, refPath, data, queuedAt }, ... ]
+//
+// ============================================================
+
+var QUEUE_KEY = 'scout_offline_queue';
+
+function queueLoad() {
+  try   { return JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]'); }
+  catch (e) { return []; }
+}
+
+function queueSave(q) {
+  try { localStorage.setItem(QUEUE_KEY, JSON.stringify(q)); }
+  catch (e) { console.error('Offline queue save failed:', e); }
+}
+
+// Add one entry to the queue and refresh the banner.
+function queueAdd(refPath, data) {
+  var q = queueLoad();
+  q.push({
+    id:       'q_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+    refPath:  refPath,
+    data:     data,
+    queuedAt: new Date().toISOString()
+  });
+  queueSave(q);
+  updateBannerWithQueue();
+}
+
+// Remove one entry by its id after a successful flush.
+function queueRemove(id) {
+  queueSave(queueLoad().filter(function(item) { return item.id !== id; }));
+}
+
+// Push all queued entries to Firebase. Called automatically on reconnect.
+function queueFlush() {
+  var q = queueLoad();
+  if (!q.length || !db) return;
+
+  q.forEach(function(item) {
+    db.ref(item.refPath).push(item.data, function(err) {
+      if (!err) {
+        queueRemove(item.id);
+        updateBannerWithQueue();
+      }
+      // If it fails again we leave it in the queue for the next flush attempt.
+    });
+  });
+}
+
+// Update the sync banner to reflect connection + queue state.
+function updateBannerWithQueue() {
+  if (!syncCode) return;
+  var count = queueLoad().length;
+  if (!isConnected) {
+    showSyncBanner(
+      count > 0
+        ? '\uD83D\uDCF5 Offline \u2014 ' + count + ' entr' + (count === 1 ? 'y' : 'ies') + ' queued'
+        : '\uD83D\uDCF5 Offline \u2014 ' + syncCode,
+      '#e67e22'
+    );
+  } else if (count > 0) {
+    showSyncBanner('\uD83D\uDD04 Syncing ' + count + ' queued entr' + (count === 1 ? 'y' : 'ies') + '\u2026', '#f39c12');
+  } else {
+    showSyncBanner('Sync: ' + syncCode, '#27ae60');
+  }
+}
 
 // ============================================================
 // MATCH START (updates robot display label, triggers TBA auto-fill)
@@ -625,6 +722,25 @@ function initFirebase() {
     return;
   }
 
+  // Track live connection. Fires immediately with current state, then on every change.
+  db.ref('.info/connected').on('value', function(snap) {
+    var wasConnected = isConnected;
+    isConnected = snap.val() === true;
+
+    if (isConnected && !wasConnected && syncCode) {
+      // Just came back online — flush any queued entries.
+      var pending = queueLoad().length;
+      if (pending) {
+        showSyncBanner('\uD83D\uDCF6 Back online \u2014 syncing ' + pending + ' queued entr' + (pending === 1 ? 'y' : 'ies') + '\u2026', '#f39c12');
+        queueFlush();
+      } else {
+        updateBannerWithQueue();
+      }
+    } else {
+      updateBannerWithQueue();
+    }
+  });
+
   syncCode = localStorage.getItem("scout_sync_code");
   if (syncCode) {
     applyCode(syncCode);
@@ -637,8 +753,10 @@ function applyCode(code) {
   syncCode   = code;
   entriesRef = db.ref("sessions/" + code + "/entries");
   localStorage.setItem("scout_sync_code", code);
-  showSyncBanner("Sync: " + code, "#27ae60");
+  updateBannerWithQueue();
   fetchSchedule();
+  // If we're already online, flush anything that was queued under this code.
+  if (isConnected) queueFlush();
 }
 
 function showCodeModal() {
