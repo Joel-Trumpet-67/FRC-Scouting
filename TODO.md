@@ -1,4 +1,4 @@
-# FRC Scouting App — TODO List
+# FRC Scouting App — TODO & Reference
 
 ---
 
@@ -7,26 +7,29 @@
 ```
 FRC-Scouting/
 ├── match.html              ← Match scouting form (open on phones during matches)
-├── precomp.html            ← Pre-comp capability form (use before the event)
-├── dashboard.html          ← Live rankings + pre-comp tab (open on laptop)
+├── dashboard.html          ← Live dashboard (open on laptop)
+│
+├── season/
+│   └── game-fields.js      ← !! EDIT THIS EACH NEW SEASON !! (labels, scoring, fields)
 │
 ├── config/
-│   ├── event-config.js     ← EDIT THIS EACH EVENT (EVENT_CODE + TBA_KEY)
-│   └── firebase-config.js  ← Firebase credentials (one-time setup)
+│   ├── event-config.js     ← EDIT THIS EACH EVENT (EVENT_CODE + TBA_KEY) — gitignored
+│   ├── event-config.example.js
+│   ├── firebase-config.js  ← Firebase credentials (one-time setup) — gitignored
+│   └── firebase-config.example.js
 │
 ├── js/
-│   ├── match.js            ← Match scouting form logic
-│   ├── precomp.js          ← Pre-comp form logic
-│   └── dashboard.js        ← Dashboard logic (handles both tabs)
+│   ├── match.js            ← Match form logic (game-agnostic)
+│   └── dashboard.js        ← Dashboard logic (game-agnostic)
 │
 ├── css/
-│   ├── scouting.css        ← Shared styles for match + precomp forms
-│   └── dashboard.css       ← Dashboard styles (includes tab bar)
+│   ├── scouting.css        ← Styles for the scouting form
+│   └── dashboard.css       ← Dashboard styles
 │
 ├── assets/
-│   ├── fonts/alexisv3.ttf
-│   ├── images/2026/field_image.png  ← replace with new field image each year
-│   └── lib/easy.qrcode.min.js
+│   ├── fonts/
+│   ├── images/2026/        ← replace with new field image each year
+│   └── lib/
 │
 ├── server.js               ← Optional local dev server (not needed for GitHub Pages)
 └── config.json             ← Local server config (not needed for GitHub Pages)
@@ -36,129 +39,86 @@ FRC-Scouting/
 
 ## 🔁 Before Each Event (checklist)
 
-- [ ] Open `config/event-config.js`
-- [ ] Change `EVENT_CODE` to the new event (e.g. `"2026miket"`)
+- [ ] Open `config/event-config.js` → change `EVENT_CODE` to the new event
 - [ ] Confirm `TBA_KEY` is still valid (check at thebluealliance.com/account)
-- [ ] Replace `assets/images/YEAR/field_image.png` with the current season's field image
-- [ ] Update `FIELD_LABELS` in `js/match.js` if game fields changed
-- [ ] Update `EFS_LABELS` / `DTA_LABELS` in `js/match.js` for new endgame options
-- [ ] Update pre-comp field labels in `js/precomp.js` if capability questions change
-- [ ] Update pre-comp label maps in `js/dashboard.js` (`PC_PAL`, `PC_PEC`, etc.)
-- [ ] Update the team detail modal field list in `js/dashboard.js` `openTeamModal()`
-- [ ] Push to GitHub → GitHub Pages auto-deploys
-
-**Pre-event (Pre-Comp workflow):**
-- [ ] Share the event's TBA code and sync code with your scouting team
-- [ ] Have each scout open `precomp.html` and fill out teams from reveal videos
-- [ ] If attending a week-0 or pit day, update entries with live pit visit data
-- [ ] Check the Pre-Comp tab in `dashboard.html` to review your team assessments
+- [ ] Push to GitHub → GitHub Pages auto-deploys in ~1 minute
+- [ ] Share the `match.html` URL and sync code with your scouting team
 
 ---
 
-## 🚀 High Priority (do before next season)
+## 🗓 Each New Season (checklist)
+
+- [ ] Update `season/game-fields.js` → `FIELD_LABELS`, `EFS_LABELS`, `DTA_LABELS`, `SEASON_SCORING`, `MODAL_FIELDS`
+- [ ] Update the Auto / Teleop / Endgame pages in `match.html` (marked with `GAME-SPECIFIC PAGES` comments)
+- [ ] Replace `assets/images/YEAR/field_image.png` with the new field map
+
+---
+
+## 🚀 Still To Do
 
 ### Add DEFAULT_SYNC_CODE to config
 - Add `const DEFAULT_SYNC_CODE = "TEAM1234";` to `config/event-config.js`
-- In `js/match.js` `initFirebase()`, use it as a fallback if localStorage is empty
-- Scouts won't need to type the code in — just open and go
-- **File to edit:** `config/event-config.js`, `js/match.js`
-
-### Pre-comp: overwrite warning
-- When re-scouting a team that already has a pre-comp entry, show a confirmation prompt
-- Currently it silently overwrites — a prompt prevents accidental data loss
-- **File to edit:** `js/precomp.js` → `submitData()` (check if precompRef.child(team) exists first)
-
-### Pre-comp: scouted count in banner
-- Show how many teams have been pre-scouted in the banner: "Sync: TEAM1234 — 8 teams scouted"
-- Listen on `precompRef` and count keys, then update the banner text
-- **File to edit:** `js/precomp.js` → `applyCode()` — add a `.on('value')` listener
-
-### Pre-comp: validation before swipe
-- Block leaving the Team Info page until Scouter + Team # are filled
-- Same idea as the match.js validation TODO
-- **File to edit:** `js/precomp.js` → `swipePage()`
-
-### Pre-comp: export CSV
-- Add an "Export Pre-Comp CSV" button on the dashboard's Pre-Comp tab
-- Exports all precompData rows as a CSV
-- **File to edit:** `js/dashboard.js` → add `exportPrecompCSV()` next to `exportCSV()`
-
-### Pre-comp: merge tier column into match data table
-- Add an "Expected Tier" column to the main match data table pulled from precompData
-- Lets coaches see expected vs actual side by side during alliance selection
-- **File to edit:** `js/dashboard.js` → `renderTable()`, `dashboard.html` → thead
-
-### Per-page validation before swipe
-- Block advancing from Pre-Match until Scouter initials + Match # are filled
-- Show a brief error message instead of silently allowing blank data through
-- **File to edit:** `js/match.js` → `swipePage()` function
-
----
-
-## 📋 Medium Priority
-
-### Offline queue (submit when reconnected)
-- If Firebase is unreachable at submit time, save the entry to `localStorage`
-- On next Firebase connect, push the queued entries and clear the queue
-- Prevents data loss at venues with spotty wifi
-- **File to edit:** `js/match.js` → `submitData()`, `initFirebase()`
+- In `js/match.js` `initFirebase()`, fall back to `DEFAULT_SYNC_CODE` if localStorage is empty
+- Scouts open the app and it just works — no code entry needed
 
 ### Export pick list
-- Add an "Export Pick List" button in `dashboard.html`
+- Add an "Export Pick List" button on the dashboard
 - Exports team number, scouted avg, SB EPA, and pick status as CSV
-- **File to edit:** `js/dashboard.js` → add `exportPicklist()` next to `exportCSV()`
+- **File:** `js/dashboard.js` → add `exportPicklist()` next to `exportCSV()`
 
 ### Persist sort preference
 - Save `sortCol` + `sortDir` to `localStorage` in `sortBy()`
-- Restore them on page load so sort survives refresh during alliance selection
-- **File to edit:** `js/dashboard.js` → `sortBy()`, boot section
+- Restore on page load so sort survives refresh during alliance selection
+- **File:** `js/dashboard.js` → `sortBy()` + boot section
 
-### 3-state pick list toggle (manual overrated)
-- Current cycle: Available → Do Not Pick → Available
-- New cycle: Available → Overrated → Do Not Pick → Available
-- Lets coaches manually mark a team as overrated even without SB data
-- **File to edit:** `js/dashboard.js` → `toggleStatus()`
+### 3-state pick list toggle
+- Current cycle: Available → DNP → Available
+- New cycle: Available → Overrated → DNP → Available
+- Lets coaches manually flag a team as overrated even without SB data
+- **File:** `js/dashboard.js` → `toggleStatus()`
+
+### Firebase security rules
+- Currently in test mode (open read/write)
+- Add rules so only authenticated users (or users with the sync code) can write
+- Document the recommended rules in README
+
+### Coach notes on teams
+- Text area in the team detail modal that saves to Firebase
+- Path: `sessions/{code}/notes/{team}` — visible to all coaches on the same sync code
+- **File:** `js/dashboard.js` → `openTeamModal()`
+
+### Match sparkline in team modal
+- Small SVG chart in the team detail modal showing a team's scoring trend match-by-match
+- Helps spot sandbagging or robots that improve/decline over the day
+- **File:** `js/dashboard.js` → `openTeamModal()`
 
 ---
 
-## 💡 Nice to Have (future season)
+## 💡 Nice to Have
 
-### Coach notes on teams
-- Add a text area in the team detail modal
-- Saves to Firebase: `sessions/{code}/notes/{team}`
-- Visible to all coaches connected to the same sync code
-
-### Match sparkline in team modal
-- Small inline chart in the team detail modal showing scoring trend by match
-- Helps spot sandbagging or robots that improve/decline over the day
-- Could use a simple `<canvas>` or a tiny charting library
-
-### Alliance selection simulator
-- Pick 3 alliances, calculate combined EPA, highlight pick conflicts
-- Useful during alliance selection at champs/districts
-
-### Light mode / print mode
-- Dashboard dark theme is hard to read outdoors or under bright lights
-- Add a CSS toggle or `@media print` styles so coaches can print rankings
+- **Light mode / print mode** — dark theme is hard to read outdoors; `@media print` styles for rankings sheet
+- **Alliance selection simulator** — pick 3 alliances, show combined EPA, flag pick conflicts
+- **Matches scouted confidence** — show count next to each team so coaches know if averages are from 1 match or 10
+- **Recent submit flash** — briefly highlight a row green when new data comes in for that team
 
 ---
 
 ## ✅ Completed
 
-- Firebase Realtime Database sync via shared room code
-- TBA auto-fill (team numbers from live match schedule)
-- Match preview grid showing all 6 positions (R1–R3 / B1–B3)
-- Robot position + scouter initials persist after each submit
-- Hub Capacity counter in Teleop
-- GitHub Pages hosting (no server needed)
-- Dashboard with Statbotics EPA columns + scouted averages
-- Sortable table (click any column header)
-- Team detail modal with all scouting entries
-- Overrated auto-flagging (SB rank vs. scouted percentile)
-- Picklist synced live across all connected devices
+- Firebase Realtime Database sync via shared sync code
+- TBA schedule auto-fill (team # from live match schedule)
+- Match preview grid (all 6 positions R1–R3 / B1–B3)
+- Robot position + scouter initials persist between matches
+- Dashboard with Statbotics EPA + scouted averages, sortable columns
+- Team detail modal with per-match entry list
+- Overrated auto-flagging (SB rank vs. scouted percentile mismatch)
+- Pick list synced live across all coach devices
 - Export CSV
-- Refactored into clean folder structure (config/, js/, css/, assets/)
-- EVENT_CODE + TBA_KEY extracted to config/event-config.js
-- Pre-comp scouting form (precomp.html + js/precomp.js)
-- Dashboard Pre-Comp tab showing capability assessments by tier
-- TBA team roster autocomplete in precomp.html (works before schedule is posted)
+- Alliance selection mode (dedicated tab, Ours/Taken/DNP, live banner)
+- Offline queue — submissions saved locally when Firebase unreachable, auto-syncs on reconnect
+- Per-page validation — blocks advancing past Pre-Match with blank fields
+- `.gitignore` + config example templates (credentials never committed)
+- `season/game-fields.js` — all game-specific config isolated in one folder
+- Hardcoded team references removed (generic examples throughout)
+- README rewritten for public / CD audience
+- GitHub Pages deploy instructions + season update checklist in README
