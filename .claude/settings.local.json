@@ -4,7 +4,10 @@
       "Bash(mkdir -p assets/fonts assets/images/2026 assets/lib)",
       "Bash(cp resources/fonts/alexisv3.ttf assets/fonts/alexisv3.ttf)",
       "Bash(cp \"2026/field_image.png\" assets/images/2026/field_image.png)",
-      "Bash(cp resources/js/easy.qrcode.min.js assets/lib/easy.qrcode.min.js)"
+      "Bash(cp resources/js/easy.qrcode.min.js assets/lib/easy.qrcode.min.js)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }
