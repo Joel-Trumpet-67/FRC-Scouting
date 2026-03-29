@@ -122,3 +122,5 @@ FRC-Scouting/
 - Hardcoded team references removed (generic examples throughout)
 - README rewritten for public / CD audience
 - GitHub Pages deploy instructions + season update checklist in README
+- MIT license added
+- `.claude/settings.local.json` gitignored (not committed)

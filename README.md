@@ -1,5 +1,8 @@
 # FRC Scouting App
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![GitHub Pages](https://img.shields.io/badge/Deploy-GitHub%20Pages-blue?logo=github)](https://pages.github.com)
+
 A free, real-time match scouting system built for FRC competitions.
 Scouts use their phones to submit data → coaches see it live on a dashboard.
 No server, no app install, no coding required to use. Runs entirely on GitHub Pages + Firebase.
