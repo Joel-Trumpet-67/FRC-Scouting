@@ -13,8 +13,8 @@
 //
 // ============================================================
 
-const EVENT_CODE = "2026milac";   // ← change this each event
-const TBA_KEY    = "D0sikEeg6pogqXPslVg6Df5Bfbqm986ivNwOjEqrwuXw21bH6Q4a666YfMaKjc2D";
+const EVENT_CODE = "2026mibig";   // ← change this each event
+const TBA_KEY    = "2QOo8b2XNWxQYpsUtcYLmnn5RL80UCzxrNyVhOe52BcwREBjwFSJfh0esuZTEeu7";
 
 // TODO: add DEFAULT_SYNC_CODE here so scouts don't have to type it in each time
 //       e.g. const DEFAULT_SYNC_CODE = "FRC3603";
