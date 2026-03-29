@@ -94,18 +94,26 @@ const TBA_KEY    = "your_key_here";
 
 To find your event code: go to [thebluealliance.com](https://thebluealliance.com), find your event, and copy the last segment of the URL (e.g. `2026miket`).
 
-### Step 6 — Deploy to GitHub Pages (free)
+### Step 6 — Deploy to GitHub Pages (free, 2 clicks)
 
-1. In your forked repo: **Settings → Pages**
-2. Under **Branch**, select `main` and `/ (root)` → **Save**
-3. Wait ~1 minute → your app is live at:
+> No server needed. GitHub Pages hosts static files for free directly from your repo.
+
+1. In your forked repo go to **Settings → Pages** (left sidebar)
+2. Under **Source / Branch**, select **`main`** and **`/ (root)`** → click **Save**
+3. GitHub will show a green banner: *"Your site is live at..."* — usually takes under a minute
+
+Your app is now live at:
 
 ```
-https://YOUR-USERNAME.github.io/FRC-Scouting/match.html      ← scouts
-https://YOUR-USERNAME.github.io/FRC-Scouting/dashboard.html  ← coaches
+https://YOUR-USERNAME.github.io/FRC-Scouting/match.html      ← scouts open this on their phones
+https://YOUR-USERNAME.github.io/FRC-Scouting/dashboard.html  ← coaches open this on the laptop
 ```
+
+**Every `git push` auto-redeploys.** When you update event codes or game fields before a competition, just push and GitHub Pages picks it up within 30–60 seconds — no manual steps.
 
 Share the `match.html` link with your scouts. Open `dashboard.html` on the coach laptop. Done.
+
+> 💡 **Testing locally?** You can also open `match.html` directly in a browser — no server required. Firebase still syncs as long as you have internet.
 
 ---
 
@@ -152,17 +160,23 @@ When a scout (or coach) opens the app for the first time, they're asked to enter
 
 ---
 
-## Updating for a New Season
+## New Season Checklist
 
-When the game changes, you'll need to update the scouting form fields. Everything is in two places:
+All game-specific config is isolated in the `season/` folder. When the game changes:
 
-**1. `match.html`** — the form inputs. Add/remove `<input>` elements to match the new game's scoring.
+**Files to edit:**
 
-**2. `js/match.js`** — two sections to update:
-- `FIELD_LABELS` — display names for each field (shown on the summary page)
-- `friendlyValue()` — how to display radio/checkbox values in the summary
+- [ ] **`season/game-fields.js`** — update field labels, scoring formula, radio value maps, and the team modal field list *(see the comments inside — every section tells you what to change)*
+- [ ] **`match.html`** — swap out the Auto, Teleop, and Endgame form pages *(clearly marked with `GAME-SPECIFIC PAGES` comments)*
+- [ ] **`assets/images/YEAR/field_image.png`** — replace with the new season's field map image
 
-That's it. The submit, sync, offline queue, and dashboard logic are all game-agnostic.
+**Files you do NOT need to touch:**
+- `js/match.js` — game-agnostic
+- `js/dashboard.js` — game-agnostic
+- `css/` — game-agnostic
+- `config/` — only changes if your Firebase project or TBA key changes
+
+After editing, `git push` and GitHub Pages auto-deploys within a minute.
 
 ---
 
@@ -170,27 +184,29 @@ That's it. The submit, sync, offline queue, and dashboard logic are all game-agn
 
 ```
 FRC-Scouting/
-├── match.html                    ← Scouting form (open on phones)
-├── dashboard.html                ← Live dashboard (open on laptop)
+├── match.html                     ← Scouting form (open on phones)
+├── dashboard.html                 ← Live dashboard (open on laptop)
+│
+├── season/                        ← !! UPDATE THIS EACH NEW SEASON !!
+│   └── game-fields.js             ← Field labels, scoring formula, modal fields
 │
 ├── config/
-│   ├── firebase-config.js        ← Your Firebase credentials (gitignored)
-│   ├── firebase-config.example.js← Template — copy this
-│   ├── event-config.js           ← EVENT_CODE + TBA_KEY (gitignored)
-│   └── event-config.example.js  ← Template — copy this
+│   ├── firebase-config.js         ← Your Firebase credentials (gitignored)
+│   ├── firebase-config.example.js ← Template — copy and fill in
+│   ├── event-config.js            ← EVENT_CODE + TBA_KEY (gitignored)
+│   └── event-config.example.js   ← Template — copy and fill in
 │
 ├── js/
-│   ├── match.js                  ← Scouting form logic
-│   ├── dashboard.js              ← Dashboard logic (both tabs)
-│   └── labels.js                 ← Shared field label maps
+│   ├── match.js                   ← Scouting form logic (game-agnostic)
+│   └── dashboard.js               ← Dashboard logic (game-agnostic)
 │
 ├── css/
-│   ├── scouting.css              ← Styles for the scouting form
-│   └── dashboard.css             ← Styles for the dashboard
+│   ├── scouting.css               ← Styles for the scouting form
+│   └── dashboard.css              ← Styles for the dashboard
 │
 └── assets/
-    ├── images/2026/              ← Field image (replace each season)
-    └── lib/                      ← Third-party JS (QR code library)
+    ├── images/2026/               ← Field image (replace each season)
+    └── lib/                       ← Third-party JS (QR code library)
 ```
 
 ---
