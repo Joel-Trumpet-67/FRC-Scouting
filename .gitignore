@@ -1,0 +1,8 @@
+# Firebase and API keys — never commit these
+config/firebase-config.js
+config/event-config.js
+firebase-config.js
+
+# OS junk
+.DS_Store
+Thumbs.db
