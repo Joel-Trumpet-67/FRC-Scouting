@@ -167,7 +167,6 @@ function friendlyValue(key, val) {
   if (key === "pac") return LABEL_PAC[val] || val;
   if (key === "pec") return LABEL_PEC[val] || val;
   if (key === "per") return LABEL_PER[val] || val;
-  if (key === "pot") return LABEL_POT[val] || val;
   if (key === "ppr") return LABEL_PPR[val] || val;
   if (key === "ptl" || key === "pth" || key === "ptd")
     return val === "1" ? "Yes" : "No";
@@ -217,11 +216,9 @@ function submitData() {
 
   data.timestamp = new Date().toISOString();
 
-  // Pre-comp uses SET (not push) — one entry per team number.
-  // Re-scouting the same team overwrites the previous entry.
-  // This is intentional: pre-comp assessments get refined as you learn more.
-  // For match-by-match performance data, use match.html instead.
-  precompRef.child(String(data.t)).set(data, function(err) {
+  // Pre-comp uses PUSH so multiple scouts can each submit their own
+  // assessment of the same team. All entries show on the dashboard.
+  precompRef.push(data, function(err) {
     if (err) {
       statusEl.textContent = "✖ Firebase error: " + err.message;
       statusEl.style.color = "#c0392b";
@@ -236,9 +233,6 @@ function submitData() {
   });
 }
 
-// TODO: add a "Force Overwrite" prompt when re-scouting an already-scouted team,
-//       so scouts don't accidentally overwrite good data. Could check if
-//       precompRef.child(teamNum) already has data before calling .set().
 
 // ============================================================
 // COPY DATA (backup, in case Firebase is down)
