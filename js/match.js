@@ -4,7 +4,7 @@
 //
 //  HOW IT WORKS:
 //    1. Scout opens match.html on their phone
-//    2. They enter a shared sync code (e.g. "FRC3603") to join the session
+//    2. They enter a shared sync code (e.g. "TEAM1234") to join the session
 //    3. TBA schedule is fetched to auto-fill team numbers
 //    4. On submit, data is pushed to Firebase → dashboard reads it live
 //
@@ -820,7 +820,7 @@ function showSyncBanner(text, color) {
 }
 
 // TODO: show entry count in the sync banner so scouts can confirm their data went through.
-//       e.g. "Sync: FRC3603 (12 entries)"  — listen on entriesRef and count.
+//       e.g. "Sync: TEAM1234 (12 entries)"  — listen on entriesRef and count.
 
 // ============================================================
 // INIT

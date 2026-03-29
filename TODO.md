@@ -37,7 +37,7 @@ FRC-Scouting/
 ## 🔁 Before Each Event (checklist)
 
 - [ ] Open `config/event-config.js`
-- [ ] Change `EVENT_CODE` to the new event (e.g. `"2026milac"`)
+- [ ] Change `EVENT_CODE` to the new event (e.g. `"2026miket"`)
 - [ ] Confirm `TBA_KEY` is still valid (check at thebluealliance.com/account)
 - [ ] Replace `assets/images/YEAR/field_image.png` with the current season's field image
 - [ ] Update `FIELD_LABELS` in `js/match.js` if game fields changed
@@ -58,7 +58,7 @@ FRC-Scouting/
 ## 🚀 High Priority (do before next season)
 
 ### Add DEFAULT_SYNC_CODE to config
-- Add `const DEFAULT_SYNC_CODE = "FRC3603";` to `config/event-config.js`
+- Add `const DEFAULT_SYNC_CODE = "TEAM1234";` to `config/event-config.js`
 - In `js/match.js` `initFirebase()`, use it as a fallback if localStorage is empty
 - Scouts won't need to type the code in — just open and go
 - **File to edit:** `config/event-config.js`, `js/match.js`
@@ -69,7 +69,7 @@ FRC-Scouting/
 - **File to edit:** `js/precomp.js` → `submitData()` (check if precompRef.child(team) exists first)
 
 ### Pre-comp: scouted count in banner
-- Show how many teams have been pre-scouted in the banner: "Sync: FRC3603 — 8 teams scouted"
+- Show how many teams have been pre-scouted in the banner: "Sync: TEAM1234 — 8 teams scouted"
 - Listen on `precompRef` and count keys, then update the banner text
 - **File to edit:** `js/precomp.js` → `applyCode()` — add a `.on('value')` listener
 
