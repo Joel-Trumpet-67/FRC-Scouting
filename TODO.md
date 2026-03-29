@@ -6,20 +6,22 @@
 
 ```
 FRC-Scouting/
-├── match.html              ← Scout form (open on phones during matches)
-├── dashboard.html          ← Live rankings (open on laptop at pit/stands)
+├── match.html              ← Match scouting form (open on phones during matches)
+├── precomp.html            ← Pre-comp capability form (use before the event)
+├── dashboard.html          ← Live rankings + pre-comp tab (open on laptop)
 │
 ├── config/
 │   ├── event-config.js     ← EDIT THIS EACH EVENT (EVENT_CODE + TBA_KEY)
 │   └── firebase-config.js  ← Firebase credentials (one-time setup)
 │
 ├── js/
-│   ├── match.js            ← Scout form logic
-│   └── dashboard.js        ← Dashboard logic
+│   ├── match.js            ← Match scouting form logic
+│   ├── precomp.js          ← Pre-comp form logic
+│   └── dashboard.js        ← Dashboard logic (handles both tabs)
 │
 ├── css/
-│   ├── scouting.css        ← Scout form styles
-│   └── dashboard.css       ← Dashboard styles
+│   ├── scouting.css        ← Shared styles for match + precomp forms
+│   └── dashboard.css       ← Dashboard styles (includes tab bar)
 │
 ├── assets/
 │   ├── fonts/alexisv3.ttf
@@ -40,8 +42,16 @@ FRC-Scouting/
 - [ ] Replace `assets/images/YEAR/field_image.png` with the current season's field image
 - [ ] Update `FIELD_LABELS` in `js/match.js` if game fields changed
 - [ ] Update `EFS_LABELS` / `DTA_LABELS` in `js/match.js` for new endgame options
+- [ ] Update pre-comp field labels in `js/precomp.js` if capability questions change
+- [ ] Update pre-comp label maps in `js/dashboard.js` (`PC_PAL`, `PC_PEC`, etc.)
 - [ ] Update the team detail modal field list in `js/dashboard.js` `openTeamModal()`
 - [ ] Push to GitHub → GitHub Pages auto-deploys
+
+**Pre-event (Pre-Comp workflow):**
+- [ ] Share the event's TBA code and sync code with your scouting team
+- [ ] Have each scout open `precomp.html` and fill out teams from reveal videos
+- [ ] If attending a week-0 or pit day, update entries with live pit visit data
+- [ ] Check the Pre-Comp tab in `dashboard.html` to review your team assessments
 
 ---
 
@@ -53,12 +63,30 @@ FRC-Scouting/
 - Scouts won't need to type the code in — just open and go
 - **File to edit:** `config/event-config.js`, `js/match.js`
 
-### Pit scouting page
-- Add `pit.html` + `js/pit.js` for collecting robot spec data before the event:
-  drivetrain type, auto modes available, max climb level, notes
-- Use the same Firebase sync code to store under `sessions/{code}/pit/{team}`
-- Show pit data alongside match data in the team detail modal
-- **Files to create:** `pit.html`, `js/pit.js`
+### Pre-comp: overwrite warning
+- When re-scouting a team that already has a pre-comp entry, show a confirmation prompt
+- Currently it silently overwrites — a prompt prevents accidental data loss
+- **File to edit:** `js/precomp.js` → `submitData()` (check if precompRef.child(team) exists first)
+
+### Pre-comp: scouted count in banner
+- Show how many teams have been pre-scouted in the banner: "Sync: FRC3603 — 8 teams scouted"
+- Listen on `precompRef` and count keys, then update the banner text
+- **File to edit:** `js/precomp.js` → `applyCode()` — add a `.on('value')` listener
+
+### Pre-comp: validation before swipe
+- Block leaving the Team Info page until Scouter + Team # are filled
+- Same idea as the match.js validation TODO
+- **File to edit:** `js/precomp.js` → `swipePage()`
+
+### Pre-comp: export CSV
+- Add an "Export Pre-Comp CSV" button on the dashboard's Pre-Comp tab
+- Exports all precompData rows as a CSV
+- **File to edit:** `js/dashboard.js` → add `exportPrecompCSV()` next to `exportCSV()`
+
+### Pre-comp: merge tier column into match data table
+- Add an "Expected Tier" column to the main match data table pulled from precompData
+- Lets coaches see expected vs actual side by side during alliance selection
+- **File to edit:** `js/dashboard.js` → `renderTable()`, `dashboard.html` → thead
 
 ### Per-page validation before swipe
 - Block advancing from Pre-Match until Scouter initials + Match # are filled
@@ -131,3 +159,6 @@ FRC-Scouting/
 - Export CSV
 - Refactored into clean folder structure (config/, js/, css/, assets/)
 - EVENT_CODE + TBA_KEY extracted to config/event-config.js
+- Pre-comp scouting form (precomp.html + js/precomp.js)
+- Dashboard Pre-Comp tab showing capability assessments by tier
+- TBA team roster autocomplete in precomp.html (works before schedule is posted)

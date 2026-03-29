@@ -3,13 +3,22 @@
 Live match scouting app for FRC events. Built for GitHub Pages — no server required.
 All scouting data syncs in real time across devices using a shared room code (Firebase).
 
-**Live app:** https://Joel-Trumpet-67.github.io/FRC-Scouting/match.html
+**Match scouting:** https://Joel-Trumpet-67.github.io/FRC-Scouting/match.html
+**Pre-comp scouting:** https://Joel-Trumpet-67.github.io/FRC-Scouting/precomp.html
 **Dashboard:** https://Joel-Trumpet-67.github.io/FRC-Scouting/dashboard.html
 
 ---
 
 ## How It Works
 
+### Before the Event (Pre-Comp)
+1. Open `precomp.html` on any device — no match schedule needed
+2. Enter the same **sync code** as the rest of your team
+3. For each team attending, fill out the capability form (drive type, auto level, expected climb, overall tier)
+4. Data is pulled from TBA's team roster so names autocomplete — works even before the schedule is posted
+5. View all pre-comp assessments on the **Pre-Comp** tab in `dashboard.html`
+
+### During the Event (Match Scouting)
 1. Everyone on the scouting team opens `match.html` on their phone/tablet
 2. Enter the same **sync code** (e.g. `FRC3603`) on every device
 3. Fill out the scouting form for your assigned robot each match
@@ -52,7 +61,18 @@ Also replace `assets/images/2026/field_image.png` with the new season's field im
 
 ---
 
-## Scouting Form Pages
+## Pre-Comp Form Pages (`precomp.html`)
+
+| Page | What You Scout |
+|------|----------------|
+| Team Info | Scouter, team # (TBA name autocomplete), scouting source, drive type |
+| Auto Capability | Expected auto level, estimated shots (1pt / 5pt), auto consistency |
+| Teleop Capability | Scores low/high, estimated shots, plays defense |
+| Endgame Capability | Expected max climb level, climb reliability |
+| Overall Assessment | Overall tier (Weak / Average / Strong / Elite), free-text notes |
+| Submit | Review summary → submit to Firebase (overwrites previous entry for that team) |
+
+## Match Scouting Pages (`match.html`)
 
 | Page | What You Scout |
 |------|----------------|
@@ -69,19 +89,21 @@ Also replace `assets/images/2026/field_image.png` with the new season's field im
 
 ```
 FRC-Scouting/
-├── match.html              ← Scout form (open on phones during matches)
-├── dashboard.html          ← Live rankings (open on laptop at pit/stands)
+├── match.html              ← Match scouting form (open on phones during matches)
+├── precomp.html            ← Pre-comp capability form (use before the event)
+├── dashboard.html          ← Live rankings + pre-comp tab (open on laptop)
 │
 ├── config/
 │   ├── event-config.js     ← EDIT THIS EACH EVENT (EVENT_CODE + TBA_KEY)
 │   └── firebase-config.js  ← Firebase credentials (one-time setup)
 │
 ├── js/
-│   ├── match.js            ← Scout form logic
-│   └── dashboard.js        ← Dashboard logic
+│   ├── match.js            ← Match scouting form logic
+│   ├── precomp.js          ← Pre-comp form logic
+│   └── dashboard.js        ← Dashboard logic (both tabs)
 │
 ├── css/
-│   ├── scouting.css        ← Scout form styles
+│   ├── scouting.css        ← Shared styles for match + precomp forms
 │   └── dashboard.css       ← Dashboard styles
 │
 └── assets/

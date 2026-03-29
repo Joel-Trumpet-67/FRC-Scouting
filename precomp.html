@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, maximum-scale=1.0">
+    <title>Pre-Comp Scouting</title>
+    <link rel="stylesheet" href="css/scouting.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <!-- Config: edit config/event-config.js to change event code + TBA key each season -->
+    <script src="config/event-config.js"></script>
+    <script src="config/firebase-config.js"></script>
+    <style>
+      /* ── Sync code modal (same as match.html) ─────────────── */
+      #sync-modal {
+        display: none; position: fixed; inset: 0;
+        background: rgba(0,0,0,0.85); z-index: 999;
+        align-items: center; justify-content: center;
+      }
+      .sync-box {
+        background: #1a1a1a; border: 1px solid #333; border-radius: 10px;
+        padding: 32px 28px; text-align: center; width: 300px;
+      }
+      .sync-box h2 { color: #97c7f0; font-size: 18px; margin-bottom: 6px; }
+      .sync-box p  { color: #777;    font-size: 12px; margin-bottom: 18px; }
+      #sync-input  {
+        width: 100%; padding: 10px; font-size: 18px; font-weight: 700;
+        text-align: center; text-transform: uppercase; letter-spacing: 2px;
+        background: #111; border: 1px solid #444; color: #fff;
+        border-radius: 6px; margin-bottom: 14px;
+      }
+      #sync-join {
+        width: 100%; padding: 10px; font-size: 14px; font-weight: 600;
+        background: #1a4a2a; color: #7ef; border: none; border-radius: 6px; cursor: pointer;
+      }
+      #sync-join:hover { filter: brightness(1.2); }
+
+      /* ── Top banner ─────────────────────────────────────────── */
+      #sync-banner-bar {
+        background: #0d0d0d; border-bottom: 1px solid #222;
+        padding: 6px 16px; display: flex; align-items: center;
+        justify-content: space-between; font-size: 12px;
+      }
+      .pc-badge {
+        background: #1a3a1a; color: #7ef; border: 1px solid #2a5a2a;
+        border-radius: 8px; padding: 2px 8px; font-size: 10px; font-weight: 700;
+        letter-spacing: 1px; text-transform: uppercase; margin-right: 8px;
+      }
+      #sync-banner { font-weight: 600; }
+      #change-code-btn {
+        font-size: 11px; color: #555; cursor: pointer; text-decoration: underline;
+        background: none; border: none;
+      }
+      #change-code-btn:hover { color: #aaa; }
+
+      /* ── Nav bar (links back to other pages) ─────────────────── */
+      #nav-bar {
+        background: #0a0a0a; border-bottom: 1px solid #1a1a1a;
+        padding: 4px 16px; display: flex; gap: 16px; font-size: 11px;
+      }
+      #nav-bar a { color: #444; text-decoration: underline; }
+      #nav-bar a:hover { color: #888; }
+
+      /* ── Button styles by page context ──────────────────────── */
+      /* Light buttons (on dark/black backgrounds) */
+      .btn-light {
+        font-family: Alexis; padding: 10px;
+        background-color: rgb(151, 199, 240); color: black;
+        border: none; cursor: pointer;
+      }
+      /* Dark buttons (on light/colored backgrounds) */
+      .btn-dark {
+        font-family: Alexis; background-color: black;
+        padding: 10px; color: white; border: none; cursor: pointer;
+      }
+      /* Submit / copy buttons (white bg page) */
+      .btn-submit-page {
+        font-family: Alexis; padding: 10px;
+        background-color: rgb(151, 199, 240); color: black;
+        border: none; cursor: pointer;
+      }
+
+      /* Team name display */
+      #teamname-label { text-align: center; font-size: 12px; color: #aaa; padding: 4px; }
+    </style>
+  </head>
+
+  <body>
+
+    <!-- Sync code modal -->
+    <div id="sync-modal">
+      <div class="sync-box">
+        <h2>Enter Sync Code</h2>
+        <p>Use the same code as your scouting team to share pre-comp data live.</p>
+        <input id="sync-input" type="text" placeholder="e.g. FRC3603"
+               onkeydown="if(event.key==='Enter') joinCode()">
+        <button id="sync-join" onclick="joinCode()">Join Session</button>
+      </div>
+    </div>
+
+    <!-- Top banner -->
+    <div id="sync-banner-bar">
+      <span>
+        <span class="pc-badge">Pre-Comp</span>
+        <span id="sync-banner" style="color:#555">Not connected…</span>
+      </span>
+      <button id="change-code-btn" onclick="changeCode()">change code</button>
+    </div>
+
+    <!-- Navigation links -->
+    <div id="nav-bar">
+      <a href="match.html">Match Scouting</a>
+      <a href="dashboard.html">Dashboard</a>
+    </div>
+
+    <form id="scoutingForm" onsubmit="return false" name="scoutingForm">
+      <div id="main-panel-holder">
+
+        <!-- ===================== PAGE 1 — TEAM INFO ===================== -->
+        <!-- Background: black (same as Pre-Match in match.html) -->
+        <div id="pc-teaminfo" class="main-panel" style="background-color: black;">
+          <h1>Pre-Comp Scout</h1>
+          <p class="match-label">
+            <input type="button" class="btn-light" value="Next" onclick="swipePage(1)">
+          </p>
+
+          <table>
+            <!-- Scouter Initials -->
+            <tr>
+              <td class="title">Scouter Initials&nbsp;</td>
+              <td class="field">
+                <input type="text" id="input_s" name="s" size="5" maxlength="5" required>
+              </td>
+            </tr>
+            <!-- Event — auto-filled from config/event-config.js, not editable -->
+            <tr>
+              <td class="title">Event&nbsp;</td>
+              <td class="field">
+                <input type="text" id="input_e" name="e" value="" readonly
+                       style="opacity:0.5; background:#eee;">
+              </td>
+            </tr>
+            <!-- Team # — type manually; autocomplete powered by TBA team roster -->
+            <tr>
+              <td class="title">Team #&nbsp;</td>
+              <td class="field">
+                <input type="number" id="input_t" name="t"
+                       min="1" max="99999" required
+                       oninput="showTeamName()" list="tba-team-list">
+                <!-- Datalist is populated from TBA /event/{code}/teams/simple -->
+                <datalist id="tba-team-list"></datalist>
+              </td>
+            </tr>
+            <!-- Team name (fetched from TBA after typing the team number) -->
+            <tr>
+              <td id="teamname-label" colspan="2"></td>
+            </tr>
+            <!-- Scouting Source -->
+            <tr>
+              <td class="title">Scouting Source&nbsp;</td>
+              <td class="field">
+                <input type="radio" name="src" value="pit">Pit Visit<br>
+                <input type="radio" name="src" value="vid">Reveal Video<br>
+                <input type="radio" name="src" value="past">Past Matches<br>
+                <input type="radio" name="src" value="multi">Multiple Sources
+                <input type="hidden" id="display_src" value="">
+              </td>
+            </tr>
+            <!-- Drive Type -->
+            <tr>
+              <td class="title">Drive Type&nbsp;</td>
+              <td class="field">
+                <input type="radio" name="drv" value="swerve">Swerve<br>
+                <input type="radio" name="drv" value="tank">Tank<br>
+                <input type="radio" name="drv" value="mec">Mecanum<br>
+                <input type="radio" name="drv" value="other">Other
+                <input type="hidden" id="display_drv" value="">
+              </td>
+            </tr>
+          </table>
+
+          <!-- TBA team roster fetch status -->
+          <p id="tba-status" style="text-align:center; font-size:11px; color:#888; padding:2px 8px; margin:0;"></p>
+
+          <p class="match-label">
+            <input type="button" class="btn-light" value="Next" onclick="swipePage(1)">
+          </p>
+        </div>
+
+        <!-- ===================== PAGE 2 — AUTO CAPABILITY ===================== -->
+        <!-- Background: light blue (same as Auton in match.html) -->
+        <div id="pc-auto" class="main-panel" style="background-color: rgb(123, 168, 184);">
+          <h2 style="color:black;">Auto Capability</h2>
+          <p class="match-label">
+            <input type="button" class="btn-dark" value="Prev" onclick="swipePage(-1)">
+            <input type="button" class="btn-dark" value="Next" onclick="swipePage(1)">
+          </p>
+
+          <table style="color:black;">
+            <!-- Expected auto level — what is this robot capable of? -->
+            <tr>
+              <td class="title">Auto Level&nbsp;</td>
+              <td class="field">
+                <input type="radio" name="pal" value="none">None<br>
+                <input type="radio" name="pal" value="basic">Basic (L1 only)<br>
+                <input type="radio" name="pal" value="scores">Scores game pieces<br>
+                <input type="radio" name="pal" value="full">Full (Score + Climb)
+                <input type="hidden" id="display_pal" value="">
+              </td>
+            </tr>
+            <!-- Estimated auto 1-point shots -->
+            <tr>
+              <td class="title">Est. Shot 1&nbsp;</td>
+              <td class="field">
+                <input type="button" class="btn-dark" value="-" onclick="counter(this.parentElement,-1)">
+                <input class="counter" id="input_pa1" type="text" name="pa1"
+                       disabled value="0" size="2" maxlength="2"
+                       style="background-color:black;color:white;border:none;text-align:center;">
+                <input type="button" class="btn-dark" value="+" onclick="counter(this.parentElement,1)">
+              </td>
+            </tr>
+            <!-- Estimated auto 5-point shots -->
+            <tr>
+              <td class="title">Est. Shot 5&nbsp;</td>
+              <td class="field">
+                <input type="button" class="btn-dark" value="-" onclick="counter(this.parentElement,-1)">
+                <input class="counter" id="input_pa5" type="text" name="pa5"
+                       disabled value="0" size="2" maxlength="2"
+                       style="background-color:black;color:white;border:none;text-align:center;">
+                <input type="button" class="btn-dark" value="+" onclick="counter(this.parentElement,1)">
+              </td>
+            </tr>
+            <!-- How consistent is their auto? -->
+            <tr>
+              <td class="title">Auto Consistency&nbsp;</td>
+              <td class="field">
+                <input type="radio" name="pac" value="unrel">Unreliable<br>
+                <input type="radio" name="pac" value="incon">Inconsistent<br>
+                <input type="radio" name="pac" value="rel">Reliable
+                <input type="hidden" id="display_pac" value="">
+              </td>
+            </tr>
+          </table>
+
+          <p class="match-label">
+            <input type="button" class="btn-dark" value="Prev" onclick="swipePage(-1)">
+            <input type="button" class="btn-dark" value="Next" onclick="swipePage(1)">
+          </p>
+        </div>
+
+        <!-- ===================== PAGE 3 — TELEOP CAPABILITY ===================== -->
+        <!-- Background: light green (same as Teleop in match.html) -->
+        <div id="pc-tele" class="main-panel" style="background-color: rgb(175, 207, 163);">
+          <h2 style="color:black;">Teleop Capability</h2>
+          <p class="match-label">
+            <input type="button" class="btn-dark" value="Prev" onclick="swipePage(-1)">
+            <input type="button" class="btn-dark" value="Next" onclick="swipePage(1)">
+          </p>
+
+          <table style="color:black;">
+            <!-- Can score in low goal? -->
+            <tr>
+              <td class="title">Scores Low?&nbsp;</td>
+              <td class="field">
+                <input type="checkbox" id="input_ptl" name="ptl">(checked = Yes)
+              </td>
+            </tr>
+            <!-- Can score in high goal? -->
+            <tr>
+              <td class="title">Scores High?&nbsp;</td>
+              <td class="field">
+                <input type="checkbox" id="input_pth" name="pth">(checked = Yes)
+              </td>
+            </tr>
+            <!-- Estimated teleop 1-point shots -->
+            <tr>
+              <td class="title">Est. Shot 1&nbsp;</td>
+              <td class="field">
+                <input type="button" class="btn-dark" value="-" onclick="counter(this.parentElement,-1)">
+                <input class="counter" id="input_pt1" type="text" name="pt1"
+                       disabled value="0" size="2" maxlength="2"
+                       style="background-color:black;color:white;border:none;text-align:center;">
+                <input type="button" class="btn-dark" value="+" onclick="counter(this.parentElement,1)">
+              </td>
+            </tr>
+            <!-- Estimated teleop 5-point shots -->
+            <tr>
+              <td class="title">Est. Shot 5&nbsp;</td>
+              <td class="field">
+                <input type="button" class="btn-dark" value="-" onclick="counter(this.parentElement,-1)">
+                <input class="counter" id="input_pt5" type="text" name="pt5"
+                       disabled value="0" size="2" maxlength="2"
+                       style="background-color:black;color:white;border:none;text-align:center;">
+                <input type="button" class="btn-dark" value="+" onclick="counter(this.parentElement,1)">
+              </td>
+            </tr>
+            <!-- Do they play defense? -->
+            <tr>
+              <td class="title">Plays Defense?&nbsp;</td>
+              <td class="field">
+                <input type="checkbox" id="input_ptd" name="ptd">(checked = Yes)
+              </td>
+            </tr>
+          </table>
+
+          <p class="match-label">
+            <input type="button" class="btn-dark" value="Prev" onclick="swipePage(-1)">
+            <input type="button" class="btn-dark" value="Next" onclick="swipePage(1)">
+          </p>
+        </div>
+
+        <!-- ===================== PAGE 4 — ENDGAME CAPABILITY ===================== -->
+        <!-- Background: light purple (same as Endgame in match.html) -->
+        <div id="pc-end" class="main-panel" style="background-color: rgb(198, 186, 222);">
+          <h2 style="color:black;">Endgame Capability</h2>
+          <p class="match-label">
+            <input type="button" class="btn-dark" value="Prev" onclick="swipePage(-1)">
+            <input type="button" class="btn-dark" value="Next" onclick="swipePage(1)">
+          </p>
+
+          <table style="color:black;">
+            <!-- What is the highest level they can reliably reach? -->
+            <tr>
+              <td class="title">Max Climb&nbsp;</td>
+              <td class="field">
+                <input type="radio" name="pec" value="none">None<br>
+                <input type="radio" name="pec" value="l1">Level 1<br>
+                <input type="radio" name="pec" value="l2">Level 2<br>
+                <input type="radio" name="pec" value="l3">Level 3
+                <input type="hidden" id="display_pec" value="">
+              </td>
+            </tr>
+            <!-- How reliable is their climb? -->
+            <tr>
+              <td class="title">Climb Reliability&nbsp;</td>
+              <td class="field">
+                <input type="radio" name="per" value="unrel">Unreliable<br>
+                <input type="radio" name="per" value="incon">Inconsistent<br>
+                <input type="radio" name="per" value="rel">Reliable
+                <input type="hidden" id="display_per" value="">
+              </td>
+            </tr>
+          </table>
+
+          <p class="match-label">
+            <input type="button" class="btn-dark" value="Prev" onclick="swipePage(-1)">
+            <input type="button" class="btn-dark" value="Next" onclick="swipePage(1)">
+          </p>
+        </div>
+
+        <!-- ===================== PAGE 5 — OVERALL ASSESSMENT ===================== -->
+        <!-- Background: dark teal (same as Misc in match.html) -->
+        <div id="pc-overall" class="main-panel" style="background-color: rgb(89, 134, 168);">
+          <h2>Overall Assessment</h2>
+          <p class="match-label">
+            <input type="button" class="btn-dark" value="Prev" onclick="swipePage(-1)">
+            <input type="button" class="btn-dark" value="Next" onclick="swipePage(1)">
+          </p>
+
+          <table>
+            <!-- Rough overall strength tier for this robot -->
+            <tr>
+              <td class="title">Overall Tier&nbsp;</td>
+              <td class="field">
+                <input type="radio" name="pot" value="weak">Weak<br>
+                <input type="radio" name="pot" value="avg">Average<br>
+                <input type="radio" name="pot" value="strong">Strong<br>
+                <input type="radio" name="pot" value="elite">Elite
+                <input type="hidden" id="display_pot" value="">
+              </td>
+            </tr>
+            <!-- Free-text notes — keep brief -->
+            <tr>
+              <td class="title">Notes (Brief)&nbsp;</td>
+              <td class="field">
+                <input type="text" id="input_pnotes" name="pnotes" size="20" maxlength="200">
+              </td>
+            </tr>
+          </table>
+
+          <p class="match-label">
+            <input type="button" class="btn-dark" value="Prev" onclick="swipePage(-1)">
+            <input type="button" class="btn-dark" value="Next" onclick="swipePage(1)">
+          </p>
+        </div>
+
+        <!-- ===================== PAGE 6 — SUBMIT ===================== -->
+        <!-- Background: white -->
+        <div id="pc-submit" class="main-panel" style="background-color: white;">
+          <h2 id="qrHeader2" style="color: black;">Submit Pre-Comp Data</h2>
+          <p class="match-label">
+            <input type="button" class="btn-submit-page" value="Prev" onclick="swipePage(-1)">
+          </p>
+
+          <!-- Summary of all fields before submitting -->
+          <table id="summary-table"
+                 style="color:black; width:90%; margin:12px auto; font-size:14px; border:none;">
+          </table>
+
+          <!-- Submit status message (success / error / duplicate) -->
+          <p id="submit-status"
+             style="text-align:center; font-size:15px; font-weight:bold; padding:10px 16px; min-height:24px;">
+          </p>
+
+          <!-- Submit button -->
+          <div id="submitButton" style="text-align:center; margin:8px 0;">
+            <input type="button" id="submit" value="Submit"
+              style="font-family:Alexis; padding:14px 32px; font-size:18px;
+                     background-color:#4CAF50; color:white; border:none; cursor:pointer;"
+              onclick="submitData()">
+          </div>
+
+          <p class="match-label" style="margin-top:10px;">
+            <input type="button" class="btn-submit-page" value="Copy Data"
+                   id="copyButton" onclick="copyData()">
+          </p>
+
+          <p id="data"
+             style="text-align:center; font-family:monospace; font-size:12px;
+                    word-break:break-all; color:#333; padding:8px 16px;">
+          </p>
+
+          <div style="text-align:center; margin-top:10px;">
+            <button type="button" class="clearForm" onclick="clearForm()">Clear Form</button>
+          </div>
+          <br>
+        </div>
+
+      </div><!-- #main-panel-holder -->
+    </form>
+
+    <script src="js/precomp.js"></script>
+  </body>
+</html>

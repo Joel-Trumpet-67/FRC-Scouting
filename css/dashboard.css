@@ -114,6 +114,35 @@ th.sb-div, td.sb-div { border-left:2px solid #3a2e00; }
 
 .no-data td { color:#333; text-align:center; padding:50px; font-size:14px; }
 
+/* ── Tab bar (Match Data / Pre-Comp toggle) ──────────────── */
+.tab-bar {
+  padding: 0 24px;
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid #1e1e1e;
+}
+.tab {
+  padding: 9px 20px;
+  font-size: 12px;
+  font-weight: 600;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #555;
+  cursor: pointer;
+  font-family: inherit;
+  letter-spacing: 0.5px;
+  transition: color 0.15s;
+}
+.tab:hover { color: #999; }
+.tab.tab-active { color: #97c7f0; border-bottom-color: #97c7f0; }
+
+/* ── Pre-comp table overrides ────────────────────────────── */
+/* Most styles are inherited from the main table rules above. */
+#precomp-table { min-width: 700px; }
+#precomp-table thead th { cursor: default; }  /* not sortable yet — see TODO */
+#precomp-table td { font-size: 12px; }
+
 /* ── Team detail modal ──────────────────────────────────── */
 #team-modal {
   display:none; position:fixed; inset:0;

@@ -28,10 +28,14 @@ var picklistData   = {};   // keyed by team number string: "available" | "overra
 var sortCol        = 'sbRank';
 var sortDir        = 'asc';
 
+// Pre-comp data (sessions/{code}/precomp — one entry per team, set by precomp.html)
+var precompData = {};   // keyed by team number string
+
 var db          = null;
 var syncCode    = null;
 var entriesRef  = null;
 var picklistRef = null;
+var precompRef  = null;
 var fbListener  = null;
 
 // ============================================================
@@ -66,6 +70,7 @@ function applyCode(code) {
 
   entriesRef  = db.ref('sessions/' + code + '/entries');
   picklistRef = db.ref('sessions/' + code + '/picklist');
+  precompRef  = db.ref('sessions/' + code + '/precomp');
 
   // Load picklist once, then subscribe to live entries
   picklistRef.once('value', function(snap) {
@@ -78,6 +83,9 @@ function applyCode(code) {
     picklistData = snap.val() || {};
     renderTable();
   });
+
+  // Subscribe to pre-comp data (updates whenever precomp.html submits a team)
+  subscribePrecomp();
 }
 
 function subscribeEntries() {
@@ -378,6 +386,106 @@ function exportCSV() {
 
 // TODO: add an "Export Pick List" button that exports just the picklist with
 //       each team's scouted + SB data next to their pick status.
+
+// ============================================================
+// PRE-COMP TAB
+// ============================================================
+
+// Subscribes to pre-comp data written by precomp.html.
+// Updates the pre-comp table live whenever a scout submits a team.
+function subscribePrecomp() {
+  if (!precompRef) return;
+  precompRef.on('value', function(snap) {
+    precompData = snap.val() || {};
+    renderPrecompTable();
+  });
+}
+
+// Label maps for pre-comp fields.
+// TODO: update these each season if capability questions change in precomp.html.
+var PC_SRC = { pit:'Pit Visit',    vid:'Reveal Video',   past:'Past Matches',    multi:'Multiple' };
+var PC_DRV = { swerve:'Swerve',    tank:'Tank',          mec:'Mecanum',          other:'Other' };
+var PC_PAL = { none:'None',        basic:'Basic',        scores:'Scores',        full:'Score+Climb' };
+var PC_PAC = { unrel:'Unreliable', incon:'Inconsistent', rel:'Reliable' };
+var PC_PEC = { none:'None',        l1:'L1',              l2:'L2',                l3:'L3' };
+var PC_PER = { unrel:'Unreliable', incon:'Inconsistent', rel:'Reliable' };
+var PC_POT = { weak:'Weak',        avg:'Average',        strong:'Strong',        elite:'Elite' };
+
+// Returns a CSS class name for the overall tier column so it's color-coded.
+function tierCls(tier) {
+  if (tier === 'elite')  return 'good';
+  if (tier === 'strong') return 'ok';
+  if (tier === 'avg')    return 'mid';
+  if (tier === 'weak')   return 'low';
+  return '';
+}
+
+// Renders the pre-comp capability table.
+// Sorted elite → strong → average → weak, then by team number within each tier.
+function renderPrecompTable() {
+  var tbody = document.getElementById('precomp-tbody');
+  if (!tbody) return;
+
+  var entries = Object.values(precompData);
+  if (!entries.length) {
+    tbody.innerHTML = '<tr class="no-data"><td colspan="9">No pre-comp data yet. Open precomp.html to scout teams.</td></tr>';
+    return;
+  }
+
+  // Sort by tier (best first), then team number
+  var tierOrder = { elite:0, strong:1, avg:2, weak:3 };
+  entries.sort(function(a, b) {
+    var ta = tierOrder[a.pot] != null ? tierOrder[a.pot] : 99;
+    var tb = tierOrder[b.pot] != null ? tierOrder[b.pot] : 99;
+    if (ta !== tb) return ta - tb;
+    return (parseInt(a.t) || 0) - (parseInt(b.t) || 0);
+  });
+
+  tbody.innerHTML = entries.map(function(e) {
+    var tier = e.pot || '';
+    return '<tr>' +
+      '<td class="team">' +
+        '<a class="tba" href="#" onclick="openTeamModal(\'' + e.t + '\');return false;">' + (e.t || '?') + '</a>' +
+      '</td>' +
+      '<td>' + (PC_SRC[e.src] || e.src || '—') + '</td>' +
+      '<td>' + (PC_DRV[e.drv] || e.drv || '—') + '</td>' +
+      '<td>' + (PC_PAL[e.pal] || e.pal || '—') + '</td>' +
+      '<td>' + (PC_PAC[e.pac] || e.pac || '—') + '</td>' +
+      '<td>' + (PC_PEC[e.pec] || e.pec || '—') + '</td>' +
+      '<td>' + (PC_PER[e.per] || e.per || '—') + '</td>' +
+      '<td class="' + tierCls(tier) + '">' + (PC_POT[tier] || tier || '—') + '</td>' +
+      '<td style="text-align:left; font-size:12px; color:#888;">' + (e.pnotes || '') + '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+// TODO: add "Export Pre-Comp CSV" button that exports just precompData.
+// TODO: merge pre-comp tier data into the match data table as an extra column
+//       so coaches can see expected vs actual side by side.
+
+// ============================================================
+// TAB SWITCHING (Match Data ↔ Pre-Comp)
+// ============================================================
+
+function switchTab(name) {
+  var matchWrap   = document.getElementById('match-data-wrap');
+  var precompWrap = document.getElementById('precomp-wrap');
+  var tabMatch    = document.getElementById('tab-match');
+  var tabPrecomp  = document.getElementById('tab-precomp');
+  if (!matchWrap || !precompWrap) return;
+
+  if (name === 'match') {
+    matchWrap.style.display   = '';
+    precompWrap.style.display = 'none';
+    tabMatch.classList.add('tab-active');
+    tabPrecomp.classList.remove('tab-active');
+  } else {
+    matchWrap.style.display   = 'none';
+    precompWrap.style.display = '';
+    tabMatch.classList.remove('tab-active');
+    tabPrecomp.classList.add('tab-active');
+  }
+}
 
 // ============================================================
 // CLEAR ALL DATA
