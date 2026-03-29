@@ -205,8 +205,7 @@ function submitData() {
   }
 
   if (!precompRef) {
-    statusEl.textContent = "No sync code set — enter a code in the banner above.";
-    statusEl.style.color = "#c0392b";
+    showCodeModal();
     return;
   }
 
