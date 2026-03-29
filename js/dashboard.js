@@ -439,7 +439,9 @@ function updateOurAllianceBanner() {
     .sort(function(a, b) { return parseInt(a) - parseInt(b); });
 
   el.innerHTML = ours.length
-    ? ours.map(function(t) { return '<span class="as-our-team">' + t + '</span>'; }).join('')
+    ? ours.map(function(t) {
+        return '<span class="as-our-team" title="Tap to remove" onclick="setAllianceStatus(\'' + t + '\',\'us\')">' + t + ' <span class="as-remove">✕</span></span>';
+      }).join('')
     : '<span class="as-empty">No teams selected yet — tap "Ours" on any team below</span>';
 }
 
