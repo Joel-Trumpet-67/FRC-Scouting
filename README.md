@@ -228,3 +228,9 @@ FRC-Scouting/
 PRs welcome. If you adapt this for your team and add something useful, consider opening a PR so other teams benefit too.
 
 To run locally without GitHub Pages, open `match.html` directly in a browser — it works without a server since everything is static.
+
+---
+
+## License
+
+MIT — free to use, modify, and distribute. See [LICENSE](LICENSE).
