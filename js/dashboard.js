@@ -425,17 +425,17 @@ function subscribePrecomp() {
 // Label maps come from js/labels.js (shared with precomp.js) — no duplication needed.
 // TODO: update js/labels.js each season when game options change.
 
-// Returns a CSS class name for the overall tier column so it's color-coded.
-function tierCls(tier) {
-  if (tier === 'elite')  return 'good';
-  if (tier === 'strong') return 'ok';
-  if (tier === 'avg')    return 'mid';
-  if (tier === 'weak')   return 'low';
+// Returns a CSS class name for the pick recommendation column so it's color-coded.
+function pickCls(ppr) {
+  if (ppr === 'p1')  return 'good';
+  if (ppr === 'p2')  return 'ok';
+  if (ppr === 'dnp') return 'low';
+  if (ppr === 'def') return 'mid';
   return '';
 }
 
 // Renders the pre-comp capability table.
-// Sorted elite → strong → average → weak, then by team number within each tier.
+// Sorted by pick recommendation (1st pick first), then by avg total pts desc.
 function renderPrecompTable() {
   var tbody = document.getElementById('precomp-tbody');
   if (!tbody) return;
@@ -446,28 +446,29 @@ function renderPrecompTable() {
     return;
   }
 
-  // Sort by tier (best first), then team number
-  var tierOrder = { elite:0, strong:1, avg:2, weak:3 };
+  // Sort: best pick first, then by estimated total pts (auto + tele) descending
+  var pickOrder = { p1:0, p2:1, def:2, dnp:3 };
   entries.sort(function(a, b) {
-    var ta = tierOrder[a.pot] != null ? tierOrder[a.pot] : 99;
-    var tb = tierOrder[b.pot] != null ? tierOrder[b.pot] : 99;
-    if (ta !== tb) return ta - tb;
-    return (parseInt(a.t) || 0) - (parseInt(b.t) || 0);
+    var pa = pickOrder[a.ppr] != null ? pickOrder[a.ppr] : 99;
+    var pb = pickOrder[b.ppr] != null ? pickOrder[b.ppr] : 99;
+    if (pa !== pb) return pa - pb;
+    var ptsa = (parseFloat(a.pap) || 0) + (parseFloat(a.ptp) || 0);
+    var ptsb = (parseFloat(b.pap) || 0) + (parseFloat(b.ptp) || 0);
+    return ptsb - ptsa;
   });
 
   tbody.innerHTML = entries.map(function(e) {
-    var tier = e.pot || '';
+    var ppr = e.ppr || '';
     return '<tr>' +
       '<td class="team">' +
         '<a class="tba" href="#" onclick="openTeamModal(\'' + e.t + '\');return false;">' + (e.t || '?') + '</a>' +
       '</td>' +
-      '<td>' + (LABEL_SRC[e.src] || e.src || '—') + '</td>' +
       '<td>' + (LABEL_DRV[e.drv] || e.drv || '—') + '</td>' +
+      '<td style="text-align:center;">' + (e.pap || '—') + '</td>' +
+      '<td style="text-align:center;">' + (e.ptp || '—') + '</td>' +
       '<td>' + (LABEL_PAL[e.pal] || e.pal || '—') + '</td>' +
-      '<td>' + (LABEL_PAC[e.pac] || e.pac || '—') + '</td>' +
       '<td>' + (LABEL_PEC[e.pec] || e.pec || '—') + '</td>' +
-      '<td>' + (LABEL_PER[e.per] || e.per || '—') + '</td>' +
-      '<td class="' + tierCls(tier) + '">' + (LABEL_POT[tier] || tier || '—') + '</td>' +
+      '<td class="' + pickCls(ppr) + '" style="font-weight:600;">' + (LABEL_PPR[ppr] || ppr || '—') + '</td>' +
       '<td style="text-align:left; font-size:12px; color:#888;">' + (e.pnotes || '') + '</td>' +
     '</tr>';
   }).join('');

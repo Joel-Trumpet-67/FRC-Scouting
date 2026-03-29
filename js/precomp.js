@@ -144,14 +144,16 @@ var FIELD_LABELS = {
   pa1:    "Est. Auto Shot 1",
   pa5:    "Est. Auto Shot 5",
   pac:    "Auto Consistency",
+  pap:    "Est. Avg Auto Pts",
   ptl:    "Scores Low Goal",
   pth:    "Scores High Goal",
   pt1:    "Est. Tele Shot 1",
   pt5:    "Est. Tele Shot 5",
   ptd:    "Plays Defense",
+  ptp:    "Est. Avg Tele Pts",
   pec:    "Expected Max Climb",
   per:    "Climb Reliability",
-  pot:    "Overall Tier",
+  ppr:    "Pick Recommendation",
   pnotes: "Notes"
 };
 
@@ -166,6 +168,7 @@ function friendlyValue(key, val) {
   if (key === "pec") return LABEL_PEC[val] || val;
   if (key === "per") return LABEL_PER[val] || val;
   if (key === "pot") return LABEL_POT[val] || val;
+  if (key === "ppr") return LABEL_PPR[val] || val;
   if (key === "ptl" || key === "pth" || key === "ptd")
     return val === "1" ? "Yes" : "No";
   return val || "—";

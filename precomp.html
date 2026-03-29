@@ -236,6 +236,14 @@
                 <input type="radio" name="pac" value="rel">Reliable
               </td>
             </tr>
+            <!-- Estimated average auto points per match -->
+            <tr>
+              <td class="title">Est. Avg Auto Pts&nbsp;</td>
+              <td class="field">
+                <input type="number" id="input_pap" name="pap" min="0" max="999"
+                       style="width:70px; background:#111; color:#fff; border:1px solid #555;">
+              </td>
+            </tr>
           </table>
 
           <p class="match-label">
@@ -295,6 +303,14 @@
                 <input type="checkbox" id="input_ptd" name="ptd">(checked = Yes)
               </td>
             </tr>
+            <!-- Estimated average teleop points per match -->
+            <tr>
+              <td class="title">Est. Avg Tele Pts&nbsp;</td>
+              <td class="field">
+                <input type="number" id="input_ptp" name="ptp" min="0" max="999"
+                       style="width:70px;">
+              </td>
+            </tr>
           </table>
 
           <p class="match-label">
@@ -350,14 +366,14 @@
           </p>
 
           <table>
-            <!-- Rough overall strength tier for this robot -->
+            <!-- Pick recommendation -->
             <tr>
-              <td class="title">Overall Tier&nbsp;</td>
+              <td class="title">Pick Recommendation&nbsp;</td>
               <td class="field">
-                <input type="radio" name="pot" value="weak">Weak<br>
-                <input type="radio" name="pot" value="avg">Average<br>
-                <input type="radio" name="pot" value="strong">Strong<br>
-                <input type="radio" name="pot" value="elite">Elite
+                <input type="radio" name="ppr" value="p1">✅ Good team — 1st pick<br>
+                <input type="radio" name="ppr" value="p2">🟡 Decent — not 1st round<br>
+                <input type="radio" name="ppr" value="dnp">❌ Not good — don't pick<br>
+                <input type="radio" name="ppr" value="def">🛡 Not good but plays defense
               </td>
             </tr>
             <!-- Free-text notes — keep brief -->

@@ -31,5 +31,5 @@ var LABEL_PEC = { none:'None', l1:'Level 1', l2:'Level 2', l3:'Level 3' };
 // How reliable is their climb?
 var LABEL_PER = { unrel:'Unreliable', incon:'Inconsistent', rel:'Reliable' };
 
-// Overall robot strength tier
-var LABEL_POT = { weak:'Weak', avg:'Average', strong:'Strong', elite:'Elite' };
+// Pick recommendation (4-option scouter assessment)
+var LABEL_PPR = { p1:'1st Pick', p2:'Decent (not 1st)', dnp:"Don't Pick", def:'Defense Only' };
