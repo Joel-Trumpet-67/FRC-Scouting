@@ -48,6 +48,12 @@
 </div>
 <div class="timestamp" id="ts"></div>
 
+<!-- Tab bar -->
+<div class="tab-bar">
+  <button class="tab tab-active" id="tab-match"    onclick="switchTab('match')">Match Data</button>
+  <button class="tab"            id="tab-alliance" onclick="switchTab('alliance')">Alliance Selection</button>
+</div>
+
 <!-- ── Match data table ─────────────────────────────────────────── -->
 <div id="match-data-wrap" class="wrap">
   <table>
@@ -82,6 +88,41 @@
   </table>
 </div><!-- #match-data-wrap -->
 
+<!-- ── Alliance Selection ────────────────────────────────────────── -->
+<div id="alliance-wrap" class="wrap" style="display:none;">
+
+  <!-- Our Alliance banner -->
+  <div class="alliance-banner">
+    <div style="flex:1;">
+      <div class="alliance-banner-label">Our Alliance</div>
+      <div id="our-alliance-teams">
+        <span class="as-empty">No teams selected yet — tap "Ours" on any team below</span>
+      </div>
+    </div>
+    <button class="btn btn-clear" onclick="clearAllianceSelection()">Reset</button>
+  </div>
+
+  <table id="alliance-table">
+    <thead>
+      <tr class="sec-hdr">
+        <th colspan="5" class="lbl-scout no-sort">TEAMS</th>
+        <th colspan="3" class="lbl-scout no-sort">QUICK ACTIONS</th>
+      </tr>
+      <tr>
+        <th>Team</th>
+        <th>SB Rank</th>
+        <th>EPA Total</th>
+        <th>Scout Auto</th>
+        <th>Scout Tele</th>
+        <th></th><th></th><th></th>
+      </tr>
+    </thead>
+    <tbody id="alliance-tbody">
+      <tr class="no-data"><td colspan="8">Enter your sync code to load data.</td></tr>
+    </tbody>
+  </table>
+
+</div><!-- #alliance-wrap -->
 
 <!-- Team detail modal (populated by openTeamModal() in js/dashboard.js) -->
 <div id="team-modal">

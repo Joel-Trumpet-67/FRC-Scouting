@@ -83,6 +83,7 @@ function applyCode(code) {
   picklistListener = function(snap) {
     picklistData = snap.val() || {};
     renderTable();
+    renderAllianceTable();
   };
   picklistRef.on('value', picklistListener);
 }
@@ -95,7 +96,7 @@ function subscribeEntries() {
     processData();
     var event = getEvent();
     if (event) fetchStatbotics(event);
-    else { renderTable(); updateChips(); }
+    else { renderTable(); renderAllianceTable(); updateChips(); }
     setPill('pill-fb', '● Live (' + allData.length + ' entries)', 'p-green');
     document.getElementById('ts').textContent = 'Updated: ' + new Date().toLocaleTimeString();
   }, function() {
@@ -155,11 +156,12 @@ function fetchStatbotics(event) {
       mergeStatbotics();
       autoFlagOverrated();
       renderTable();
+      renderAllianceTable();
       updateChips();
       setPill('pill-sb', '✓ SB: ' + data.length + ' teams', 'p-blue');
     })
     .catch(function(){
-      renderTable(); updateChips();
+      renderTable(); renderAllianceTable(); updateChips();
       setPill('pill-sb', 'Statbotics unavailable', 'p-grey');
     });
 }
@@ -347,6 +349,7 @@ function sortBy(col) {
   if (sortCol===col) { sortDir=sortDir==='asc'?'desc':'asc'; }
   else { sortCol=col; sortDir=['sbRank','t'].includes(col)?'asc':'desc'; }
   renderTable();
+  renderAllianceTable();
 }
 
 // TODO: persist sortCol + sortDir in localStorage so the sort preference
@@ -365,6 +368,110 @@ function toggleStatus(team) {
 
 // TODO: add a 3-state cycle: available → overrated → dnp → available
 //       so coaches can manually mark teams as overrated even without SB data.
+
+// ============================================================
+// ALLIANCE SELECTION
+// ============================================================
+
+// Status values used in picklistData:
+//   'us'        — on our alliance
+//   'picked'    — taken by another alliance
+//   'dnp'       — do not pick
+//   'available' — default
+//   'overrated' — auto-flagged by scout vs SB mismatch
+
+var allianceStatusOrder = { us:0, available:1, overrated:1, dnp:2, picked:3 };
+
+function renderAllianceTable() {
+  var tbody = document.getElementById('alliance-tbody');
+  if (!tbody) return;
+
+  updateOurAllianceBanner();
+
+  var rows = teamStats.slice();
+  if (!rows.length) {
+    tbody.innerHTML = '<tr class="no-data"><td colspan="8">No data yet for this sync code.</td></tr>';
+    return;
+  }
+
+  // Sort: ours first → available/overrated (by SB rank) → dnp → taken
+  rows.sort(function(a, b) {
+    var sa = allianceStatusOrder[picklistData[String(a.t)] || 'available'];
+    var sb = allianceStatusOrder[picklistData[String(b.t)] || 'available'];
+    if (sa !== sb) return sa - sb;
+    // Within the same group sort by SB rank asc, then scouted total desc
+    var ra = a.sbRank != null ? a.sbRank : 9999;
+    var rb = b.sbRank != null ? b.sbRank : 9999;
+    if (ra !== rb) return ra - rb;
+    return ((b.scoutAuto||0) + (b.scoutTele||0)) - ((a.scoutAuto||0) + (a.scoutTele||0));
+  });
+
+  tbody.innerHTML = rows.map(function(r) {
+    var status = picklistData[String(r.t)] || 'available';
+    var trCls  = status === 'us'     ? 'as-us'     :
+                 status === 'picked' ? 'as-picked'  :
+                 status === 'dnp'    ? 'as-dnp'     : '';
+
+    function abtn(s, label, cls) {
+      var active = status === s ? ' as-active' : '';
+      return '<td><button class="as-btn ' + cls + active + '" ' +
+             'onclick="setAllianceStatus(\'' + r.t + '\',\'' + s + '\')">' + label + '</button></td>';
+    }
+
+    return '<tr class="' + trCls + '">' +
+      '<td class="team"><a class="tba" href="#" onclick="openTeamModal(\'' + r.t + '\');return false;">' + r.t + '</a></td>' +
+      '<td>' + (r.sbRank  != null ? r.sbRank        : '—') + '</td>' +
+      '<td>' + (r.sbTotal != null ? r1(r.sbTotal)   : '—') + '</td>' +
+      '<td>' + (r.scoutAuto > 0   ? r1(r.scoutAuto) : '—') + '</td>' +
+      '<td>' + (r.scoutTele > 0   ? r1(r.scoutTele) : '—') + '</td>' +
+      abtn('us',     '✅ Ours',  'as-btn-ours')  +
+      abtn('picked', '🚫 Taken', 'as-btn-taken') +
+      abtn('dnp',    '❌ DNP',   'as-btn-dnp')   +
+    '</tr>';
+  }).join('');
+}
+
+function updateOurAllianceBanner() {
+  var el = document.getElementById('our-alliance-teams');
+  if (!el) return;
+  var ours = Object.keys(picklistData)
+    .filter(function(t) { return picklistData[t] === 'us'; })
+    .sort(function(a, b) { return parseInt(a) - parseInt(b); });
+
+  el.innerHTML = ours.length
+    ? ours.map(function(t) { return '<span class="as-our-team">' + t + '</span>'; }).join('')
+    : '<span class="as-empty">No teams selected yet — tap "Ours" on any team below</span>';
+}
+
+// Toggles a team's alliance status. Tapping the active button resets to available.
+function setAllianceStatus(team, status) {
+  var cur  = picklistData[String(team)] || 'available';
+  var next = (cur === status) ? 'available' : status;
+  if (picklistRef) picklistRef.child(String(team)).set(next);
+}
+
+// Clears only 'us' and 'picked' marks — leaves DNP intact.
+function clearAllianceSelection() {
+  if (!confirm('Reset all "Ours" and "Taken" marks? DNP teams will stay.')) return;
+  Object.keys(picklistData).forEach(function(team) {
+    var s = picklistData[team];
+    if (s === 'us' || s === 'picked') {
+      if (picklistRef) picklistRef.child(team).set('available');
+    }
+  });
+}
+
+// ============================================================
+// TAB SWITCHING
+// ============================================================
+
+function switchTab(name) {
+  document.getElementById('match-data-wrap').style.display   = name === 'match'    ? '' : 'none';
+  document.getElementById('alliance-wrap').style.display     = name === 'alliance' ? '' : 'none';
+  document.getElementById('tab-match').classList.toggle('tab-active',    name === 'match');
+  document.getElementById('tab-alliance').classList.toggle('tab-active', name === 'alliance');
+  if (name === 'alliance') renderAllianceTable();
+}
 
 // ============================================================
 // CHIPS (summary stats at top of page)
