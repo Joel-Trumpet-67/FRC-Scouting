@@ -47,7 +47,8 @@ function initFirebase() {
     firebase.initializeApp(FIREBASE_CONFIG);
     db = firebase.database();
   } catch(e) {
-    setPill('pill-fb', 'Firebase error — check config/firebase-config.js', 'p-red');
+    setPill('pill-fb', 'Firebase error: ' + e.message, 'p-red');
+    console.error('Firebase init failed:', e);
     return;
   }
   syncCode = localStorage.getItem('scout_sync_code');
