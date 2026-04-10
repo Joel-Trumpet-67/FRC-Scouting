@@ -203,3 +203,43 @@ var MODAL_FIELDS = [
   { key: 'tip',  label: 'Tippy',           fn: function(v){ return v==='1'?'Yes':'No'; } },
   { key: 'dta',  label: 'Downtime',        fn: function(v){ return DTA_LABELS[v]||v||'—'; } }
 ];
+
+
+// ── 6. SQL EXPORT COLUMNS ─────────────────────────────────────
+//
+//  Maps form field keys to SQL column names, in the exact order
+//  they appear in the database table. Used by exportCSV() in
+//  dashboard.js — update this whenever the SQL schema changes.
+//
+//  key — the name="xx" attribute on the <input> in match.html
+//  col — the matching column name in the SQL table
+//
+var SQL_EXPORT_COLUMNS = [
+  // ── Prematch ──
+  { key: 's',   col: 'scout' },
+  { key: 'e',   col: 'event_code' },
+  { key: 'l',   col: 'match_level' },
+  { key: 'm',   col: 'match_number' },
+  { key: 'r',   col: 'robot_position' },
+  { key: 't',   col: 'team_number' },
+  { key: 'as',  col: 'auto_start_pos' },
+  // ── Auton ──
+  { key: 'ad8', col: 'auto_dumps_8' },
+  { key: 'as1', col: 'auto_shot_1' },
+  { key: 'as5', col: 'auto_shot_5' },
+  { key: 'amf', col: 'auto_missed_fuel' },
+  { key: 'ac1', col: 'auto_l1' },
+  // ── Teleop ──
+  { key: 'taw', col: 'won_auto' },
+  { key: 'ts1', col: 'tele_shot_1' },
+  { key: 'ts5', col: 'tele_shot_5' },
+  { key: 'tmf', col: 'tele_missed_fuel' },
+  // ── Endgame ──
+  { key: 'ect', col: 'climb_time' },
+  { key: 'efs', col: 'final_status' },
+  // ── Postmatch ──
+  { key: 'die', col: 'died' },
+  { key: 'tip', col: 'tippy' },
+  { key: 'dta', col: 'downtime_actions' },
+  { key: 'cmm', col: 'comments' },
+];

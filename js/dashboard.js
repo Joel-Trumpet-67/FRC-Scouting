@@ -586,10 +586,16 @@ function toggleMissingPanel() {
 
 function exportCSV() {
   if (!allData.length) { alert('No data to export.'); return; }
-  var h   = Object.keys(allData[0]);
-  var csv = [h.join(',')].concat(allData.map(function(r){
-    return h.map(function(k){ return JSON.stringify(r[k]!=null?r[k]:''); }).join(',');
-  })).join('\n');
+  // SQL_EXPORT_COLUMNS lives in season/game-fields.js — update it when the schema changes.
+  var cols = SQL_EXPORT_COLUMNS;
+  var header = cols.map(function(c){ return c.col; }).join(',');
+  var rows = allData.map(function(r){
+    return cols.map(function(c){
+      var v = r[c.key];
+      return JSON.stringify(v != null ? v : '');
+    }).join(',');
+  });
+  var csv = [header].concat(rows).join('\n');
   var a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
   a.download = 'scouting_'+(getEvent()||'export')+'_'+new Date().toISOString().slice(0,10)+'.csv';
