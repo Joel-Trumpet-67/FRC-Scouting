@@ -158,12 +158,14 @@ var SEASON_SCORING = {
     function _avg(arr) {
       return arr.length ? arr.reduce(function(a,b){return a+b;},0)/arr.length : 0;
     }
+    var auto = _avg(s.as1)*1 + _avg(s.as5)*5;
+    var tele = _avg(s.ts1)*1 + _avg(s.ts5)*5;
     var climbs = s.efs.filter(function(v){ return v==='1'||v==='2'||v==='3'; });
     return {
       // 2026 scoring: Shot1 = 1pt, Shot5 = 5pts
-      scoutAuto:  _avg(s.as1)*1 + _avg(s.as5)*5,
-      scoutTele:  _avg(s.ts1)*1 + _avg(s.ts5)*5,
-
+      scoutAuto:  auto,
+      scoutTele:  tele,
+      scoutTotal: auto + tele,
       climbRate:  s.matches ? (climbs.length / s.matches) * 100 : 0
     };
   }
