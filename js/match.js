@@ -709,12 +709,23 @@ function clearForm() {
 // ============================================================
 
 function initFirebase() {
+  // Apply sync code first so the banner always shows — even if Firebase fails.
+  syncCode = localStorage.getItem("scout_sync_code");
+  if (!syncCode && typeof DEFAULT_SYNC_CODE !== 'undefined' && DEFAULT_SYNC_CODE) {
+    syncCode = DEFAULT_SYNC_CODE;
+    localStorage.setItem("scout_sync_code", syncCode);
+  }
+  if (syncCode) {
+    showSyncBanner('Sync: ' + syncCode, '#888');
+    fetchSchedule();
+  }
+
   try {
     firebase.initializeApp(FIREBASE_CONFIG);
     db = firebase.database();
   } catch(e) {
     console.error("Firebase init failed:", e.message);
-    showSyncBanner("Firebase not configured — check config/firebase-config.js", "#c0392b");
+    showSyncBanner((syncCode ? 'Sync: ' + syncCode + ' — ' : '') + 'Firebase error: ' + e.message, '#c0392b');
     return;
   }
 
@@ -737,11 +748,9 @@ function initFirebase() {
     }
   });
 
-  syncCode = localStorage.getItem("scout_sync_code");
   if (syncCode) {
-    applyCode(syncCode);
-  } else if (typeof DEFAULT_SYNC_CODE !== 'undefined' && DEFAULT_SYNC_CODE) {
-    applyCode(DEFAULT_SYNC_CODE);
+    entriesRef = db.ref("sessions/" + syncCode + "/entries");
+    if (isConnected) queueFlush();
   } else {
     showCodeModal();
   }
