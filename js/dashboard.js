@@ -612,14 +612,10 @@ function exportCSV() {
 function showQR() {
   var url = window.location.href.replace('dashboard.html', 'match.html');
   document.getElementById('qr-url-label').textContent = url;
-  var modal = document.getElementById('qr-modal');
-  modal.style.display = 'flex';
-  // Generate after modal is visible so the container has dimensions
-  setTimeout(function() {
-    var container = document.getElementById('qr-code-img');
-    container.innerHTML = '';
-    new QRCode(container, { text: url, width: 220, height: 220 });
-  }, 50);
+  var container = document.getElementById('qr-code-img');
+  var encoded = encodeURIComponent(url);
+  container.innerHTML = '<img src="https://chart.googleapis.com/chart?cht=qr&chs=220x220&chl=' + encoded + '" width="220" height="220">';
+  document.getElementById('qr-modal').style.display = 'flex';
 }
 
 // TODO: add an "Export Pick List" button that exports just the picklist with
