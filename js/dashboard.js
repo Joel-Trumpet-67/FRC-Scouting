@@ -52,6 +52,9 @@ function initFirebase() {
     return;
   }
   syncCode = localStorage.getItem('scout_sync_code');
+  if (!syncCode && typeof DEFAULT_SYNC_CODE !== 'undefined' && DEFAULT_SYNC_CODE) {
+    syncCode = DEFAULT_SYNC_CODE;
+  }
   if (syncCode) {
     applyCode(syncCode);
   } else {
