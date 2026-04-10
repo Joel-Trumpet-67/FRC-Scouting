@@ -709,14 +709,16 @@ function clearForm() {
 // ============================================================
 
 function initFirebase() {
-  // Apply sync code first so the banner always shows — even if Firebase fails.
-  syncCode = localStorage.getItem("scout_sync_code");
-  if (!syncCode && typeof DEFAULT_SYNC_CODE !== 'undefined' && DEFAULT_SYNC_CODE) {
+  // DEFAULT_SYNC_CODE always wins — changing it in event-config.js
+  // automatically moves all scouts to the new code on next load.
+  if (typeof DEFAULT_SYNC_CODE !== 'undefined' && DEFAULT_SYNC_CODE) {
     syncCode = DEFAULT_SYNC_CODE;
-    localStorage.setItem("scout_sync_code", syncCode);
+  } else {
+    syncCode = localStorage.getItem("scout_sync_code");
   }
   if (syncCode) {
-    showSyncBanner('Sync: ' + syncCode, '#888');
+    localStorage.setItem("scout_sync_code", syncCode);
+    showSyncBanner('Sync: ' + syncCode, '#27ae60');
     fetchSchedule();
   }
 
