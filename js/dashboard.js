@@ -190,7 +190,7 @@ function mergeStatbotics() {
     var sb = statboticsData[team];
     teamStats.push({
       t: team, matches: 0,
-      scoutAuto: null, scoutTele: null, hcap: null, climbRate: null,
+      scoutAuto: null, scoutTele: null, climbRate: null,
       sbRank: sb.rank, numTeams: sb.numTeams,
       sbTotal: sb.sbTotal, sbAuto: sb.sbAuto, sbTele: sb.sbTele, sbEnd: sb.sbEnd,
     });
@@ -279,7 +279,7 @@ function renderTable() {
 
   var tbody = document.getElementById('tbody');
   if (!rows.length) {
-    tbody.innerHTML = '<tr class="no-data"><td colspan="11">No entries yet for this sync code.</td></tr>';
+    tbody.innerHTML = '<tr class="no-data"><td colspan="10">No entries yet for this sync code.</td></tr>';
     return;
   }
 
@@ -289,7 +289,7 @@ function renderTable() {
     return v.length?{min:Math.min.apply(null,v),max:Math.max.apply(null,v)}:null;
   }
   var R={};
-  ['scoutAuto','scoutTele','hcap','climbRate','sbTotal','sbAuto','sbTele','sbEnd'].forEach(function(c){R[c]=rng(c);});
+  ['scoutAuto','scoutTele','climbRate','sbTotal','sbAuto','sbTele','sbEnd'].forEach(function(c){R[c]=rng(c);});
 
   tbody.innerHTML = rows.map(function(r){
     var rankCls = r.sbRank<=3?'rank top3':r.sbRank<=10?'rank top10':'rank';
@@ -303,7 +303,7 @@ function renderTable() {
       '<td class="team"><a class="tba" href="#" onclick="openTeamModal(\''+r.t+'\');return false;">'+r.t+'</a></td>'+
       htd(r.scoutAuto,R.scoutAuto)+
       htd(r.scoutTele,R.scoutTele)+
-      htd(r.hcap,R.hcap)+
+
       (r.climbRate!=null?'<td class="'+clsCl(r.climbRate)+'">'+r.climbRate.toFixed(0)+'%</td>':'<td class="low">—</td>')+
       sbtd(r.sbTotal,R.sbTotal,true)+
       sbtd(r.sbAuto,R.sbAuto,false)+

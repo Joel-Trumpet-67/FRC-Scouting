@@ -56,7 +56,7 @@ var FIELD_LABELS = {
   ts1: 'Teleop Shot 1',
   ts5: 'Teleop Shot 5',
   tmf: 'Teleop Missed',
-  hcap:'Hub Capacity',
+
   // ── ENDGAME (2026 game-specific) ──
   ect: 'Climb Timer (s)',
   efs: 'Final Status',
@@ -137,7 +137,7 @@ var SEASON_SCORING = {
 
   // Fields whose values are pushed into arrays and averaged
   // Must match name="xx" attributes in match.html
-  numericFields: ['as1', 'as5', 'ts1', 'ts5', 'hcap'],
+  numericFields: ['as1', 'as5', 'ts1', 'ts5'],
 
   // Fields collected as raw strings (for categorical stats like climb rate)
   rawFields: ['efs'],
@@ -148,7 +148,7 @@ var SEASON_SCORING = {
   //    s.as1      = array of Shot-1 counts (one per match)
   //    s.as5      = array of Shot-5 counts
   //    s.ts1/ts5  = same for teleop
-  //    s.hcap     = hub capacity counts
+
   //    s.efs      = array of endgame status strings ('1','2','3','F','X')
   //
   //  Returns an object that gets merged into teamStats for each team.
@@ -163,7 +163,7 @@ var SEASON_SCORING = {
       // 2026 scoring: Shot1 = 1pt, Shot5 = 5pts
       scoutAuto:  _avg(s.as1)*1 + _avg(s.as5)*5,
       scoutTele:  _avg(s.ts1)*1 + _avg(s.ts5)*5,
-      hcap:       _avg(s.hcap),
+
       climbRate:  s.matches ? (climbs.length / s.matches) * 100 : 0
     };
   }
@@ -194,7 +194,7 @@ var MODAL_FIELDS = [
   { key: 'ts1',  label: 'Tele Shot 1' },
   { key: 'ts5',  label: 'Tele Shot 5' },
   { key: 'tmf',  label: 'Tele Missed' },
-  { key: 'hcap', label: 'Hub Cap' },
+
   // ── Endgame ──
   { key: 'ect',  label: 'Climb Timer (s)' },
   { key: 'efs',  label: 'Final Status',    fn: function(v){ return EFS_LABELS[v]||v||'—'; } },
