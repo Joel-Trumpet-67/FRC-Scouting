@@ -805,6 +805,12 @@ window.onload = function() {
     eventEl.value = EVENT_CODE;
   }
 
+  // Show sync code prominently so scouts can confirm they're on the right session
+  var syncEl = document.getElementById("input_sync_display");
+  if (syncEl && typeof DEFAULT_SYNC_CODE !== "undefined" && DEFAULT_SYNC_CODE) {
+    syncEl.value = DEFAULT_SYNC_CODE;
+  }
+
   // Field image canvas setup
   var img = document.getElementById("img_as");
   if (img) {
