@@ -740,6 +740,8 @@ function initFirebase() {
   syncCode = localStorage.getItem("scout_sync_code");
   if (syncCode) {
     applyCode(syncCode);
+  } else if (typeof DEFAULT_SYNC_CODE !== 'undefined' && DEFAULT_SYNC_CODE) {
+    applyCode(DEFAULT_SYNC_CODE);
   } else {
     showCodeModal();
   }
