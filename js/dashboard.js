@@ -99,7 +99,7 @@ function subscribeEntries() {
   setPill('pill-fb', 'Connecting…', 'p-grey');
   fbListener = entriesRef.on('value', function(snapshot) {
     var raw = snapshot.val() || {};
-    allData = Object.values(raw);
+    allData = Object.keys(raw).map(function(k){ return Object.assign({_key: k}, raw[k]); });
     processData();
     var event = getEvent();
     if (event) { fetchStatbotics(event); fetchMatchSchedule(event); }
@@ -705,6 +705,7 @@ function openTeamModal(team) {
             '<span class="m-num">Match '+(e.m||'?')+'</span>'+
             robTag+
             '<span class="m-scout">'+(e.s||'?')+'</span>'+
+            (e._key ? '<button class="tm-delete-btn" onclick="deleteEntry(\''+e._key+'\',\''+team+'\')">🗑 Delete</button>' : '')+
           '</div>'+
           '<div class="tm-fields">'+fields+'</div>'+
           comment+
@@ -717,6 +718,11 @@ function openTeamModal(team) {
 
 function closeTeamModal() {
   document.getElementById('team-modal').classList.remove('open');
+}
+
+function deleteEntry(key, team) {
+  if (!confirm('Delete this entry for Team ' + team + '?')) return;
+  entriesRef.child(key).remove().catch(function(e){ alert('Error: ' + e.message); });
 }
 
 // Close modal when clicking the dark backdrop
