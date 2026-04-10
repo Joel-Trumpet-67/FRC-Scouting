@@ -1,6 +1,3 @@
-# Keep event-config out of git (changes each event, contains TBA key)
-config/event-config.js
-
 # Editor / tool settings
 .claude/
 .vscode/
