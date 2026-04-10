@@ -1,8 +1,5 @@
-# Firebase and API keys — never commit these
-config/firebase-config.js
+# Keep event-config out of git (changes each event, contains TBA key)
 config/event-config.js
-firebase-config.js
-config.json
 
 # Editor / tool settings
 .claude/
