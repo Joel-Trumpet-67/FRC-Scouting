@@ -34,6 +34,7 @@
     <span id="pill-fb"     class="pill p-grey">Firebase —</span>
     <span id="pill-sb"     class="pill p-grey">Statbotics —</span>
     <button class="btn btn-code"   onclick="changeCode()">Change Code</button>
+    <button class="btn btn-qr"     onclick="showQR()">📱 Scout QR</button>
     <button class="btn btn-export" onclick="exportCSV()">Export CSV</button>
     <button class="btn btn-clear"  onclick="clearAll()">Clear Data</button>
   </div>
@@ -130,6 +131,16 @@
 
 </div><!-- #alliance-wrap -->
 
+<!-- QR code modal — scouts scan this to open match.html -->
+<div id="qr-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;display:none;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:12px;padding:32px;text-align:center;max-width:320px;width:90%;">
+    <div style="font-size:18px;font-weight:700;margin-bottom:4px;color:#111;">Scan to Scout</div>
+    <div style="font-size:13px;color:#666;margin-bottom:20px;" id="qr-url-label"></div>
+    <div id="qr-code-img"></div>
+    <button onclick="document.getElementById('qr-modal').style.display='none'" style="margin-top:20px;padding:10px 28px;font-size:15px;border:none;border-radius:8px;background:#222;color:#fff;cursor:pointer;">Close</button>
+  </div>
+</div>
+
 <!-- Team detail modal (populated by openTeamModal() in js/dashboard.js) -->
 <div id="team-modal">
   <div class="tm-box">
@@ -147,6 +158,7 @@
 <!-- season/game-fields.js must load before dashboard.js -->
 <script src="season/game-fields.js"></script>
 <script src="js/dashboard.js"></script>
+<script src="assets/lib/easy.qrcode.min.js"></script>
 
 </body>
 </html>
