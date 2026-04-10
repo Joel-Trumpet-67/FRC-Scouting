@@ -2,6 +2,7 @@
 config/firebase-config.js
 config/event-config.js
 firebase-config.js
+config.json
 
 # Editor / tool settings
 .claude/
