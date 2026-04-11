@@ -691,6 +691,13 @@ function openTeamModal(team) {
     entries.forEach(function(e){
       var isRed  = (e.r||'').charAt(0)==='r';
       var robTag = '<span class="m-robot '+(isRed?'red-tag':'blue-tag')+'">'+(ROBOT_LABELS[e.r]||e.r||'?')+'</span>';
+
+      // Points scored this match
+      var autoPts  = num(e.as1)*1 + num(e.as5)*5;
+      var telePts  = num(e.ts1)*1 + num(e.ts5)*5;
+      var totalPts = autoPts + telePts;
+      var ptsBadge = '<span class="m-pts">'+totalPts+' pts <span class="m-pts-detail">(Auto: '+autoPts+' | Tele: '+telePts+')</span></span>';
+
       var fields = MODAL_FIELDS.map(function(f){
         var raw = e[f.key];
         var display = f.fn ? f.fn(raw) : (raw||'0');
@@ -707,6 +714,7 @@ function openTeamModal(team) {
             '<span class="m-scout">'+(e.s||'?')+'</span>'+
             (e._key ? '<button class="tm-delete-btn" onclick="deleteEntry(\''+e._key+'\',\''+team+'\')">🗑 Delete</button>' : '')+
           '</div>'+
+          ptsBadge+
           '<div class="tm-fields">'+fields+'</div>'+
           comment+
         '</div>';

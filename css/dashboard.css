@@ -269,6 +269,8 @@ tr.as-dnp    { background: rgba(192, 57,  43, 0.08); }
 .tm-delete-btn { margin-left:auto; background:none; border:1px solid #555; color:#c0392b; border-radius:6px; padding:2px 8px; font-size:11px; cursor:pointer; }
 .tm-delete-btn:hover { background:#c0392b; color:#fff; border-color:#c0392b; }
 .tm-entry-hdr .m-num   { font-size:16px; font-weight:700; color:#fff; }
+.m-pts        { display:block; font-size:15px; font-weight:700; color:#f5a623; margin-bottom:6px; }
+.m-pts-detail { font-size:12px; font-weight:400; color:#aaa; }
 .tm-entry-hdr .m-robot { font-size:12px; padding:2px 8px; border-radius:8px; font-weight:600; }
 .red-tag  { background:#3a0808; color:#ff8080; }
 .blue-tag { background:#08083a; color:#8080ff; }
