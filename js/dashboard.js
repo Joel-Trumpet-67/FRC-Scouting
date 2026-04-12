@@ -103,7 +103,7 @@ function subscribeEntries() {
     allData = Object.keys(raw).map(function(k){ return Object.assign({_key: k}, raw[k]); });
     processData();
     var event = getEvent();
-    if (event) { fetchStatbotics(event); fetchMatchSchedule(event); }
+    if (event) { fetchStatbotics(event); fetchMatchSchedule(event); validateData(); }
     else { renderTable(); renderAllianceTable(); updateChips(); }
     setPill('pill-fb', '● Live (' + allData.length + ' entries)', 'p-green');
     document.getElementById('ts').textContent = 'Updated: ' + new Date().toLocaleTimeString();
@@ -528,6 +528,7 @@ function fetchMatchSchedule(event) {
         .filter(function(m) { return m.comp_level === 'qm'; })
         .sort(function(a, b) { return a.match_number - b.match_number; });
       checkMissingMatches();
+      validateData();
     })
     .catch(function() { /* TBA unavailable — silent, tracker just won't show */ });
 }
@@ -594,6 +595,116 @@ function checkMissingMatches() {
 
 function toggleMissingPanel() {
   var panel = document.getElementById('missing-panel');
+  if (!panel) return;
+  panel.style.display = panel.style.display === 'none' ? '' : 'none';
+}
+
+// ============================================================
+// SCORE QUALITY — cross-check scouted alliance totals vs TBA
+// ============================================================
+//
+// After a match is played, the 3 scouts' per-robot totals should
+// roughly add up to the official TBA alliance score.
+// (TBA score includes foul/penalty points which scouts can't track,
+//  so we allow a 50pt buffer before flagging an under-count.)
+//
+// Flags:
+//   OVER  — scouts reported more than TBA (always an error)
+//   UNDER — scouts reported 50+ pts less than TBA (scouts missed scoring)
+
+var qualityFlags = [];
+
+function validateData() {
+  var chip  = document.getElementById('quality-chip');
+  var panel = document.getElementById('quality-panel');
+  if (!chip || !scheduleMatches.length || !allData.length) {
+    if (chip) chip.style.display = 'none';
+    return;
+  }
+
+  qualityFlags = [];
+  var CLIMB_PTS = {'1':10,'2':20,'3':30};
+  var OVER_BUFFER  = 10;  // scouts can't exceed TBA by more than this (fouls only go up)
+  var UNDER_BUFFER = 50;  // allow up to 50pts gap for foul/penalty points scouts can't track
+
+  // Only check matches TBA has scored (score = -1 means not yet played)
+  var completed = scheduleMatches.filter(function(m) {
+    return m.alliances && m.alliances.red.score > 0 && m.alliances.blue.score > 0;
+  });
+
+  completed.forEach(function(match) {
+    var mn          = match.match_number;
+    var matchEntries = allData.filter(function(e) { return parseInt(e.m) === mn; });
+    if (!matchEntries.length) return;
+
+    ['red','blue'].forEach(function(color) {
+      var prefix   = color === 'red' ? 'r' : 'b';
+      var tbaScore = match.alliances[color].score;
+      var entries  = matchEntries.filter(function(e) { return (e.r||'').charAt(0) === prefix; });
+      if (!entries.length) return;
+
+      var scoutSum = entries.reduce(function(sum, e) {
+        var auto = num(e.as1)*1 + num(e.as5)*5 + num(e.ad8)*8 + num(e.ac1)*15;
+        var tele = num(e.ts1)*1 + num(e.ts5)*5;
+        var end  = CLIMB_PTS[e.efs] || 0;
+        return sum + auto + tele + end;
+      }, 0);
+      scoutSum = Math.round(scoutSum);
+
+      var gap  = tbaScore - scoutSum;   // positive = scouts under-counted
+      var over = scoutSum > tbaScore + OVER_BUFFER;
+      var under = gap > UNDER_BUFFER;
+
+      if (over || under) {
+        qualityFlags.push({
+          match:   mn,
+          color:   color,
+          scouts:  entries.length,
+          sum:     scoutSum,
+          tba:     tbaScore,
+          gap:     gap,
+          over:    over
+        });
+      }
+    });
+  });
+
+  // Update chip
+  if (qualityFlags.length) {
+    chip.style.display = '';
+    document.getElementById('c-quality').textContent = qualityFlags.length;
+  } else {
+    chip.style.display = 'none';
+    if (panel) panel.style.display = 'none';
+  }
+
+  // Build panel content
+  if (!panel) return;
+  panel.innerHTML =
+    '<div class="quality-header">' +
+      '<span>Score discrepancies — scouted alliance total vs TBA official (' + qualityFlags.length + ')</span>' +
+      '<button class="quality-close" onclick="toggleQualityPanel()">✕</button>' +
+    '</div>' +
+    '<table class="quality-table">' +
+      '<tr><th>Match</th><th>Alliance</th><th>Scouts</th><th>Scouted</th><th>TBA</th><th>Gap</th></tr>' +
+      qualityFlags.map(function(f) {
+        var dir = f.over
+          ? '<span class="gap-over">OVER by ' + Math.abs(f.gap) + '</span>'
+          : '<span class="gap-under">UNDER by ' + f.gap + '</span>';
+        return '<tr>' +
+          '<td>Q' + f.match + '</td>' +
+          '<td>' + f.color.toUpperCase() + '</td>' +
+          '<td>' + f.scouts + '/3</td>' +
+          '<td>' + f.sum + '</td>' +
+          '<td>' + f.tba + '</td>' +
+          '<td>' + dir + '</td>' +
+        '</tr>';
+      }).join('') +
+    '</table>';
+}
+
+function toggleQualityPanel() {
+  var panel = document.getElementById('quality-panel');
   if (!panel) return;
   panel.style.display = panel.style.display === 'none' ? '' : 'none';
 }

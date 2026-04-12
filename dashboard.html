@@ -50,10 +50,16 @@
     <div class="chip-val" id="c-missing">0</div>
     <div class="chip-label">⚠ Gaps</div>
   </div>
+  <div class="chip chip-err" id="quality-chip" style="display:none;" onclick="toggleQualityPanel()" title="Click to see score discrepancies vs TBA">
+    <div class="chip-val" id="c-quality">0</div>
+    <div class="chip-label">⚠ Score Gaps</div>
+  </div>
 </div>
 <div class="timestamp" id="ts"></div>
 <!-- Missing matches panel — only visible when gaps exist -->
 <div id="missing-panel" style="display:none;"></div>
+<!-- Score quality panel — only visible when discrepancies exist -->
+<div id="quality-panel" style="display:none;"></div>
 
 <!-- Tab bar -->
 <div class="tab-bar">
