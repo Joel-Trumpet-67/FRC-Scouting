@@ -23,6 +23,7 @@
 
 var allData        = [];   // raw Firebase entries (array of objects)
 var teamStats      = [];   // processed per-team stats (one entry per team)
+var teamEntryIndex = {};   // keyed by team number string → array of raw entries (built in processData)
 var statboticsData = {};   // keyed by team number string
 var picklistData   = {};   // keyed by team number string: "available" | "overrated" | "dnp"
 var sortCol        = 'sbRank';
@@ -174,23 +175,22 @@ function fetchStatbotics(event) {
 }
 
 function mergeStatbotics() {
-  // Attach SB data to already-scouted teams
-  teamStats = teamStats.map(function(s){
+  // Attach SB data to already-scouted teams in-place (avoids rebuilding the array)
+  var scoutedSet = {};
+  teamStats.forEach(function(s){
     var sb = statboticsData[s.t] || {};
-    return Object.assign({}, s, {
-      sbRank:   sb.rank     != null ? sb.rank     : null,
-      numTeams: sb.numTeams != null ? sb.numTeams : null,
-      sbTotal:  sb.sbTotal  != null ? sb.sbTotal  : null,
-      sbAuto:   sb.sbAuto   != null ? sb.sbAuto   : null,
-      sbTele:   sb.sbTele   != null ? sb.sbTele   : null,
-      sbEnd:    sb.sbEnd    != null ? sb.sbEnd    : null,
-    });
+    s.sbRank   = sb.rank     != null ? sb.rank     : null;
+    s.numTeams = sb.numTeams != null ? sb.numTeams : null;
+    s.sbTotal  = sb.sbTotal  != null ? sb.sbTotal  : null;
+    s.sbAuto   = sb.sbAuto   != null ? sb.sbAuto   : null;
+    s.sbTele   = sb.sbTele   != null ? sb.sbTele   : null;
+    s.sbEnd    = sb.sbEnd    != null ? sb.sbEnd    : null;
+    scoutedSet[s.t] = true;
   });
 
   // Also show teams from Statbotics that haven't been scouted yet
-  var scouted = teamStats.map(function(s){ return s.t; });
   Object.keys(statboticsData).forEach(function(team){
-    if (scouted.indexOf(team) !== -1) return;
+    if (scoutedSet[team]) return;
     var sb = statboticsData[team];
     teamStats.push({
       t: team, matches: 0,
@@ -209,17 +209,21 @@ function mergeStatbotics() {
 // Scoring formula and field list live in season/game-fields.js — edit that, not this.
 function processData() {
   var teams = {};
+  teamEntryIndex = {};  // reset per-team entry index
+
   allData.forEach(function(e){
     var t = String(e.t || '?');
     if (!teams[t]) {
       teams[t] = { t:t, matches:0 };
       SEASON_SCORING.numericFields.forEach(function(f){ teams[t][f] = []; });
       SEASON_SCORING.rawFields.forEach(function(f){ teams[t][f] = []; });
+      teamEntryIndex[t] = [];
     }
     var s = teams[t];
     s.matches++;
     SEASON_SCORING.numericFields.forEach(function(f){ s[f].push(num(e[f])); });
     SEASON_SCORING.rawFields.forEach(function(f){ s[f].push(e[f] || ''); });
+    teamEntryIndex[t].push(e);  // build index in the same pass
   });
 
   teamStats = Object.values(teams).map(function(s){
@@ -247,11 +251,16 @@ function autoFlagOverrated() {
   var bySB    = both.slice().sort(function(a,b){ return a.sbTotal - b.sbTotal; });
   var n = both.length - 1;
 
+  // Build position-index maps so each lookup is O(1) instead of O(n)
+  var scoutIdx = {}, sbIdx = {};
+  byScout.forEach(function(s, i){ scoutIdx[s.t] = i; });
+  bySB.forEach(function(s, i){ sbIdx[s.t] = i; });
+
   both.forEach(function(s){
     var key = String(s.t);
     if (picklistData[key] === 'dnp') return;  // don't override manual DNP
-    var sp = byScout.findIndex(function(x){ return x.t===s.t; }) / n;
-    var bp = bySB.findIndex(function(x){ return x.t===s.t; }) / n;
+    var sp = scoutIdx[s.t] / n;
+    var bp = sbIdx[s.t] / n;
     if (bp >= 0.65 && sp <= 0.35) {
       if (picklistRef) picklistRef.child(key).set('overrated');
     } else if (picklistData[key] === 'overrated') {
@@ -287,13 +296,17 @@ function renderTable() {
     return;
   }
 
-  // Compute min/max ranges for color-coding each column
-  function rng(col) {
-    var v=rows.map(function(r){return r[col];}).filter(function(v){return v!=null;});
-    return v.length?{min:Math.min.apply(null,v),max:Math.max.apply(null,v)}:null;
-  }
-  var R={};
-  ['scoutAuto','scoutTele','scoutTotal','climbRate','sbTotal','sbAuto','sbTele','sbEnd'].forEach(function(c){R[c]=rng(c);});
+  // Compute min/max ranges for color-coding — single pass over all rows for all columns
+  var RANGE_COLS = ['scoutAuto','scoutTele','scoutTotal','climbRate','sbTotal','sbAuto','sbTele','sbEnd'];
+  var R = {};
+  rows.forEach(function(r){
+    RANGE_COLS.forEach(function(c){
+      var v = r[c];
+      if (v == null) return;
+      if (!R[c]) { R[c] = {min:v, max:v}; }
+      else { if (v < R[c].min) R[c].min=v; if (v > R[c].max) R[c].max=v; }
+    });
+  });
 
   tbody.innerHTML = rows.map(function(r){
     var rankCls = r.sbRank<=3?'rank top3':r.sbRank<=10?'rank top10':'rank';
@@ -666,8 +679,7 @@ function setPill(id, text, cls) {
 //       under sessions/{code}/notes/{team} — so coaches can annotate teams.
 function openTeamModal(team) {
   var sb      = statboticsData[String(team)] || {};
-  var entries = allData.filter(function(d){ return String(d.t) === String(team); });
-  entries.sort(function(a,b){ return (parseInt(a.m)||0)-(parseInt(b.m)||0); });
+  var entries = (teamEntryIndex[String(team)] || []).slice().sort(function(a,b){ return (parseInt(a.m)||0)-(parseInt(b.m)||0); });
 
   document.getElementById('tm-title').textContent = 'Team ' + team;
   document.getElementById('tm-sub').innerHTML =
