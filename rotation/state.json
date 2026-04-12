@@ -1,0 +1,32 @@
+{
+  "match_number": 1,
+  "queue": [
+    {
+      "rank": 1,
+      "name": "Scout1"
+    },
+    {
+      "rank": 2,
+      "name": "Scout2"
+    },
+    {
+      "rank": 3,
+      "name": "Scout3"
+    },
+    {
+      "rank": 4,
+      "name": "Scout4"
+    },
+    {
+      "rank": 5,
+      "name": "Scout5"
+    },
+    {
+      "rank": 6,
+      "name": "Scout6"
+    }
+  ],
+  "last_swap_match": 0,
+  "last_teams": [],
+  "epa_cache": {}
+}
