@@ -137,7 +137,7 @@ var SEASON_SCORING = {
 
   // Fields whose values are pushed into arrays and averaged
   // Must match name="xx" attributes in match.html
-  numericFields: ['as1', 'as5', 'ts1', 'ts5'],
+  numericFields: ['as1', 'as5', 'ad8', 'ac1', 'ts1', 'ts5'],
 
   // Fields collected as raw strings (for categorical stats like climb rate)
   rawFields: ['efs'],
@@ -158,14 +158,21 @@ var SEASON_SCORING = {
     function _avg(arr) {
       return arr.length ? arr.reduce(function(a,b){return a+b;},0)/arr.length : 0;
     }
-    var auto = _avg(s.as1)*1 + _avg(s.as5)*5;
+    // Auto: shots + dump (8pts) + L1 climb bonus (15pts)
+    var auto = _avg(s.as1)*1 + _avg(s.as5)*5 + _avg(s.ad8)*8 + _avg(s.ac1)*15;
+    // Teleop: shots only
     var tele = _avg(s.ts1)*1 + _avg(s.ts5)*5;
+    // Endgame climb: L1=10, L2=20, L3=30 — averaged across matches
+    var CLIMB_PTS = {'1':10, '2':20, '3':30};
+    var end = s.efs.length
+      ? s.efs.reduce(function(sum,v){ return sum+(CLIMB_PTS[v]||0); }, 0) / s.efs.length
+      : 0;
     var climbs = s.efs.filter(function(v){ return v==='1'||v==='2'||v==='3'; });
     return {
-      // 2026 scoring: Shot1 = 1pt, Shot5 = 5pts
       scoutAuto:  auto,
       scoutTele:  tele,
-      scoutTotal: auto + tele,
+      scoutEnd:   end,
+      scoutTotal: auto + tele + end,
       climbRate:  s.matches ? (climbs.length / s.matches) * 100 : 0
     };
   }

@@ -292,12 +292,12 @@ function renderTable() {
 
   var tbody = document.getElementById('tbody');
   if (!rows.length) {
-    tbody.innerHTML = '<tr class="no-data"><td colspan="11">No entries yet for this sync code.</td></tr>';
+    tbody.innerHTML = '<tr class="no-data"><td colspan="12">No entries yet for this sync code.</td></tr>';
     return;
   }
 
   // Compute min/max ranges for color-coding — single pass over all rows for all columns
-  var RANGE_COLS = ['scoutAuto','scoutTele','scoutTotal','climbRate','sbTotal','sbAuto','sbTele','sbEnd'];
+  var RANGE_COLS = ['scoutAuto','scoutTele','scoutEnd','scoutTotal','climbRate','sbTotal','sbAuto','sbTele','sbEnd'];
   var R = {};
   rows.forEach(function(r){
     RANGE_COLS.forEach(function(c){
@@ -320,6 +320,7 @@ function renderTable() {
       '<td class="team"><a class="tba" href="#" onclick="openTeamModal(\''+r.t+'\');return false;">'+r.t+'</a></td>'+
       htd(r.scoutAuto,R.scoutAuto)+
       htd(r.scoutTele,R.scoutTele)+
+      htd(r.scoutEnd,R.scoutEnd)+
       htd(r.scoutTotal,R.scoutTotal)+
       (r.climbRate!=null?'<td class="'+clsCl(r.climbRate)+'">'+r.climbRate.toFixed(0)+'%</td>':'<td class="low">—</td>')+
       sbtd(r.sbTotal,R.sbTotal,true)+
@@ -416,7 +417,7 @@ function renderAllianceTable() {
     var ra = a.sbRank != null ? a.sbRank : 9999;
     var rb = b.sbRank != null ? b.sbRank : 9999;
     if (ra !== rb) return ra - rb;
-    return ((b.scoutAuto||0) + (b.scoutTele||0)) - ((a.scoutAuto||0) + (a.scoutTele||0));
+    return (b.scoutTotal||0) - (a.scoutTotal||0);
   });
 
   tbody.innerHTML = rows.map(function(r) {
@@ -705,10 +706,12 @@ function openTeamModal(team) {
       var robTag = '<span class="m-robot '+(isRed?'red-tag':'blue-tag')+'">'+(ROBOT_LABELS[e.r]||e.r||'?')+'</span>';
 
       // Points scored this match
-      var autoPts  = num(e.as1)*1 + num(e.as5)*5;
+      var CLIMB_PTS = {'1':10,'2':20,'3':30};
+      var autoPts  = num(e.as1)*1 + num(e.as5)*5 + num(e.ad8)*8 + num(e.ac1)*15;
       var telePts  = num(e.ts1)*1 + num(e.ts5)*5;
-      var totalPts = autoPts + telePts;
-      var ptsBadge = '<span class="m-pts">'+totalPts+' pts <span class="m-pts-detail">(Auto: '+autoPts+' | Tele: '+telePts+')</span></span>';
+      var endPts   = CLIMB_PTS[e.efs] || 0;
+      var totalPts = autoPts + telePts + endPts;
+      var ptsBadge = '<span class="m-pts">'+totalPts+' pts <span class="m-pts-detail">(Auto: '+autoPts+' | Tele: '+telePts+' | End: '+endPts+')</span></span>';
 
       var fields = MODAL_FIELDS.map(function(f){
         var raw = e[f.key];
