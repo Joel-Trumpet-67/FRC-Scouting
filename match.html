@@ -400,15 +400,6 @@
           <table id="summary-table" style="color:black; width:90%; margin:12px auto; font-size:14px; border:none;">
           </table>
 
-          <!-- Short code — coach reads this off the screen and types it into add.py -->
-          <div id="entry-code-box" style="display:none; margin:10px 16px; padding:12px;
-               background:#f0f4f0; border:2px solid #4CAF50; border-radius:8px; text-align:center;">
-            <div style="font-size:11px; color:#555; margin-bottom:4px;">Read this to the coach ↓</div>
-            <div id="entry-code" style="font-size:28px; font-weight:900; letter-spacing:4px;
-                 color:#111; font-family:monospace;"></div>
-            <div style="font-size:10px; color:#888; margin-top:4px;">Match · Robot · Team · AutoClimb · Auto% · Def · Tele% · End</div>
-          </div>
-
           <!-- Status message -->
           <p id="submit-status" style="text-align:center; font-size:15px; font-weight:bold; padding:10px 16px; min-height:24px;"></p>
 
@@ -431,18 +422,6 @@
             <button type="button" class="clearForm" onclick="clearForm()">Clear Form</button>
           </div>
 
-          <!-- Export all local submissions to JSON (for offline dashboard import) -->
-          <div style="text-align:center; margin-top:16px; padding-bottom:8px;">
-            <button type="button" onclick="exportLocalData()"
-              style="padding:10px 22px; font-size:14px; background:#1a3a5a; color:#97c7f0;
-                     border:1px solid #2a5a8a; border-radius:6px; cursor:pointer;">
-              📂 Export to File
-            </button>
-            <div style="font-size:11px; color:#666; margin-top:5px;">
-              Downloads all submissions as JSON for offline dashboard import
-            </div>
-          </div>
-          <br>
         </div>
 
       </div><!-- #main-panel-holder -->

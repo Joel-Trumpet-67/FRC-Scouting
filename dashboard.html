@@ -24,14 +24,6 @@
     <input id="sync-input" type="text" placeholder="e.g. TEAM1234"
            onkeydown="if(event.key==='Enter') joinCode()">
     <button id="sync-join" onclick="joinCode()">View Dashboard</button>
-    <div style="margin-top:14px; border-top:1px solid #333; padding-top:14px;">
-      <p style="color:#666; font-size:12px; margin:0 0 10px;">No internet? Import a JSON file exported from the scout app.</p>
-      <button id="sync-offline" onclick="useOfflineMode()"
-        style="width:100%; padding:10px; font-size:13px; background:#1a3a5a; color:#97c7f0;
-               border:1px solid #2a5a8a; border-radius:6px; cursor:pointer;">
-        📂 Use File Import (Offline)
-      </button>
-    </div>
   </div>
 </div>
 
@@ -43,12 +35,8 @@
     <span id="pill-sb"     class="pill p-grey">Statbotics —</span>
     <button class="btn btn-code"   onclick="changeCode()">Change Code</button>
     <button class="btn btn-qr"     onclick="showQR()">📱 Scout QR</button>
-    <button class="btn btn-import" onclick="importFile()">📂 Import File</button>
     <button class="btn btn-export" onclick="exportCSV()">Export CSV</button>
     <button class="btn btn-clear"  onclick="clearAll()">Clear Data</button>
-    <!-- Hidden file input for JSON import -->
-    <input type="file" id="import-file-input" accept=".json" style="display:none"
-           onchange="handleImportFile(this)">
   </div>
 </header>
 
