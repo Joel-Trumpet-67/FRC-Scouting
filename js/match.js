@@ -270,6 +270,31 @@ function flip(element) {
 //       The canvas logic above doesn't need changes — it's position-independent.
 
 // ============================================================
+// CLIMB LEVEL BUTTONS (Auto screen)
+// ============================================================
+
+function setClimbLevel(level) {
+  document.getElementById('input_acl').value = level;
+  document.querySelectorAll('.climb-btn[data-climb="acl"]').forEach(function(btn) {
+    if (parseInt(btn.getAttribute('data-val')) === level) {
+      btn.classList.add('climb-active');
+    } else {
+      btn.classList.remove('climb-active');
+    }
+  });
+}
+
+// ============================================================
+// DEFENSE MODE TOGGLE (Teleop screen)
+// ============================================================
+
+function toggleDefenseMode() {
+  var isDefense = document.getElementById('input_def').checked;
+  document.getElementById('offensive-section').style.display = isDefense ? 'none' : '';
+  document.getElementById('defense-section').style.display   = isDefense ? ''     : 'none';
+}
+
+// ============================================================
 // DATA COLLECTION
 // ============================================================
 
@@ -686,6 +711,20 @@ function clearForm() {
       }
     }
   });
+
+  // Reset range sliders (clearForm loop skips type="range")
+  var apctEl = document.getElementById('input_apct');
+  if (apctEl) { apctEl.value = 33; document.getElementById('display_apct').textContent = 33; }
+  var tpctEl = document.getElementById('input_tpct');
+  if (tpctEl) { tpctEl.value = 33; document.getElementById('display_tpct').textContent = 33; }
+
+  // Reset climb level buttons back to None
+  setClimbLevel(0);
+
+  // Reset defense mode — show offensive section, hide defense section
+  var defEl = document.getElementById('input_def');
+  if (defEl) defEl.checked = false;
+  toggleDefenseMode();
 
   // Restore robot position for next match (scouts stay on the same robot)
   if (savedRobotVal) {
