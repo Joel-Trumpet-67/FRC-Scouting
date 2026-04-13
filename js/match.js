@@ -596,39 +596,85 @@ function updateMatchStart() {
 // ============================================================
 // TBA SCHEDULE INTEGRATION
 // ============================================================
+//
+//  Schedule is cached in localStorage so it works offline at competition.
+//  Pre-fetch once with internet before the event — then it works with no WiFi.
+//
+// ============================================================
+
+function scheduleCacheKey(event) {
+  return "tba_schedule_" + event;
+}
+
+function loadCachedSchedule(event) {
+  try {
+    var raw = localStorage.getItem(scheduleCacheKey(event));
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch(e) { return null; }
+}
+
+function saveScheduleCache(event, data) {
+  try {
+    localStorage.setItem(scheduleCacheKey(event), JSON.stringify(data));
+  } catch(e) { console.warn("Could not cache schedule:", e); }
+}
 
 function fetchSchedule() {
   var event = (document.getElementById("input_e").value || "").trim();
-  if (!event || event === scheduleEvent) return;
+  if (!event) return;
+
+  // Already loaded for this event — nothing to do
+  if (event === scheduleEvent && schedule) return;
 
   var statusEl = document.getElementById("tba-status");
 
-  // TBA_KEY comes from config/event-config.js
-  var key = (typeof TBA_KEY !== "undefined" && TBA_KEY) ? TBA_KEY : "";
-  if (!key) {
-    if (statusEl) statusEl.textContent = "TBA_KEY missing — set it in config/event-config.js";
+  // Try localStorage cache first
+  var cached = loadCachedSchedule(event);
+  if (cached && cached.length) {
+    schedule      = cached;
+    scheduleEvent = event;
+    if (statusEl) statusEl.textContent = "✓ Schedule: " + cached.length + " matches (cached)";
+    autoFillTeam();
+    // Still try to refresh from TBA in background if key available
+    refreshScheduleFromTBA(event, statusEl, true);
     return;
   }
 
-  if (statusEl) statusEl.textContent = "Fetching TBA schedule…";
+  // No cache — must fetch live
+  var key = (typeof TBA_KEY !== "undefined" && TBA_KEY) ? TBA_KEY : "";
+  if (!key) {
+    if (statusEl) statusEl.textContent = "No schedule cached — need internet to fetch";
+    return;
+  }
+
+  if (statusEl) statusEl.textContent = "Fetching schedule from TBA…";
+  refreshScheduleFromTBA(event, statusEl, false);
+}
+
+function refreshScheduleFromTBA(event, statusEl, silent) {
+  var key = (typeof TBA_KEY !== "undefined" && TBA_KEY) ? TBA_KEY : "";
+  if (!key) return;
 
   fetch("https://www.thebluealliance.com/api/v3/event/" + event + "/matches/simple", {
     headers: { "X-TBA-Auth-Key": key }
   })
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      if (Array.isArray(data)) {
+      if (Array.isArray(data) && data.length) {
         schedule      = data;
         scheduleEvent = event;
-        if (statusEl) statusEl.textContent = "✓ TBA: " + data.length + " matches loaded";
+        saveScheduleCache(event, data);
+        if (statusEl) statusEl.textContent = "✓ Schedule: " + data.length + " matches loaded";
         autoFillTeam();
-      } else {
-        if (statusEl) statusEl.textContent = "TBA: " + (data.error || "No data — check EVENT_CODE in config/event-config.js");
-        schedule = null;
+      } else if (!silent) {
+        if (statusEl) statusEl.textContent = "TBA: schedule not published yet for " + event;
       }
     })
     .catch(function() {
-      if (statusEl) statusEl.textContent = "TBA fetch failed — check TBA_KEY in config/event-config.js";
+      if (!silent && statusEl) statusEl.textContent = schedule
+        ? "✓ Schedule: " + schedule.length + " matches (cached — offline)"
+        : "Offline — no cached schedule. Fetch with internet before competition.";
     });
 }
 
@@ -820,7 +866,6 @@ function initFirebase() {
   if (syncCode) {
     localStorage.setItem("scout_sync_code", syncCode);
     showSyncBanner('Sync: ' + syncCode, '#27ae60');
-    fetchSchedule();
   }
 
   try {
@@ -918,6 +963,9 @@ window.onload = function() {
     if (img.complete && img.naturalWidth) initCanvas();
     else img.onload = initCanvas;
   }
+
+  // Fetch schedule immediately (uses cache if offline, fetches live if online)
+  fetchSchedule();
 
   // Firebase
   initFirebase();
