@@ -621,7 +621,9 @@ function saveScheduleCache(event, data) {
 }
 
 function fetchSchedule() {
-  var event = (document.getElementById("input_e").value || "").trim();
+  var eventEl = document.getElementById("input_e");
+  var event = (eventEl ? eventEl.value : "").trim()
+    || (typeof EVENT_CODE !== "undefined" ? EVENT_CODE : "");
   if (!event) return;
 
   // Already loaded for this event — nothing to do
