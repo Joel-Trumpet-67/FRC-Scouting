@@ -9,3 +9,20 @@
 const EVENT_CODE        = "2026mibig";
 const TBA_KEY           = "X2gNmgd573cLcpkm3WCVQQpvN7MHYhpLedSTOHVRKaSHluh7ZZzBbEkutg1ksDhr";
 const DEFAULT_SYNC_CODE = "TEAM3603";
+
+// ── OFFLINE LOCAL SERVER ──────────────────────────────────────
+//
+//  When there's no internet at a competition venue, run server.py
+//  on the coach's laptop and set this to the laptop's local IP.
+//
+//  Steps:
+//    1. Coach starts a phone hotspot
+//    2. Laptop + all scout phones join that hotspot
+//    3. Run: python3 server.py  (in this folder)
+//    4. Set LOCAL_SERVER below to the IP shown in the terminal
+//    5. All scouts reload match.html — data now goes to the laptop
+//
+//  Example: const LOCAL_SERVER = 'http://192.168.1.5:5800';
+//  Leave empty to use Firebase (normal online mode).
+//
+const LOCAL_SERVER = '';

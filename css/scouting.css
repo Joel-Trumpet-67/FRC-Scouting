@@ -275,7 +275,11 @@ input.counter {
     text-align: center;
 }
 
-/* ── Contribution % slider ─────────────────────────────────── */
+/* Hides teleop sub-sections (offense/defense toggle) — !important overrides
+   display:table layout context set on .main-panel by swipePage() */
+.section-hidden {
+    display: none !important;
+}
 .pct-slider {
     width: 100%;
     max-width: 220px;

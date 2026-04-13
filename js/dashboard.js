@@ -45,6 +45,14 @@ var scheduleEvent    = null;   // event code the schedule was fetched for (cache
 // ============================================================
 
 function initFirebase() {
+  // ── LOCAL SERVER MODE ────────────────────────────────────────
+  // When LOCAL_SERVER is set in config/event-config.js, skip Firebase
+  // entirely and poll the Python server running on this machine.
+  if (typeof LOCAL_SERVER !== 'undefined' && LOCAL_SERVER) {
+    initLocalServerMode();
+    return;
+  }
+
   try {
     firebase.initializeApp(FIREBASE_CONFIG);
     db = firebase.database();
@@ -63,6 +71,57 @@ function initFirebase() {
   } else {
     document.getElementById('sync-modal').style.display = 'flex';
   }
+}
+
+// ── LOCAL SERVER MODE ─────────────────────────────────────────
+// Polls server.py (running on this machine) for new entries every 3 seconds.
+// No Firebase, no internet needed.
+
+var localPollTimer = null;
+var localLastCount = -1;
+
+function initLocalServerMode() {
+  document.getElementById('sync-modal').style.display = 'none';
+  syncCode = '__local__';
+  setPill('pill-code', 'Local server', 'p-blue');
+  setPill('pill-fb',   '⟳ Polling local server…', 'p-grey');
+  document.getElementById('page-title').textContent = 'FRC Scouting Dashboard (Local)';
+
+  pollLocalServer();
+  localPollTimer = setInterval(pollLocalServer, 3000);
+}
+
+function pollLocalServer() {
+  fetch(LOCAL_SERVER + '/entries')
+    .then(function(r) { return r.json(); })
+    .then(function(payload) {
+      var entries = payload.entries || [];
+      if (entries.length === localLastCount) return;  // nothing new
+      localLastCount = entries.length;
+
+      allData = entries.map(function(e, i) {
+        return Object.assign({ _key: 'local_' + i }, e);
+      });
+
+      processData();
+      var event = getEvent();
+      if (event && (typeof TBA_KEY !== 'undefined') && TBA_KEY) {
+        fetchStatbotics(event);
+        fetchMatchSchedule(event);
+        validateData();
+      } else {
+        renderTable();
+        renderAllianceTable();
+        renderDefenseTable();
+        updateChips();
+      }
+
+      setPill('pill-fb', '● Local: ' + entries.length + ' entries', 'p-green');
+      document.getElementById('ts').textContent = 'Updated: ' + new Date().toLocaleTimeString();
+    })
+    .catch(function() {
+      setPill('pill-fb', '✗ Local server unreachable — is server.py running?', 'p-red');
+    });
 }
 
 function applyCode(code) {

@@ -290,8 +290,8 @@ function setClimbLevel(level) {
 
 function toggleDefenseMode() {
   var isDefense = document.getElementById('input_def').checked;
-  document.getElementById('offensive-section').style.display = isDefense ? 'none' : '';
-  document.getElementById('defense-section').style.display   = isDefense ? ''     : 'none';
+  document.getElementById('offensive-section').classList.toggle('section-hidden', isDefense);
+  document.getElementById('defense-section').classList.toggle('section-hidden', !isDefense);
 }
 
 // ============================================================
@@ -428,6 +428,14 @@ function submitData() {
   // even when Firebase is unavailable (no internet at competition).
   localSubsAdd(data);
 
+  // ── LOCAL SERVER PATH ─────────────────────────────────────────
+  // When LOCAL_SERVER is set in config/event-config.js, submit directly
+  // to the Python server running on the coach's laptop. No Firebase needed.
+  if (typeof LOCAL_SERVER !== 'undefined' && LOCAL_SERVER) {
+    submitToLocalServer(data, statusEl, btn);
+    return;
+  }
+
   // ── OFFLINE PATH ─────────────────────────────────────────────
   // If Firebase is disconnected, skip the network entirely and
   // queue locally. The queue flushes automatically on reconnect.
@@ -486,6 +494,36 @@ function submitData() {
 // DISPLAY / COPY (backup, in case Firebase is down)
 // ============================================================
 
+// Sends data to the coach's laptop server (offline competition mode).
+// LOCAL_SERVER must be set in config/event-config.js.
+function submitToLocalServer(data, statusEl, btn) {
+  btn.setAttribute("value", "Submitting\u2026");
+  btn.disabled = true;
+
+  fetch(LOCAL_SERVER + '/submit', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify(data)
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(result) {
+      if (result.ok) {
+        statusEl.textContent = "\u2713 Saved to laptop server! Advancing\u2026";
+        statusEl.style.color = "#27ae60";
+        btn.setAttribute("value", "Submitted \u2713");
+        setTimeout(clearForm, 1500);
+      } else {
+        throw new Error(result.error || 'Server error');
+      }
+    })
+    .catch(function(err) {
+      statusEl.textContent = "\u26A0 Local server error: " + err.message + " \u2014 is server.py running?";
+      statusEl.style.color = "#c0392b";
+      btn.setAttribute("value", "Submit");
+      btn.disabled = false;
+    });
+}
+
 function displayData() {
   document.getElementById("data").innerHTML = getData();
 }
@@ -493,6 +531,26 @@ function displayData() {
 function copyData() {
   navigator.clipboard.writeText(getData());
   document.getElementById("copyButton").setAttribute("value", "Copied");
+}
+
+// Copies the current entry as a compact JSON string.
+// Scouts paste this into Discord/text when Firebase is offline — dashboard
+// coach pastes it into the "Paste Entries" modal to import the data.
+function copyEntryJSON() {
+  var data = getDataObject();
+  var json = JSON.stringify(data);
+  navigator.clipboard.writeText(json).then(function() {
+    var btn = document.getElementById("copyEntryBtn");
+    btn.value = "✓ Copied! Paste in Discord/chat";
+    btn.style.background = "#1a4a2a";
+    setTimeout(function() {
+      btn.value = "📋 Copy Entry (for offline share)";
+      btn.style.background = "#1a3a5a";
+    }, 3000);
+  }).catch(function() {
+    // Clipboard API not available — show the text instead
+    document.getElementById("data").innerHTML = json;
+  });
 }
 
 // ============================================================
@@ -776,7 +834,10 @@ function clearForm() {
   // Reset defense mode — show offensive section, hide defense section
   var defEl = document.getElementById('input_def');
   if (defEl) defEl.checked = false;
-  toggleDefenseMode();
+  var offEl = document.getElementById('offensive-section');
+  var dfsEl = document.getElementById('defense-section');
+  if (offEl) offEl.classList.remove('section-hidden');
+  if (dfsEl) dfsEl.classList.add('section-hidden');
 
   // Restore robot position for next match (scouts stay on the same robot)
   if (savedRobotVal) {
