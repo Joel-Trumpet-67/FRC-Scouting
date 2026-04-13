@@ -62,9 +62,10 @@ function swipePage(increment) {
   window.scrollTo(0, 0);
   slides[slide].style.display = "table";
 
-  // When arriving at the Submit page (last), refresh the summary
+  // When arriving at the Submit page (last), refresh the summary and show the short code
   if (slide === slides.length - 1) {
     updateSummary();
+    showEntryCode();
     document.getElementById("submit-status").textContent = "";
     document.getElementById("submit-status").style.color = "";
     document.getElementById("data").innerHTML = "";
@@ -522,6 +523,43 @@ function submitToLocalServer(data, statusEl, btn) {
       btn.setAttribute("value", "Submit");
       btn.disabled = false;
     });
+}
+
+// Builds and shows the 8-field short code on the submit page.
+// Format: MATCH·ROBOT·TEAM·ACLIMB·APCT·DEF·TPCT·END
+// Coach reads it and types: python3 add.py JT 5 r1 3603 1 45 0 60 2
+function showEntryCode() {
+  var d   = getDataObject();
+  var rob = {r1:'1',r2:'2',r3:'3',b1:'4',b2:'5',b3:'6'};
+  var end = {1:'1',2:'2',3:'3',F:'F',X:'X'};
+  var isNew = d.apct !== undefined && d.apct !== '';
+  var code;
+  if (isNew) {
+    // New format fields
+    code = [
+      d.m   || '?',
+      d.r   || '?',
+      d.t   || '?',
+      d.acl || '0',
+      d.apct|| '33',
+      d.def || '0',
+      d.tpct|| '33',
+      d.efs || 'X'
+    ].join(' ');
+  } else {
+    code = [
+      d.m   || '?',
+      d.r   || '?',
+      d.t   || '?',
+      d.as1 || '0',
+      d.as5 || '0',
+      d.ts1 || '0',
+      d.ts5 || '0',
+      d.efs || 'X'
+    ].join(' ');
+  }
+  document.getElementById('entry-code').textContent = code;
+  document.getElementById('entry-code-box').style.display = 'block';
 }
 
 function displayData() {
