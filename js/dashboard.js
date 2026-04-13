@@ -22,7 +22,9 @@
 // ============================================================
 
 var allData        = [];   // raw Firebase entries (array of objects)
-var teamStats      = [];   // processed per-team stats (one entry per team)
+var teamStats      = [];   // processed per-team offense stats (one entry per team)
+var defenseStats   = [];   // processed per-team defense stats (teams that played defense)
+var teamEntryIndex = {};   // keyed by team number string → array of raw entries (built in processData)
 var statboticsData = {};   // keyed by team number string
 var picklistData   = {};   // keyed by team number string: "available" | "overrated" | "dnp"
 var sortCol        = 'sbRank';
@@ -43,6 +45,14 @@ var scheduleEvent    = null;   // event code the schedule was fetched for (cache
 // ============================================================
 
 function initFirebase() {
+  // ── LOCAL SERVER MODE ────────────────────────────────────────
+  // When LOCAL_SERVER is set in config/event-config.js, skip Firebase
+  // entirely and poll the Python server running on this machine.
+  if (typeof LOCAL_SERVER !== 'undefined' && LOCAL_SERVER) {
+    initLocalServerMode();
+    return;
+  }
+
   try {
     firebase.initializeApp(FIREBASE_CONFIG);
     db = firebase.database();
@@ -61,6 +71,57 @@ function initFirebase() {
   } else {
     document.getElementById('sync-modal').style.display = 'flex';
   }
+}
+
+// ── LOCAL SERVER MODE ─────────────────────────────────────────
+// Polls server.py (running on this machine) for new entries every 3 seconds.
+// No Firebase, no internet needed.
+
+var localPollTimer = null;
+var localLastCount = -1;
+
+function initLocalServerMode() {
+  document.getElementById('sync-modal').style.display = 'none';
+  syncCode = '__local__';
+  setPill('pill-code', 'Local server', 'p-blue');
+  setPill('pill-fb',   '⟳ Polling local server…', 'p-grey');
+  document.getElementById('page-title').textContent = 'FRC Scouting Dashboard (Local)';
+
+  pollLocalServer();
+  localPollTimer = setInterval(pollLocalServer, 3000);
+}
+
+function pollLocalServer() {
+  fetch(LOCAL_SERVER + '/entries')
+    .then(function(r) { return r.json(); })
+    .then(function(payload) {
+      var entries = payload.entries || [];
+      if (entries.length === localLastCount) return;  // nothing new
+      localLastCount = entries.length;
+
+      allData = entries.map(function(e, i) {
+        return Object.assign({ _key: 'local_' + i }, e);
+      });
+
+      processData();
+      var event = getEvent();
+      if (event && (typeof TBA_KEY !== 'undefined') && TBA_KEY) {
+        fetchStatbotics(event);
+        fetchMatchSchedule(event);
+        validateData();
+      } else {
+        renderTable();
+        renderAllianceTable();
+        renderDefenseTable();
+        updateChips();
+      }
+
+      setPill('pill-fb', '● Local: ' + entries.length + ' entries', 'p-green');
+      document.getElementById('ts').textContent = 'Updated: ' + new Date().toLocaleTimeString();
+    })
+    .catch(function() {
+      setPill('pill-fb', '✗ Local server unreachable — is server.py running?', 'p-red');
+    });
 }
 
 function applyCode(code) {
@@ -102,8 +163,8 @@ function subscribeEntries() {
     allData = Object.keys(raw).map(function(k){ return Object.assign({_key: k}, raw[k]); });
     processData();
     var event = getEvent();
-    if (event) { fetchStatbotics(event); fetchMatchSchedule(event); }
-    else { renderTable(); renderAllianceTable(); updateChips(); }
+    if (event) { fetchStatbotics(event); fetchMatchSchedule(event); validateData(); }
+    else { renderTable(); renderAllianceTable(); renderDefenseTable(); updateChips(); }
     setPill('pill-fb', '● Live (' + allData.length + ' entries)', 'p-green');
     document.getElementById('ts').textContent = 'Updated: ' + new Date().toLocaleTimeString();
   }, function() {
@@ -164,6 +225,7 @@ function fetchStatbotics(event) {
       autoFlagOverrated();
       renderTable();
       renderAllianceTable();
+      renderDefenseTable();
       updateChips();
       setPill('pill-sb', '✓ SB: ' + data.length + ' teams', 'p-blue');
     })
@@ -174,23 +236,22 @@ function fetchStatbotics(event) {
 }
 
 function mergeStatbotics() {
-  // Attach SB data to already-scouted teams
-  teamStats = teamStats.map(function(s){
+  // Attach SB data to already-scouted teams in-place (avoids rebuilding the array)
+  var scoutedSet = {};
+  teamStats.forEach(function(s){
     var sb = statboticsData[s.t] || {};
-    return Object.assign({}, s, {
-      sbRank:   sb.rank     != null ? sb.rank     : null,
-      numTeams: sb.numTeams != null ? sb.numTeams : null,
-      sbTotal:  sb.sbTotal  != null ? sb.sbTotal  : null,
-      sbAuto:   sb.sbAuto   != null ? sb.sbAuto   : null,
-      sbTele:   sb.sbTele   != null ? sb.sbTele   : null,
-      sbEnd:    sb.sbEnd    != null ? sb.sbEnd    : null,
-    });
+    s.sbRank   = sb.rank     != null ? sb.rank     : null;
+    s.numTeams = sb.numTeams != null ? sb.numTeams : null;
+    s.sbTotal  = sb.sbTotal  != null ? sb.sbTotal  : null;
+    s.sbAuto   = sb.sbAuto   != null ? sb.sbAuto   : null;
+    s.sbTele   = sb.sbTele   != null ? sb.sbTele   : null;
+    s.sbEnd    = sb.sbEnd    != null ? sb.sbEnd    : null;
+    scoutedSet[s.t] = true;
   });
 
   // Also show teams from Statbotics that haven't been scouted yet
-  var scouted = teamStats.map(function(s){ return s.t; });
   Object.keys(statboticsData).forEach(function(team){
-    if (scouted.indexOf(team) !== -1) return;
+    if (scoutedSet[team]) return;
     var sb = statboticsData[team];
     teamStats.push({
       t: team, matches: 0,
@@ -206,28 +267,73 @@ function mergeStatbotics() {
 // ============================================================
 
 // Summarizes raw scouting entries into per-team averages.
-// Scoring formula and field list live in season/game-fields.js — edit that, not this.
+// Offense entries (def != '1') go to teamStats via SEASON_SCORING.
+// Defense entries (def === '1') go to defenseStats with impact scoring.
+// Scoring formula lives in season/game-fields.js — edit that, not this.
 function processData() {
-  var teams = {};
+  var teams    = {};   // offense accumulator
+  var defTeams = {};   // defense accumulator
+  teamEntryIndex = {};
+
   allData.forEach(function(e){
     var t = String(e.t || '?');
-    if (!teams[t]) {
-      teams[t] = { t:t, matches:0 };
-      SEASON_SCORING.numericFields.forEach(function(f){ teams[t][f] = []; });
-      SEASON_SCORING.rawFields.forEach(function(f){ teams[t][f] = []; });
+
+    // All entries go into the per-team index for the modal
+    if (!teamEntryIndex[t]) teamEntryIndex[t] = [];
+    teamEntryIndex[t].push(e);
+
+    if (e.def === '1') {
+      // ── Defense entry ──────────────────────────────────────────
+      if (!defTeams[t]) {
+        defTeams[t] = { t:t, defMatches:0, dhit:[], dpin:[], dfmiss:[], dguard:[], dfoul:[], dycard:[], drcard:[] };
+      }
+      var ds = defTeams[t];
+      ds.defMatches++;
+      ['dhit','dpin','dfmiss','dguard','dfoul'].forEach(function(f){ ds[f].push(num(e[f])); });
+      ds.dycard.push(e.dycard === '1' ? 1 : 0);
+      ds.drcard.push(e.drcard === '1' ? 1 : 0);
+    } else {
+      // ── Offense entry ──────────────────────────────────────────
+      if (!teams[t]) {
+        teams[t] = { t:t, matches:0 };
+        SEASON_SCORING.numericFields.forEach(function(f){ teams[t][f] = []; });
+        SEASON_SCORING.rawFields.forEach(function(f){ teams[t][f] = []; });
+      }
+      var s = teams[t];
+      s.matches++;
+      SEASON_SCORING.numericFields.forEach(function(f){ s[f].push(num(e[f])); });
+      SEASON_SCORING.rawFields.forEach(function(f){ s[f].push(e[f] || ''); });
     }
-    var s = teams[t];
-    s.matches++;
-    SEASON_SCORING.numericFields.forEach(function(f){ s[f].push(num(e[f])); });
-    SEASON_SCORING.rawFields.forEach(function(f){ s[f].push(e[f] || ''); });
   });
 
+  // Build offense teamStats
   teamStats = Object.values(teams).map(function(s){
     var stats = SEASON_SCORING.computeStats(s);
     return Object.assign({ t:s.t, matches:s.matches }, stats, {
       sbRank:null, numTeams:null, sbTotal:null, sbAuto:null, sbTele:null, sbEnd:null,
     });
   });
+
+  // Build defenseStats
+  // Impact formula: hits×3 + pins×8 + disrupts×10 + guards×6 − fouls×5 − ycards×20 − rcards×50
+  defenseStats = Object.values(defTeams).map(function(ds){
+    function _a(arr){ return arr.length ? arr.reduce(function(a,b){return a+b;},0)/arr.length : 0; }
+    var impact = _a(ds.dhit)*3 + _a(ds.dpin)*8 + _a(ds.dfmiss)*10 + _a(ds.dguard)*6
+               - _a(ds.dfoul)*5 - _a(ds.dycard)*20 - _a(ds.drcard)*50;
+    return {
+      t:          ds.t,
+      defMatches: ds.defMatches,
+      impact:     impact,
+      avgHit:     _a(ds.dhit),
+      avgPin:     _a(ds.dpin),
+      avgDisrupt: _a(ds.dfmiss),
+      avgGuard:   _a(ds.dguard),
+      avgFoul:    _a(ds.dfoul),
+      avgYCard:   _a(ds.dycard),
+      avgRCard:   _a(ds.drcard),
+    };
+  });
+
   mergeStatbotics();
 }
 
@@ -247,11 +353,16 @@ function autoFlagOverrated() {
   var bySB    = both.slice().sort(function(a,b){ return a.sbTotal - b.sbTotal; });
   var n = both.length - 1;
 
+  // Build position-index maps so each lookup is O(1) instead of O(n)
+  var scoutIdx = {}, sbIdx = {};
+  byScout.forEach(function(s, i){ scoutIdx[s.t] = i; });
+  bySB.forEach(function(s, i){ sbIdx[s.t] = i; });
+
   both.forEach(function(s){
     var key = String(s.t);
     if (picklistData[key] === 'dnp') return;  // don't override manual DNP
-    var sp = byScout.findIndex(function(x){ return x.t===s.t; }) / n;
-    var bp = bySB.findIndex(function(x){ return x.t===s.t; }) / n;
+    var sp = scoutIdx[s.t] / n;
+    var bp = sbIdx[s.t] / n;
     if (bp >= 0.65 && sp <= 0.35) {
       if (picklistRef) picklistRef.child(key).set('overrated');
     } else if (picklistData[key] === 'overrated') {
@@ -283,17 +394,21 @@ function renderTable() {
 
   var tbody = document.getElementById('tbody');
   if (!rows.length) {
-    tbody.innerHTML = '<tr class="no-data"><td colspan="11">No entries yet for this sync code.</td></tr>';
+    tbody.innerHTML = '<tr class="no-data"><td colspan="12">No entries yet for this sync code.</td></tr>';
     return;
   }
 
-  // Compute min/max ranges for color-coding each column
-  function rng(col) {
-    var v=rows.map(function(r){return r[col];}).filter(function(v){return v!=null;});
-    return v.length?{min:Math.min.apply(null,v),max:Math.max.apply(null,v)}:null;
-  }
-  var R={};
-  ['scoutAuto','scoutTele','scoutTotal','climbRate','sbTotal','sbAuto','sbTele','sbEnd'].forEach(function(c){R[c]=rng(c);});
+  // Compute min/max ranges for color-coding — single pass over all rows for all columns
+  var RANGE_COLS = ['scoutAuto','scoutTele','scoutEnd','scoutTotal','climbRate','sbTotal','sbAuto','sbTele','sbEnd'];
+  var R = {};
+  rows.forEach(function(r){
+    RANGE_COLS.forEach(function(c){
+      var v = r[c];
+      if (v == null) return;
+      if (!R[c]) { R[c] = {min:v, max:v}; }
+      else { if (v < R[c].min) R[c].min=v; if (v > R[c].max) R[c].max=v; }
+    });
+  });
 
   tbody.innerHTML = rows.map(function(r){
     var rankCls = r.sbRank<=3?'rank top3':r.sbRank<=10?'rank top10':'rank';
@@ -302,11 +417,17 @@ function renderTable() {
     if (status==='dnp')            { bdg='❌ Do Not Pick'; bcls='badge b-dnp'; }
     else if (status==='overrated') { bdg='⚠️ Overrated';   bcls='badge b-over'; }
     else                           { bdg='✅ Available';   bcls='badge b-ok'; }
+    // Tele column: new-format teams show contribution % with % sign
+    var teleCell = r.isNewFormat
+      ? (r.scoutTele != null ? '<td class="mid">' + r.scoutTele.toFixed(0) + '%</td>' : '<td class="low">—</td>')
+      : htd(r.scoutTele, R.scoutTele);
+
     return '<tr>'+
       '<td class="'+rankCls+'">'+(r.sbRank!=null?r.sbRank:'—')+'</td>'+
       '<td class="team"><a class="tba" href="#" onclick="openTeamModal(\''+r.t+'\');return false;">'+r.t+'</a></td>'+
       htd(r.scoutAuto,R.scoutAuto)+
-      htd(r.scoutTele,R.scoutTele)+
+      teleCell+
+      htd(r.scoutEnd,R.scoutEnd)+
       htd(r.scoutTotal,R.scoutTotal)+
       (r.climbRate!=null?'<td class="'+clsCl(r.climbRate)+'">'+r.climbRate.toFixed(0)+'%</td>':'<td class="low">—</td>')+
       sbtd(r.sbTotal,R.sbTotal,true)+
@@ -403,7 +524,7 @@ function renderAllianceTable() {
     var ra = a.sbRank != null ? a.sbRank : 9999;
     var rb = b.sbRank != null ? b.sbRank : 9999;
     if (ra !== rb) return ra - rb;
-    return ((b.scoutAuto||0) + (b.scoutTele||0)) - ((a.scoutAuto||0) + (a.scoutTele||0));
+    return (b.scoutTotal||0) - (a.scoutTotal||0);
   });
 
   tbody.innerHTML = rows.map(function(r) {
@@ -464,15 +585,70 @@ function clearAllianceSelection() {
 }
 
 // ============================================================
+// DEFENSE TABLE
+// ============================================================
+
+function renderDefenseTable() {
+  var wrap = document.getElementById('defense-wrap');
+  if (!wrap) return;
+
+  if (!defenseStats.length) {
+    wrap.innerHTML = '<p style="text-align:center;color:#888;padding:24px;">No defense entries yet — scouts check "Played Defense?" during teleop.</p>';
+    return;
+  }
+
+  var rows = defenseStats.slice().sort(function(a, b){ return b.impact - a.impact; });
+
+  wrap.innerHTML =
+    '<table id="defense-table">' +
+    '<thead>' +
+      '<tr class="sec-hdr"><th colspan="9" class="lbl-scout no-sort">DEFENSE PERFORMANCE</th></tr>' +
+      '<tr>' +
+        '<th>Team</th>' +
+        '<th>Matches</th>' +
+        '<th>Impact Score</th>' +
+        '<th>Avg Hits</th>' +
+        '<th>Avg Pins</th>' +
+        '<th>Avg Disrupts</th>' +
+        '<th>Avg Guards</th>' +
+        '<th>Avg Fouls</th>' +
+        '<th>Cards</th>' +
+      '</tr>' +
+    '</thead>' +
+    '<tbody>' +
+    rows.map(function(r){
+      var impCls = r.impact >= 20 ? 'good' : r.impact >= 8 ? 'ok' : r.impact >= 0 ? 'mid' : 'low';
+      var cards = '';
+      if (r.avgYCard > 0) cards += '<span style="color:#f39c12" title="Yellow card rate">Y:'+r.avgYCard.toFixed(2)+'</span> ';
+      if (r.avgRCard > 0) cards += '<span style="color:#c0392b" title="Red card rate">R:'+r.avgRCard.toFixed(2)+'</span>';
+      return '<tr>' +
+        '<td class="team"><a class="tba" href="#" onclick="openTeamModal(\''+r.t+'\');return false;">'+r.t+'</a></td>'+
+        '<td>'+r.defMatches+'</td>'+
+        '<td class="'+impCls+'">'+r1(r.impact)+'</td>'+
+        '<td>'+r1(r.avgHit)+'</td>'+
+        '<td>'+r1(r.avgPin)+'</td>'+
+        '<td>'+r1(r.avgDisrupt)+'</td>'+
+        '<td>'+r1(r.avgGuard)+'</td>'+
+        '<td>'+(r.avgFoul>0?'<span class="low">'+r1(r.avgFoul)+'</span>':'0')+'</td>'+
+        '<td>'+(cards||'—')+'</td>'+
+      '</tr>';
+    }).join('') +
+    '</tbody></table>';
+}
+
+// ============================================================
 // TAB SWITCHING
 // ============================================================
 
 function switchTab(name) {
-  document.getElementById('match-data-wrap').style.display   = name === 'match'    ? '' : 'none';
-  document.getElementById('alliance-wrap').style.display     = name === 'alliance' ? '' : 'none';
+  document.getElementById('match-data-wrap').style.display = name === 'match'    ? '' : 'none';
+  document.getElementById('alliance-wrap').style.display   = name === 'alliance' ? '' : 'none';
+  document.getElementById('defense-wrap').style.display    = name === 'defense'  ? '' : 'none';
   document.getElementById('tab-match').classList.toggle('tab-active',    name === 'match');
   document.getElementById('tab-alliance').classList.toggle('tab-active', name === 'alliance');
+  document.getElementById('tab-defense').classList.toggle('tab-active',  name === 'defense');
   if (name === 'alliance') renderAllianceTable();
+  if (name === 'defense')  renderDefenseTable();
 }
 
 // ============================================================
@@ -514,6 +690,7 @@ function fetchMatchSchedule(event) {
         .filter(function(m) { return m.comp_level === 'qm'; })
         .sort(function(a, b) { return a.match_number - b.match_number; });
       checkMissingMatches();
+      validateData();
     })
     .catch(function() { /* TBA unavailable — silent, tracker just won't show */ });
 }
@@ -582,6 +759,208 @@ function toggleMissingPanel() {
   var panel = document.getElementById('missing-panel');
   if (!panel) return;
   panel.style.display = panel.style.display === 'none' ? '' : 'none';
+}
+
+// ============================================================
+// SCORE QUALITY — cross-check scouted alliance totals vs TBA
+// ============================================================
+//
+// After a match is played, the 3 scouts' per-robot totals should
+// roughly add up to the official TBA alliance score.
+// (TBA score includes foul/penalty points which scouts can't track,
+//  so we allow a 50pt buffer before flagging an under-count.)
+//
+// Flags:
+//   OVER  — scouts reported more than TBA (always an error)
+//   UNDER — scouts reported 50+ pts less than TBA (scouts missed scoring)
+
+var qualityFlags = [];
+
+function validateData() {
+  var chip  = document.getElementById('quality-chip');
+  var panel = document.getElementById('quality-panel');
+  if (!chip || !scheduleMatches.length || !allData.length) {
+    if (chip) chip.style.display = 'none';
+    return;
+  }
+
+  qualityFlags = [];
+  var CLIMB_PTS = {'1':10,'2':20,'3':30};
+  var OVER_BUFFER  = 10;  // scouts can't exceed TBA by more than this (fouls only go up)
+  var UNDER_BUFFER = 50;  // allow up to 50pts gap for foul/penalty points scouts can't track
+
+  // Only check matches TBA has scored (score = -1 means not yet played)
+  var completed = scheduleMatches.filter(function(m) {
+    return m.alliances && m.alliances.red.score > 0 && m.alliances.blue.score > 0;
+  });
+
+  completed.forEach(function(match) {
+    var mn          = match.match_number;
+    var matchEntries = allData.filter(function(e) { return parseInt(e.m) === mn; });
+    if (!matchEntries.length) return;
+
+    ['red','blue'].forEach(function(color) {
+      var prefix   = color === 'red' ? 'r' : 'b';
+      var tbaScore = match.alliances[color].score;
+      var entries  = matchEntries.filter(function(e) { return (e.r||'').charAt(0) === prefix; });
+      if (!entries.length) return;
+
+      // Skip cross-validation if any entry uses new pct-based format
+      // (can't compute robot pts from contribution % without per-match TBA data)
+      var hasNewFmt = entries.some(function(e){ return e.apct !== undefined; });
+      if (hasNewFmt) return;
+
+      var scoutSum = entries.reduce(function(sum, e) {
+        var auto = num(e.as1)*1 + num(e.as5)*5 + num(e.ad8)*8 + num(e.ac1)*15;
+        var tele = num(e.ts1)*1 + num(e.ts5)*5;
+        var end  = CLIMB_PTS[e.efs] || 0;
+        return sum + auto + tele + end;
+      }, 0);
+      scoutSum = Math.round(scoutSum);
+
+      var gap  = tbaScore - scoutSum;   // positive = scouts under-counted
+      var over = scoutSum > tbaScore + OVER_BUFFER;
+      var under = gap > UNDER_BUFFER;
+
+      if (over || under) {
+        qualityFlags.push({
+          match:   mn,
+          color:   color,
+          scouts:  entries.length,
+          sum:     scoutSum,
+          tba:     tbaScore,
+          gap:     gap,
+          over:    over
+        });
+      }
+    });
+  });
+
+  // Update chip
+  if (qualityFlags.length) {
+    chip.style.display = '';
+    document.getElementById('c-quality').textContent = qualityFlags.length;
+  } else {
+    chip.style.display = 'none';
+    if (panel) panel.style.display = 'none';
+  }
+
+  // Build panel content
+  if (!panel) return;
+  panel.innerHTML =
+    '<div class="quality-header">' +
+      '<span>Score discrepancies — scouted alliance total vs TBA official (' + qualityFlags.length + ')</span>' +
+      '<button class="quality-close" onclick="toggleQualityPanel()">✕</button>' +
+    '</div>' +
+    '<table class="quality-table">' +
+      '<tr><th>Match</th><th>Alliance</th><th>Scouts</th><th>Scouted</th><th>TBA</th><th>Gap</th></tr>' +
+      qualityFlags.map(function(f) {
+        var dir = f.over
+          ? '<span class="gap-over">OVER by ' + Math.abs(f.gap) + '</span>'
+          : '<span class="gap-under">UNDER by ' + f.gap + '</span>';
+        return '<tr>' +
+          '<td>Q' + f.match + '</td>' +
+          '<td>' + f.color.toUpperCase() + '</td>' +
+          '<td>' + f.scouts + '/3</td>' +
+          '<td>' + f.sum + '</td>' +
+          '<td>' + f.tba + '</td>' +
+          '<td>' + dir + '</td>' +
+        '</tr>';
+      }).join('') +
+    '</table>';
+}
+
+function toggleQualityPanel() {
+  var panel = document.getElementById('quality-panel');
+  if (!panel) return;
+  panel.style.display = panel.style.display === 'none' ? '' : 'none';
+}
+
+// ============================================================
+// FILE IMPORT — offline dashboard loading
+// ============================================================
+//
+//  Scouts export a JSON file from match.html (📂 Export to File button).
+//  The coach imports it here — no Firebase or internet needed.
+//  Imported entries are merged into allData, deduplicating by
+//  scouter + match + robot + event.
+//
+// ============================================================
+
+// "Use File Import" button in the sync modal — enters offline mode
+function useOfflineMode() {
+  document.getElementById('sync-modal').style.display = 'none';
+  syncCode = '__offline__';
+  setPill('pill-code', 'Offline mode', 'p-blue');
+  setPill('pill-fb',   '📂 File import only — Firebase disabled', 'p-grey');
+  document.getElementById('page-title').textContent = 'FRC Scouting Dashboard (Offline)';
+  // Don't init Firebase at all — just open the file picker
+  importFile();
+}
+
+// Triggers the hidden file input
+function importFile() {
+  var input = document.getElementById('import-file-input');
+  if (input) input.click();
+}
+
+// Called when the file input changes (user picked a file)
+function handleImportFile(input) {
+  var file = input.files[0];
+  if (!file) return;
+
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var payload = JSON.parse(e.target.result);
+
+      // Accept either a raw array or { entries: [...] } object
+      var entries = Array.isArray(payload) ? payload : (payload.entries || []);
+      if (!entries.length) { alert('No entries found in the file.'); return; }
+
+      // Merge — skip duplicates by scouter+match+robot+event
+      var existingKeys = {};
+      allData.forEach(function(d){
+        existingKeys[d.s + '|' + d.m + '|' + d.r + '|' + d.e] = true;
+      });
+
+      var added = 0;
+      entries.forEach(function(entry) {
+        var key = entry.s + '|' + entry.m + '|' + entry.r + '|' + entry.e;
+        if (!existingKeys[key]) {
+          allData.push(Object.assign({ _key: 'imp_' + Date.now() + '_' + added }, entry));
+          existingKeys[key] = true;
+          added++;
+        }
+      });
+
+      // Refresh the dashboard with merged data
+      processData();
+      var event = getEvent();
+      if (event && (typeof TBA_KEY !== 'undefined') && TBA_KEY) {
+        fetchStatbotics(event);
+        fetchMatchSchedule(event);
+        validateData();
+      } else {
+        renderTable();
+        renderAllianceTable();
+        renderDefenseTable();
+        updateChips();
+      }
+
+      setPill('pill-fb', '📂 ' + added + ' entries imported from file', 'p-blue');
+      document.getElementById('ts').textContent =
+        'Imported: ' + file.name + ' (' + entries.length + ' entries, ' + added + ' new)';
+
+      if (added === 0) {
+        alert('All entries in this file were already loaded (no duplicates added).');
+      }
+    } catch (err) {
+      alert('Could not read file: ' + err.message);
+    }
+    input.value = '';  // reset so same file can be re-imported if needed
+  };
+  reader.readAsText(file);
 }
 
 // ============================================================
@@ -666,8 +1045,7 @@ function setPill(id, text, cls) {
 //       under sessions/{code}/notes/{team} — so coaches can annotate teams.
 function openTeamModal(team) {
   var sb      = statboticsData[String(team)] || {};
-  var entries = allData.filter(function(d){ return String(d.t) === String(team); });
-  entries.sort(function(a,b){ return (parseInt(a.m)||0)-(parseInt(b.m)||0); });
+  var entries = (teamEntryIndex[String(team)] || []).slice().sort(function(a,b){ return (parseInt(a.m)||0)-(parseInt(b.m)||0); });
 
   document.getElementById('tm-title').textContent = 'Team ' + team;
   document.getElementById('tm-sub').innerHTML =
@@ -692,13 +1070,31 @@ function openTeamModal(team) {
       var isRed  = (e.r||'').charAt(0)==='r';
       var robTag = '<span class="m-robot '+(isRed?'red-tag':'blue-tag')+'">'+(ROBOT_LABELS[e.r]||e.r||'?')+'</span>';
 
-      // Points scored this match
-      var autoPts  = num(e.as1)*1 + num(e.as5)*5;
-      var telePts  = num(e.ts1)*1 + num(e.ts5)*5;
-      var totalPts = autoPts + telePts;
-      var ptsBadge = '<span class="m-pts">'+totalPts+' pts <span class="m-pts-detail">(Auto: '+autoPts+' | Tele: '+telePts+')</span></span>';
+      // Points scored this match — detect format per entry
+      var CLIMB_PTS = {'1':10,'2':20,'3':30};
+      var isNew = e.apct !== undefined;
+      var isDefEntry = e.def === '1';
+      var ptsBadge;
+      if (isDefEntry) {
+        // Defense entry: show impact score
+        var imp = num(e.dhit)*3 + num(e.dpin)*8 + num(e.dfmiss)*10 + num(e.dguard)*6
+                - num(e.dfoul)*5 - (e.dycard==='1'?20:0) - (e.drcard==='1'?50:0);
+        ptsBadge = '<span class="m-pts">Defense — Impact: '+imp+' pts</span>';
+      } else if (isNew) {
+        var ACL_PTS = {0:0,1:15,2:30,3:45};
+        var autoPts  = ACL_PTS[num(e.acl)] || 0;
+        var endPts   = CLIMB_PTS[e.efs] || 0;
+        ptsBadge = '<span class="m-pts">Auto: '+autoPts+' pts | Tele: '+num(e.tpct).toFixed(0)+'% | End: '+endPts+' pts</span>';
+      } else {
+        var autoPts  = num(e.as1)*1 + num(e.as5)*5 + num(e.ad8)*8 + num(e.ac1)*15;
+        var telePts  = num(e.ts1)*1 + num(e.ts5)*5;
+        var endPts   = CLIMB_PTS[e.efs] || 0;
+        var totalPts = autoPts + telePts + endPts;
+        ptsBadge = '<span class="m-pts">'+totalPts+' pts <span class="m-pts-detail">(Auto: '+autoPts+' | Tele: '+telePts+' | End: '+endPts+')</span></span>';
+      }
 
-      var fields = MODAL_FIELDS.map(function(f){
+      var modalFields = isNew ? MODAL_FIELDS_NEW : MODAL_FIELDS_OLD;
+      var fields = modalFields.map(function(f){
         var raw = e[f.key];
         var display = f.fn ? f.fn(raw) : (raw||'0');
         return '<div class="tm-field">'+f.label+': <span>'+display+'</span></div>';
@@ -729,7 +1125,12 @@ function closeTeamModal() {
 }
 
 function deleteEntry(key, team) {
+  if (key && key.startsWith('imp_')) {
+    alert('This entry was imported from a file and cannot be deleted from Firebase.\nReload the page to clear imported data.');
+    return;
+  }
   if (!confirm('Delete this entry for Team ' + team + '?')) return;
+  if (!entriesRef) { alert('Not connected to Firebase.'); return; }
   entriesRef.child(key).remove().catch(function(e){ alert('Error: ' + e.message); });
 }
 

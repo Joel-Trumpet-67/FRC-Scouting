@@ -62,9 +62,10 @@ function swipePage(increment) {
   window.scrollTo(0, 0);
   slides[slide].style.display = "table";
 
-  // When arriving at the Submit page (last), refresh the summary
+  // When arriving at the Submit page (last), refresh the summary and show the short code
   if (slide === slides.length - 1) {
     updateSummary();
+    showEntryCode();
     document.getElementById("submit-status").textContent = "";
     document.getElementById("submit-status").style.color = "";
     document.getElementById("data").innerHTML = "";
@@ -270,6 +271,31 @@ function flip(element) {
 //       The canvas logic above doesn't need changes — it's position-independent.
 
 // ============================================================
+// CLIMB LEVEL BUTTONS (Auto screen)
+// ============================================================
+
+function setClimbLevel(level) {
+  document.getElementById('input_acl').value = level;
+  document.querySelectorAll('.climb-btn[data-climb="acl"]').forEach(function(btn) {
+    if (parseInt(btn.getAttribute('data-val')) === level) {
+      btn.classList.add('climb-active');
+    } else {
+      btn.classList.remove('climb-active');
+    }
+  });
+}
+
+// ============================================================
+// DEFENSE MODE TOGGLE (Teleop screen)
+// ============================================================
+
+function toggleDefenseMode() {
+  var isDefense = document.getElementById('input_def').checked;
+  document.getElementById('offensive-section').classList.toggle('section-hidden', isDefense);
+  document.getElementById('defense-section').classList.toggle('section-hidden', !isDefense);
+}
+
+// ============================================================
 // DATA COLLECTION
 // ============================================================
 
@@ -328,6 +354,54 @@ function updateSummary() {
 }
 
 // ============================================================
+// LOCAL SUBMISSIONS STORE
+// ============================================================
+//
+//  Every submission is saved to localStorage regardless of Firebase
+//  connectivity, so scouts can always export a complete JSON file
+//  for the dashboard to import offline.
+//
+//  Key: 'scout_local_subs'  (never auto-cleared — persists between sessions)
+//
+// ============================================================
+
+var LOCAL_SUBS_KEY = 'scout_local_subs';
+
+function localSubsLoad() {
+  try   { return JSON.parse(localStorage.getItem(LOCAL_SUBS_KEY) || '[]'); }
+  catch (e) { return []; }
+}
+
+function localSubsAdd(data) {
+  var subs = localSubsLoad();
+  subs.push(data);
+  try { localStorage.setItem(LOCAL_SUBS_KEY, JSON.stringify(subs)); }
+  catch (e) { console.error('localSubsAdd failed:', e); }
+}
+
+// Downloads all locally stored submissions as a JSON file.
+// Scouts use this to transfer data to the dashboard when offline.
+function exportLocalData() {
+  var subs = localSubsLoad();
+  if (!subs.length) {
+    alert('No submissions stored locally yet.\nSubmit at least one match entry first.');
+    return;
+  }
+  var payload = {
+    exported:  new Date().toISOString(),
+    syncCode:  syncCode || 'unknown',
+    entries:   subs
+  };
+  var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  var a    = document.createElement('a');
+  a.href   = URL.createObjectURL(blob);
+  a.download = 'scouting_' + (syncCode || 'data') + '_' + new Date().toISOString().slice(0, 10) + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+// ============================================================
 // FIREBASE SUBMIT
 // ============================================================
 
@@ -350,6 +424,18 @@ function submitData() {
   }
 
   data.timestamp = new Date().toISOString();
+
+  // Always save a local copy — lets scouts export a file for the dashboard
+  // even when Firebase is unavailable (no internet at competition).
+  localSubsAdd(data);
+
+  // ── LOCAL SERVER PATH ─────────────────────────────────────────
+  // When LOCAL_SERVER is set in config/event-config.js, submit directly
+  // to the Python server running on the coach's laptop. No Firebase needed.
+  if (typeof LOCAL_SERVER !== 'undefined' && LOCAL_SERVER) {
+    submitToLocalServer(data, statusEl, btn);
+    return;
+  }
 
   // ── OFFLINE PATH ─────────────────────────────────────────────
   // If Firebase is disconnected, skip the network entirely and
@@ -409,6 +495,73 @@ function submitData() {
 // DISPLAY / COPY (backup, in case Firebase is down)
 // ============================================================
 
+// Sends data to the coach's laptop server (offline competition mode).
+// LOCAL_SERVER must be set in config/event-config.js.
+function submitToLocalServer(data, statusEl, btn) {
+  btn.setAttribute("value", "Submitting\u2026");
+  btn.disabled = true;
+
+  fetch(LOCAL_SERVER + '/submit', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify(data)
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(result) {
+      if (result.ok) {
+        statusEl.textContent = "\u2713 Saved to laptop server! Advancing\u2026";
+        statusEl.style.color = "#27ae60";
+        btn.setAttribute("value", "Submitted \u2713");
+        setTimeout(clearForm, 1500);
+      } else {
+        throw new Error(result.error || 'Server error');
+      }
+    })
+    .catch(function(err) {
+      statusEl.textContent = "\u26A0 Local server error: " + err.message + " \u2014 is server.py running?";
+      statusEl.style.color = "#c0392b";
+      btn.setAttribute("value", "Submit");
+      btn.disabled = false;
+    });
+}
+
+// Builds and shows the 8-field short code on the submit page.
+// Format: MATCH·ROBOT·TEAM·ACLIMB·APCT·DEF·TPCT·END
+// Coach reads it and types: python3 add.py JT 5 r1 3603 1 45 0 60 2
+function showEntryCode() {
+  var d   = getDataObject();
+  var rob = {r1:'1',r2:'2',r3:'3',b1:'4',b2:'5',b3:'6'};
+  var end = {1:'1',2:'2',3:'3',F:'F',X:'X'};
+  var isNew = d.apct !== undefined && d.apct !== '';
+  var code;
+  if (isNew) {
+    // New format fields
+    code = [
+      d.m   || '?',
+      d.r   || '?',
+      d.t   || '?',
+      d.acl || '0',
+      d.apct|| '33',
+      d.def || '0',
+      d.tpct|| '33',
+      d.efs || 'X'
+    ].join(' ');
+  } else {
+    code = [
+      d.m   || '?',
+      d.r   || '?',
+      d.t   || '?',
+      d.as1 || '0',
+      d.as5 || '0',
+      d.ts1 || '0',
+      d.ts5 || '0',
+      d.efs || 'X'
+    ].join(' ');
+  }
+  document.getElementById('entry-code').textContent = code;
+  document.getElementById('entry-code-box').style.display = 'block';
+}
+
 function displayData() {
   document.getElementById("data").innerHTML = getData();
 }
@@ -416,6 +569,26 @@ function displayData() {
 function copyData() {
   navigator.clipboard.writeText(getData());
   document.getElementById("copyButton").setAttribute("value", "Copied");
+}
+
+// Copies the current entry as a compact JSON string.
+// Scouts paste this into Discord/text when Firebase is offline — dashboard
+// coach pastes it into the "Paste Entries" modal to import the data.
+function copyEntryJSON() {
+  var data = getDataObject();
+  var json = JSON.stringify(data);
+  navigator.clipboard.writeText(json).then(function() {
+    var btn = document.getElementById("copyEntryBtn");
+    btn.value = "✓ Copied! Paste in Discord/chat";
+    btn.style.background = "#1a4a2a";
+    setTimeout(function() {
+      btn.value = "📋 Copy Entry (for offline share)";
+      btn.style.background = "#1a3a5a";
+    }, 3000);
+  }).catch(function() {
+    // Clipboard API not available — show the text instead
+    document.getElementById("data").innerHTML = json;
+  });
 }
 
 // ============================================================
@@ -686,6 +859,23 @@ function clearForm() {
       }
     }
   });
+
+  // Reset range sliders (clearForm loop skips type="range")
+  var apctEl = document.getElementById('input_apct');
+  if (apctEl) { apctEl.value = 33; document.getElementById('display_apct').textContent = 33; }
+  var tpctEl = document.getElementById('input_tpct');
+  if (tpctEl) { tpctEl.value = 33; document.getElementById('display_tpct').textContent = 33; }
+
+  // Reset climb level buttons back to None
+  setClimbLevel(0);
+
+  // Reset defense mode — show offensive section, hide defense section
+  var defEl = document.getElementById('input_def');
+  if (defEl) defEl.checked = false;
+  var offEl = document.getElementById('offensive-section');
+  var dfsEl = document.getElementById('defense-section');
+  if (offEl) offEl.classList.remove('section-hidden');
+  if (dfsEl) dfsEl.classList.add('section-hidden');
 
   // Restore robot position for next match (scouts stay on the same robot)
   if (savedRobotVal) {
