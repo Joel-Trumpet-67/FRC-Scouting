@@ -6,8 +6,8 @@
 //
 // ============================================================
 
-const EVENT_CODE        = "2026mibig";
-const TBA_KEY           = "X2gNmgd573cLcpkm3WCVQQpvN7MHYhpLedSTOHVRKaSHluh7ZZzBbEkutg1ksDhr";
+const EVENT_CODE        = "2026micmp";
+const TBA_KEY           = "FSce0rjyre8mlq90YaG7I0r9iq9OqeGTDptyA4sG1cu6aMmW7yjQpj2VW7hYAZ7g";
 const DEFAULT_SYNC_CODE = "TEAM3603";
 
 // ── OFFLINE LOCAL SERVER ──────────────────────────────────────
