@@ -353,6 +353,54 @@ function updateSummary() {
 }
 
 // ============================================================
+// LOCAL SUBMISSIONS STORE
+// ============================================================
+//
+//  Every submission is saved to localStorage regardless of Firebase
+//  connectivity, so scouts can always export a complete JSON file
+//  for the dashboard to import offline.
+//
+//  Key: 'scout_local_subs'  (never auto-cleared — persists between sessions)
+//
+// ============================================================
+
+var LOCAL_SUBS_KEY = 'scout_local_subs';
+
+function localSubsLoad() {
+  try   { return JSON.parse(localStorage.getItem(LOCAL_SUBS_KEY) || '[]'); }
+  catch (e) { return []; }
+}
+
+function localSubsAdd(data) {
+  var subs = localSubsLoad();
+  subs.push(data);
+  try { localStorage.setItem(LOCAL_SUBS_KEY, JSON.stringify(subs)); }
+  catch (e) { console.error('localSubsAdd failed:', e); }
+}
+
+// Downloads all locally stored submissions as a JSON file.
+// Scouts use this to transfer data to the dashboard when offline.
+function exportLocalData() {
+  var subs = localSubsLoad();
+  if (!subs.length) {
+    alert('No submissions stored locally yet.\nSubmit at least one match entry first.');
+    return;
+  }
+  var payload = {
+    exported:  new Date().toISOString(),
+    syncCode:  syncCode || 'unknown',
+    entries:   subs
+  };
+  var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  var a    = document.createElement('a');
+  a.href   = URL.createObjectURL(blob);
+  a.download = 'scouting_' + (syncCode || 'data') + '_' + new Date().toISOString().slice(0, 10) + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+// ============================================================
 // FIREBASE SUBMIT
 // ============================================================
 
@@ -375,6 +423,10 @@ function submitData() {
   }
 
   data.timestamp = new Date().toISOString();
+
+  // Always save a local copy — lets scouts export a file for the dashboard
+  // even when Firebase is unavailable (no internet at competition).
+  localSubsAdd(data);
 
   // ── OFFLINE PATH ─────────────────────────────────────────────
   // If Firebase is disconnected, skip the network entirely and

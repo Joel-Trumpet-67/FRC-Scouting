@@ -420,6 +420,18 @@
           <div id="clearButton" style="text-align:center; margin-top:10px;">
             <button type="button" class="clearForm" onclick="clearForm()">Clear Form</button>
           </div>
+
+          <!-- Export all local submissions to JSON (for offline dashboard import) -->
+          <div style="text-align:center; margin-top:16px; padding-bottom:8px;">
+            <button type="button" onclick="exportLocalData()"
+              style="padding:10px 22px; font-size:14px; background:#1a3a5a; color:#97c7f0;
+                     border:1px solid #2a5a8a; border-radius:6px; cursor:pointer;">
+              📂 Export to File
+            </button>
+            <div style="font-size:11px; color:#666; margin-top:5px;">
+              Downloads all submissions as JSON for offline dashboard import
+            </div>
+          </div>
           <br>
         </div>
 
