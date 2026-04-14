@@ -6,7 +6,7 @@
 //
 // ============================================================
 
-const EVENT_CODE        = "2026micmp";
+const EVENT_CODE        = "2026micmpa";
 const TBA_KEY           = "FSce0rjyre8mlq90YaG7I0r9iq9OqeGTDptyA4sG1cu6aMmW7yjQpj2VW7hYAZ7g";
 const DEFAULT_SYNC_CODE = "TEAM3603";
 
