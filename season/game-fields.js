@@ -45,31 +45,17 @@ var FIELD_LABELS = {
   m:   'Match #',
   r:   'Robot',
   t:   'Team #',
-  // ── AUTO (2026 new format) ──
-  acl: 'Auto Climb',
-  apct:'Auto Contribution %',
-  // ── AUTO (2026 old format — kept for backward compat) ──
+  // ── AUTO (2026 game-specific) ──
   ad8: 'Dumps 8',
   as1: 'Auton Shot 1',
   as5: 'Auton Shot 5',
   amf: 'Auton Missed',
   ac1: 'Auton L1 Climb',
-  // ── TELEOP ──
-  def: 'Played Defense?',
-  tpct:'Tele Contribution %',
-  // ── TELEOP (old format) ──
+  // ── TELEOP (2026 game-specific) ──
   taw: 'Won Auto?',
   ts1: 'Teleop Shot 1',
   ts5: 'Teleop Shot 5',
   tmf: 'Teleop Missed',
-  // ── DEFENSE ──
-  dhit:  'Hits/Bumps',
-  dpin:  'Pins',
-  dfmiss:'Cycles Disrupted',
-  dguard:'Hub Guarded',
-  dfoul: 'Fouls Received',
-  dycard:'Yellow Card',
-  drcard:'Red Card',
   // ── ENDGAME (2026 game-specific) ──
   ect: 'Climb Timer (s)',
   efs: 'Final Status',
@@ -126,10 +112,8 @@ function friendlyValue(key, val) {
   if (key === 'dta') return DTA_LABELS[val] || val;
   if (key === 'r')   return ROBOT_LABELS[val] || val;
   if (key === 'l')   return LEVEL_LABELS[val] || val;
-  if (key === 'acl') { var lv = {'0':'None','1':'L1','2':'L2','3':'L3'}; return lv[val] || val || '—'; }
   if (key === 'ad8' || key === 'ac1' || key === 'taw' ||
-      key === 'die' || key === 'tip' ||
-      key === 'def' || key === 'dycard' || key === 'drcard')
+      key === 'die' || key === 'tip')
     return val === '1' ? 'Yes' : 'No';
   return val || '—';
 }
@@ -152,59 +136,42 @@ var SEASON_SCORING = {
 
   // Fields whose values are pushed into arrays and averaged
   // Must match name="xx" attributes in match.html
-  // Old format fields: as1/as5/ad8/ac1/ts1/ts5
-  // New format fields: apct/tpct/acl (old entries have these as 0)
-  numericFields: ['as1', 'as5', 'ad8', 'ac1', 'ts1', 'ts5', 'apct', 'tpct', 'acl'],
+  numericFields: ['as1', 'as5', 'ad8', 'ac1', 'ts1', 'ts5'],
 
   // Fields collected as raw strings (for categorical stats like climb rate)
   rawFields: ['efs'],
 
   // ── SCORING FORMULA ──────────────────────────────────────
-  //  s = accumulated team object (offense entries only, defense filtered by processData):
-  //    s.matches  = number of offense matches scouted
+  //  s = accumulated team object:
+  //    s.matches  = number of matches scouted
+  //    s.as1      = array of Shot-1 counts (one per match)
+  //    s.as5      = array of Shot-5 counts
+  //    s.ts1/ts5  = same for teleop
   //    s.efs      = array of endgame status strings ('1','2','3','F','X')
-  //    OLD FORMAT: s.as1/as5/ad8/ac1/ts1/ts5 = shot/action counts
-  //    NEW FORMAT: s.apct = auto contribution %, s.tpct = tele contribution %, s.acl = climb level 0-3
   //
-  //  Returns an object merged into teamStats.
+  //  Returns an object that gets merged into teamStats for each team.
+  //  Keys here must match what renderTable() and renderAllianceTable() expect.
   //
   computeStats: function(s) {
     function _avg(arr) {
       return arr.length ? arr.reduce(function(a,b){return a+b;},0)/arr.length : 0;
     }
-
-    // Detect format: new entries have non-zero apct values
-    var hasNew = s.apct && s.apct.some(function(v){ return v > 0; });
-
-    var auto, tele;
-    if (hasNew) {
-      // New format — auto = avg climb pts from acl level (0→0, 1→15, 2→30, 3→45)
-      var ACL_PTS = {0:0, 1:15, 2:30, 3:45};
-      auto = _avg(s.acl.map(function(v){ return ACL_PTS[Math.round(v)] || 0; }));
-      // Tele = raw contribution % (0-100) — displayed with % in table
-      tele = _avg(s.tpct);
-    } else {
-      // Old format — shots + dump (8pts) + L1 climb bonus (15pts)
-      auto = _avg(s.as1)*1 + _avg(s.as5)*5 + _avg(s.ad8)*8 + _avg(s.ac1)*15;
-      // Teleop: shots only
-      tele = _avg(s.ts1)*1 + _avg(s.ts5)*5;
-    }
-
-    // Endgame climb: L1=10, L2=20, L3=30 — same for both formats
+    // Auto: shots + dump (8pts) + L1 climb bonus (15pts)
+    var auto = _avg(s.as1)*1 + _avg(s.as5)*5 + _avg(s.ad8)*8 + _avg(s.ac1)*15;
+    // Teleop: shots only
+    var tele = _avg(s.ts1)*1 + _avg(s.ts5)*5;
+    // Endgame climb: L1=10, L2=20, L3=30 — averaged across matches
     var CLIMB_PTS = {'1':10, '2':20, '3':30};
     var end = s.efs.length
       ? s.efs.reduce(function(sum,v){ return sum+(CLIMB_PTS[v]||0); }, 0) / s.efs.length
       : 0;
     var climbs = s.efs.filter(function(v){ return v==='1'||v==='2'||v==='3'; });
-
     return {
-      scoutAuto:   auto,
-      scoutTele:   tele,
-      scoutEnd:    end,
-      scoutTotal:  auto + tele + end,
-      climbRate:   s.matches ? (climbs.length / s.matches) * 100 : 0,
-      isNewFormat: hasNew,
-      avgAutoPct:  hasNew ? _avg(s.apct) : null,
+      scoutAuto:  auto,
+      scoutTele:  tele,
+      scoutEnd:   end,
+      scoutTotal: auto + tele + end,
+      climbRate:  s.matches ? (climbs.length / s.matches) * 100 : 0
     };
   }
 };
@@ -222,8 +189,7 @@ var SEASON_SCORING = {
 //
 //  Add/remove entries to match your new game fields.
 //
-// Old-format entry fields (shot counters)
-var MODAL_FIELDS_OLD = [
+var MODAL_FIELDS = [
   // ── Auto ──
   { key: 'as1',  label: 'Auto Shot 1' },
   { key: 'as5',  label: 'Auto Shot 5' },
@@ -243,34 +209,6 @@ var MODAL_FIELDS_OLD = [
   { key: 'tip',  label: 'Tippy',           fn: function(v){ return v==='1'?'Yes':'No'; } },
   { key: 'dta',  label: 'Downtime',        fn: function(v){ return DTA_LABELS[v]||v||'—'; } }
 ];
-
-// New-format entry fields (contribution % sliders + defense counters)
-var MODAL_FIELDS_NEW = [
-  // ── Auto ──
-  { key: 'acl',    label: 'Auto Climb',        fn: function(v){ var l={'0':'None','1':'L1','2':'L2','3':'L3'}; return l[v]||v||'—'; } },
-  { key: 'apct',   label: 'Auto Contribution %' },
-  // ── Teleop ──
-  { key: 'def',    label: 'Played Defense',    fn: function(v){ return v==='1'?'Yes':'No'; } },
-  { key: 'tpct',   label: 'Tele Contribution %' },
-  { key: 'tip',    label: 'Tippy',             fn: function(v){ return v==='1'?'Yes':'No'; } },
-  // ── Defense (only shown when def=1) ──
-  { key: 'dhit',   label: 'Hits/Bumps' },
-  { key: 'dpin',   label: 'Pins' },
-  { key: 'dfmiss', label: 'Cycles Disrupted' },
-  { key: 'dguard', label: 'Hub Guarded' },
-  { key: 'dfoul',  label: 'Fouls Received' },
-  { key: 'dycard', label: 'Yellow Card',       fn: function(v){ return v==='1'?'Yes':'No'; } },
-  { key: 'drcard', label: 'Red Card',          fn: function(v){ return v==='1'?'Yes':'No'; } },
-  // ── Endgame ──
-  { key: 'ect',    label: 'Climb Timer (s)' },
-  { key: 'efs',    label: 'Final Status',      fn: function(v){ return EFS_LABELS[v]||v||'—'; } },
-  // ── Misc ──
-  { key: 'die',    label: 'Died',              fn: function(v){ return v==='1'?'Yes':'No'; } },
-  { key: 'dta',    label: 'Downtime',          fn: function(v){ return DTA_LABELS[v]||v||'—'; } }
-];
-
-// Backward-compat alias — used by old references in dashboard.js
-var MODAL_FIELDS = MODAL_FIELDS_OLD;
 
 
 // ── 6. SQL EXPORT COLUMNS ─────────────────────────────────────
@@ -302,20 +240,6 @@ var SQL_EXPORT_COLUMNS = [
   { key: 'ts1', col: 'tele_shot_1' },
   { key: 'ts5', col: 'tele_shot_5' },
   { key: 'tmf', col: 'tele_missed_fuel' },
-  // ── New-format Auton ──
-  { key: 'acl',    col: 'auto_climb_level' },
-  { key: 'apct',   col: 'auto_pct' },
-  // ── New-format Teleop ──
-  { key: 'def',    col: 'played_defense' },
-  { key: 'tpct',   col: 'tele_pct' },
-  // ── Defense ──
-  { key: 'dhit',   col: 'defense_hits' },
-  { key: 'dpin',   col: 'defense_pins' },
-  { key: 'dfmiss', col: 'defense_disrupts' },
-  { key: 'dguard', col: 'defense_guards' },
-  { key: 'dfoul',  col: 'defense_fouls' },
-  { key: 'dycard', col: 'defense_yellow_card' },
-  { key: 'drcard', col: 'defense_red_card' },
   // ── Endgame ──
   { key: 'ect', col: 'climb_time' },
   { key: 'efs', col: 'final_status' },

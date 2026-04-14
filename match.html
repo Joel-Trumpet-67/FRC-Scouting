@@ -200,27 +200,30 @@
           </p>
 
           <table id="auton_table">
-            <!-- Auto Climb Level -->
+            <!-- Dumps 8 - bool -->
             <tr>
-              <td class="title">Auto Climb&nbsp;</td>
-              <td class="field">
-                <div class="climb-btn-group">
-                  <button type="button" class="climb-btn climb-active" data-climb="acl" data-val="0" onclick="setClimbLevel(0)">None</button>
-                  <button type="button" class="climb-btn" data-climb="acl" data-val="1" onclick="setClimbLevel(1)">L1</button>
-                  <button type="button" class="climb-btn" data-climb="acl" data-val="2" onclick="setClimbLevel(2)">L2</button>
-                  <button type="button" class="climb-btn" data-climb="acl" data-val="3" onclick="setClimbLevel(3)">L3</button>
-                </div>
-                <input type="hidden" id="input_acl" name="acl" value="0">
-              </td>
+              <td class="title">Dumps 8&nbsp;</td>
+              <td class="field"><input type="checkbox" id="input_ad8" name="ad8">(checked = Yes)</td>
             </tr>
-            <!-- Auto Contribution % -->
+            <!-- Shot 1 - counter -->
             <tr>
-              <td class="title">Auto Contribution&nbsp;</td>
-              <td class="field">
-                <span id="display_apct" class="pct-val">33</span>%
-                <input type="range" id="input_apct" name="apct" min="0" max="100" value="33" step="1"
-                  class="pct-slider" oninput="document.getElementById('display_apct').textContent=this.value">
-              </td>
+              <td class="title">Shot 1&nbsp;</td>
+              <td class="field"><input type="button" id="minus_as1" value="-" onclick="counter(this.parentElement,-1)"><input class="counter" id="input_as1" type="text" name="as1" style="background-color:black;color:white;border:none;text-align:center;" disabled value="0" size="2" maxlength="2"><input type="button" id="plus_as1" value="+" onclick="counter(this.parentElement,1)"></td>
+            </tr>
+            <!-- Shot 5 - counter -->
+            <tr>
+              <td class="title">Shot 5&nbsp;</td>
+              <td class="field"><input type="button" id="minus_as5" value="-" onclick="counter(this.parentElement,-1)"><input class="counter" id="input_as5" type="text" name="as5" style="background-color:black;color:white;border:none;text-align:center;" disabled value="0" size="2" maxlength="2"><input type="button" id="plus_as5" value="+" onclick="counter(this.parentElement,1)"></td>
+            </tr>
+            <!-- Missed Fuel - counter -->
+            <tr>
+              <td class="title">Missed Fuel&nbsp;</td>
+              <td class="field"><input type="button" id="minus_amf" value="-" onclick="counter(this.parentElement,-1)"><input class="counter" id="input_amf" type="text" name="amf" style="background-color:black;color:white;border:none;text-align:center;" disabled value="0" size="2" maxlength="2"><input type="button" id="plus_amf" value="+" onclick="counter(this.parentElement,1)"></td>
+            </tr>
+            <!-- Climbed to L1 - bool -->
+            <tr>
+              <td class="title">Climbed to L1&nbsp;</td>
+              <td class="field"><input type="checkbox" id="input_ac1" name="ac1">(checked = Yes)</td>
             </tr>
           </table>
 
@@ -239,64 +242,27 @@
           </p>
 
           <table id="teleop_table">
-            <!-- Defense Toggle -->
+            <!-- Won Auto? - bool -->
             <tr>
-              <td class="title">Played Defense?&nbsp;</td>
-              <td class="field"><input type="checkbox" id="input_def" name="def" onchange="toggleDefenseMode()">(checked = Yes)</td>
+              <td class="title">Won Auto?&nbsp;</td>
+              <td class="field"><input type="checkbox" id="input_taw" name="taw">(checked = Yes)</td>
+            </tr>
+            <!-- Shot 1 - counter -->
+            <tr>
+              <td class="title">Shot 1&nbsp;</td>
+              <td class="field"><input type="button" id="minus_ts1" value="-" onclick="counter(this.parentElement,-1)"><input class="counter" id="input_ts1" type="text" name="ts1" style="background-color:black;color:white;border:none;text-align:center;" disabled value="0" size="2" maxlength="2"><input type="button" id="plus_ts1" value="+" onclick="counter(this.parentElement,1)"></td>
+            </tr>
+            <!-- Shot 5 - counter -->
+            <tr>
+              <td class="title">Shot 5&nbsp;</td>
+              <td class="field"><input type="button" id="minus_ts5" value="-" onclick="counter(this.parentElement,-1)"><input class="counter" id="input_ts5" type="text" name="ts5" style="background-color:black;color:white;border:none;text-align:center;" disabled value="0" size="2" maxlength="2"><input type="button" id="plus_ts5" value="+" onclick="counter(this.parentElement,1)"></td>
+            </tr>
+            <!-- Missed Fuel - counter -->
+            <tr>
+              <td class="title">Missed Fuel&nbsp;</td>
+              <td class="field"><input type="button" id="minus_tmf" value="-" onclick="counter(this.parentElement,-1)"><input class="counter" id="input_tmf" type="text" name="tmf" style="background-color:black;color:white;border:none;text-align:center;" disabled value="0" size="2" maxlength="2"><input type="button" id="plus_tmf" value="+" onclick="counter(this.parentElement,1)"></td>
             </tr>
           </table>
-
-          <!-- OFFENSIVE section — hidden when defense is active -->
-          <div id="offensive-section">
-            <table>
-              <tr>
-                <td class="title">Tele Contribution&nbsp;</td>
-                <td class="field">
-                  <span id="display_tpct" class="pct-val">33</span>%
-                  <input type="range" id="input_tpct" name="tpct" min="0" max="100" value="33" step="1"
-                    class="pct-slider" oninput="document.getElementById('display_tpct').textContent=this.value">
-                </td>
-              </tr>
-              <tr>
-                <td class="title">Tippy&nbsp;</td>
-                <td class="field"><input type="checkbox" id="input_tip" name="tip">(checked = Yes)</td>
-              </tr>
-            </table>
-          </div>
-
-          <!-- DEFENSE section — shown when defense is active -->
-          <div id="defense-section" class="section-hidden">
-            <table id="defense_table">
-              <tr>
-                <td class="title">Hits / Bumps&nbsp;</td>
-                <td class="field"><input type="button" value="-" onclick="counter(this.parentElement,-1)"><input class="counter" id="input_dhit" type="text" name="dhit" style="background-color:black;color:white;border:none;text-align:center;" disabled value="0" size="2" maxlength="2"><input type="button" value="+" onclick="counter(this.parentElement,1)"></td>
-              </tr>
-              <tr>
-                <td class="title">Pins&nbsp;</td>
-                <td class="field"><input type="button" value="-" onclick="counter(this.parentElement,-1)"><input class="counter" id="input_dpin" type="text" name="dpin" style="background-color:black;color:white;border:none;text-align:center;" disabled value="0" size="2" maxlength="2"><input type="button" value="+" onclick="counter(this.parentElement,1)"></td>
-              </tr>
-              <tr>
-                <td class="title">Cycles Disrupted&nbsp;</td>
-                <td class="field"><input type="button" value="-" onclick="counter(this.parentElement,-1)"><input class="counter" id="input_dfmiss" type="text" name="dfmiss" style="background-color:black;color:white;border:none;text-align:center;" disabled value="0" size="2" maxlength="2"><input type="button" value="+" onclick="counter(this.parentElement,1)"></td>
-              </tr>
-              <tr>
-                <td class="title">Hub Guarded&nbsp;</td>
-                <td class="field"><input type="button" value="-" onclick="counter(this.parentElement,-1)"><input class="counter" id="input_dguard" type="text" name="dguard" style="background-color:black;color:white;border:none;text-align:center;" disabled value="0" size="2" maxlength="2"><input type="button" value="+" onclick="counter(this.parentElement,1)"></td>
-              </tr>
-              <tr>
-                <td class="title">Fouls Received&nbsp;</td>
-                <td class="field"><input type="button" value="-" onclick="counter(this.parentElement,-1)"><input class="counter" id="input_dfoul" type="text" name="dfoul" style="background-color:black;color:white;border:none;text-align:center;" disabled value="0" size="2" maxlength="2"><input type="button" value="+" onclick="counter(this.parentElement,1)"></td>
-              </tr>
-              <tr>
-                <td class="title">Yellow Card&nbsp;</td>
-                <td class="field"><input type="checkbox" id="input_dycard" name="dycard">(checked = Yes)</td>
-              </tr>
-              <tr>
-                <td class="title">Red Card&nbsp;</td>
-                <td class="field"><input type="checkbox" id="input_drcard" name="drcard">(checked = Yes)</td>
-              </tr>
-            </table>
-          </div>
 
           <p class="match-label">
             <input type="button" value="Prev" id="prevButton4" onclick="swipePage(-1)">
