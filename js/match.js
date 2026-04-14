@@ -270,6 +270,17 @@ function flip(element) {
 //       The canvas logic above doesn't need changes — it's position-independent.
 
 // ============================================================
+// TEAM NAME LOOKUP (season/teams.js)
+// ============================================================
+
+function updateTeamLabel(num) {
+  var label = document.getElementById('teamname-label');
+  if (!label) return;
+  var t = TEAM_DATA && TEAM_DATA[String(num)];
+  label.textContent = t ? num + ' — ' + t.name + ' (' + t.city + ', ' + t.state + ')' : '';
+}
+
+// ============================================================
 // DATA COLLECTION
 // ============================================================
 
@@ -690,8 +701,7 @@ function autoFillTeam() {
     var teamNum = alliance.team_keys[pos].replace("frc", "");
     var teamEl  = document.getElementById("input_t");
     if (teamEl) teamEl.value = teamNum;
-    var label = document.getElementById("teamname-label");
-    if (label) label.textContent = "Auto-filled from TBA";
+    updateTeamLabel(teamNum);
   }
 
   showMatchPreview(match);

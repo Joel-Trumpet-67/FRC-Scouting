@@ -373,9 +373,12 @@ function renderTable() {
     if (status==='dnp')            { bdg='❌ Do Not Pick'; bcls='badge b-dnp'; }
     else if (status==='overrated') { bdg='⚠️ Overrated';   bcls='badge b-over'; }
     else                           { bdg='✅ Available';   bcls='badge b-ok'; }
+    var td = TEAM_DATA && TEAM_DATA[String(r.t)];
+    var teamCell = '<a class="tba" href="#" onclick="openTeamModal(\''+r.t+'\');return false;">'+r.t+'</a>'+
+      (td ? '<div style="font-size:11px;color:#888;line-height:1.2;">'+td.name+'</div>' : '');
     return '<tr>'+
       '<td class="'+rankCls+'">'+(r.sbRank!=null?r.sbRank:'—')+'</td>'+
-      '<td class="team"><a class="tba" href="#" onclick="openTeamModal(\''+r.t+'\');return false;">'+r.t+'</a></td>'+
+      '<td class="team">'+teamCell+'</td>'+
       htd(r.scoutAuto,R.scoutAuto)+
       htd(r.scoutTele, R.scoutTele)+
       htd(r.scoutEnd,R.scoutEnd)+
@@ -490,8 +493,11 @@ function renderAllianceTable() {
              'onclick="setAllianceStatus(\'' + r.t + '\',\'' + s + '\')">' + label + '</button></td>';
     }
 
+    var atd = TEAM_DATA && TEAM_DATA[String(r.t)];
+    var aTeamCell = '<a class="tba" href="#" onclick="openTeamModal(\'' + r.t + '\');return false;">' + r.t + '</a>' +
+      (atd ? '<div style="font-size:11px;color:#888;line-height:1.2;">' + atd.name + '</div>' : '');
     return '<tr class="' + trCls + '">' +
-      '<td class="team"><a class="tba" href="#" onclick="openTeamModal(\'' + r.t + '\');return false;">' + r.t + '</a></td>' +
+      '<td class="team">' + aTeamCell + '</td>' +
       '<td>' + (r.sbRank  != null ? r.sbRank        : '—') + '</td>' +
       '<td>' + (r.sbTotal != null ? r1(r.sbTotal)   : '—') + '</td>' +
       '<td>' + (r.scoutAuto > 0   ? r1(r.scoutAuto) : '—') + '</td>' +
@@ -857,10 +863,24 @@ function openTeamModal(team) {
   var sb      = statboticsData[String(team)] || {};
   var entries = (teamEntryIndex[String(team)] || []).slice().sort(function(a,b){ return (parseInt(a.m)||0)-(parseInt(b.m)||0); });
 
-  document.getElementById('tm-title').textContent = 'Team ' + team;
+  var td = TEAM_DATA && TEAM_DATA[String(team)];
+  document.getElementById('tm-title').textContent = td ? team + ' — ' + td.name : 'Team ' + team;
+  var locStr = td ? td.city + ', ' + td.state + ' &nbsp;|&nbsp; ' : '';
   document.getElementById('tm-sub').innerHTML =
+    locStr +
     'Rank: ' + (sb.rank ? sb.rank + ' / ' + (sb.numTeams||'?') : '—') +
     ' &nbsp;|&nbsp; <a class="tba" href="https://www.thebluealliance.com/team/'+team+'" target="_blank" style="color:#97c7f0;">View on TBA ↗</a>';
+
+  // Robot image (if available)
+  var imgEl = document.getElementById('tm-robot-img');
+  if (imgEl) {
+    if (td && td.img) {
+      imgEl.src = td.img;
+      imgEl.style.display = '';
+    } else {
+      imgEl.style.display = 'none';
+    }
+  }
 
   // Statbotics chips
   var sbHtml = '';
