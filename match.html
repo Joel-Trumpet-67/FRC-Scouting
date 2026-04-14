@@ -102,7 +102,7 @@
               <td class="title">Event&nbsp;</td>
               <td class="field">
                 <!-- Value is auto-set from EVENT_CODE in config/event-config.js -->
-                <input type="text" id="input_e" name="e" value="2026micmp" required>
+                <input type="text" id="input_e" name="e" value="2026micmp4" required>
               </td>
             </tr>
             <!-- Match Level -->
@@ -141,11 +141,11 @@
             <tr>
               <td class="title">Team #&nbsp;</td>
               <td class="field">
-                <input type="number" id="input_t" name="t" min="1" max="99999">
+                <input type="number" id="input_t" name="t" min="1" max="99999" oninput="updateTeamLabel(this.value)">
               </td>
             </tr>
             <tr>
-              <td id="teamname-label" colspan="2" style="text-align:center;"></td>
+              <td id="teamname-label" colspan="2" style="text-align:center;font-weight:600;color:#97c7f0;"></td>
             </tr>
             <!-- Auto Start Position -->
             <tr>
@@ -394,6 +394,7 @@
     </form>
 
     <!-- season/game-fields.js must load before match.js -->
+    <script src="season/teams.js"></script>
     <script src="season/game-fields.js"></script>
     <script src="js/match.js"></script>
   </body>
