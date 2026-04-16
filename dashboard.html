@@ -65,6 +65,7 @@
 <div class="tab-bar">
   <button class="tab tab-active" id="tab-match"    onclick="switchTab('match')">Match Data</button>
   <button class="tab"            id="tab-alliance" onclick="switchTab('alliance')">Alliance Selection</button>
+  <button class="tab"            id="tab-pit"      onclick="switchTab('pit')">Pit Scouting</button>
 </div>
 
 <!-- ── Match data table ─────────────────────────────────────────── -->
@@ -139,6 +140,31 @@
 
 </div><!-- #alliance-wrap -->
 
+<!-- ── Pit Scouting ──────────────────────────────────────────── -->
+<div id="pit-wrap" class="wrap" style="display:none;">
+  <table id="pit-table">
+    <thead>
+      <tr class="sec-hdr">
+        <th colspan="9" class="lbl-scout no-sort">PIT SCOUTING</th>
+      </tr>
+      <tr>
+        <th>Team</th>
+        <th>Weight</th>
+        <th>Drivetrain</th>
+        <th>Style</th>
+        <th>Max Hang</th>
+        <th>Fuel Cap</th>
+        <th>Photo</th>
+        <th>Comments</th>
+        <th>Scouter</th>
+      </tr>
+    </thead>
+    <tbody id="pit-tbody">
+      <tr class="no-data"><td colspan="9">Enter your sync code to load data.</td></tr>
+    </tbody>
+  </table>
+</div><!-- #pit-wrap -->
+
 <!-- QR code modal — scouts scan this to open match.html -->
 <div id="qr-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;display:none;align-items:center;justify-content:center;">
   <div style="background:#fff;border-radius:12px;padding:32px;text-align:center;max-width:320px;width:90%;">
@@ -164,9 +190,10 @@
   </div>
 </div>
 
-<!-- season/game-fields.js must load before dashboard.js -->
+<!-- season/game-fields.js and pit-fields.js must load before dashboard.js -->
 <script src="season/teams.js"></script>
 <script src="season/game-fields.js"></script>
+<script src="season/pit-fields.js"></script>
 <script src="js/dashboard.js"></script>
 
 </body>

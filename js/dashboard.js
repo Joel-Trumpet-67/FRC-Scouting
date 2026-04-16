@@ -33,8 +33,11 @@ var db              = null;
 var syncCode        = null;
 var entriesRef      = null;
 var picklistRef     = null;
+var pitRef          = null;
 var fbListener      = null;
 var picklistListener = null;
+var pitListener      = null;
+var pitData          = {};     // keyed by team number string — pit scouting entries
 var sbEvent          = null;   // last event we fetched Statbotics data for (cache key)
 var scheduleMatches  = [];     // TBA qual match schedule (array of match objects)
 var scheduleEvent    = null;   // event code the schedule was fetched for (cache key)
@@ -132,12 +135,14 @@ function applyCode(code) {
   // Detach all old listeners before switching to a new sync code
   if (fbListener       && entriesRef)  entriesRef.off('value',  fbListener);
   if (picklistListener && picklistRef) picklistRef.off('value', picklistListener);
+  if (pitListener      && pitRef)      pitRef.off('value',      pitListener);
 
   // Reset Statbotics cache so it re-fetches for the new code's event
   sbEvent = null;
 
   entriesRef  = db.ref('sessions/' + code + '/entries');
   picklistRef = db.ref('sessions/' + code + '/picklist');
+  pitRef      = db.ref('sessions/' + code + '/pit');
 
   // Load picklist once, then subscribe to live entries
   picklistRef.once('value', function(snap) {
@@ -152,6 +157,13 @@ function applyCode(code) {
     renderAllianceTable();
   };
   picklistRef.on('value', picklistListener);
+
+  // Subscribe to pit scouting data (live — updates as scouts submit pit forms)
+  pitListener = function(snap) {
+    pitData = snap.val() || {};
+    renderPitTable();
+  };
+  pitRef.on('value', pitListener);
 }
 
 function subscribeEntries() {
@@ -548,9 +560,52 @@ function clearAllianceSelection() {
 function switchTab(name) {
   document.getElementById('match-data-wrap').style.display = name === 'match'    ? '' : 'none';
   document.getElementById('alliance-wrap').style.display   = name === 'alliance' ? '' : 'none';
+  document.getElementById('pit-wrap').style.display        = name === 'pit'      ? '' : 'none';
   document.getElementById('tab-match').classList.toggle('tab-active',    name === 'match');
   document.getElementById('tab-alliance').classList.toggle('tab-active', name === 'alliance');
+  document.getElementById('tab-pit').classList.toggle('tab-active',      name === 'pit');
   if (name === 'alliance') renderAllianceTable();
+  if (name === 'pit')      renderPitTable();
+}
+
+// ============================================================
+// PIT SCOUTING TABLE
+// ============================================================
+
+function renderPitTable() {
+  var tbody = document.getElementById('pit-tbody');
+  if (!tbody) return;
+
+  var entries = Object.values(pitData);
+  if (!entries.length) {
+    tbody.innerHTML = '<tr class="no-data"><td colspan="9">No pit scouting data yet for this sync code.</td></tr>';
+    return;
+  }
+
+  // Sort by team number ascending
+  entries.sort(function(a, b) { return parseInt(a.pt || 0) - parseInt(b.pt || 0); });
+
+  tbody.innerHTML = entries.map(function(e) {
+    var td = TEAM_DATA && TEAM_DATA[String(e.pt)];
+    var teamCell = '<a class="tba" href="#" onclick="openTeamModal(\'' + e.pt + '\');return false;">' + (e.pt || '?') + '</a>' +
+      (td ? '<div style="font-size:11px;color:#888;line-height:1.2;">' + td.name + '</div>' : '');
+
+    var dt = PIT_DRIVETRAIN_LABELS[e.pdt] || e.pdt || '—';
+    var st = PIT_STYLE_LABELS[e.pst]      || e.pst || '—';
+    var hl = PIT_HANGLEVEL_LABELS[e.phl]  || e.phl || '—';
+
+    return '<tr>' +
+      '<td class="team">' + teamCell + '</td>' +
+      '<td>' + (e.pw  || '—') + ' lbs</td>' +
+      '<td>' + dt + '</td>' +
+      '<td>' + st + '</td>' +
+      '<td>' + hl + '</td>' +
+      '<td>' + (e.pfc || '—') + '</td>' +
+      '<td>' + (e.pph === '1' ? '&#x2713;' : '—') + '</td>' +
+      '<td style="font-size:12px;max-width:180px;">' + (e.pcm || '—') + '</td>' +
+      '<td style="font-size:11px;color:#888;">' + (e.s || '—') + '</td>' +
+    '</tr>';
+  }).join('');
 }
 
 // ============================================================
