@@ -121,21 +121,21 @@
             <tr>
               <td class="title">Scouter&nbsp;</td>
               <td class="field">
-                <input type="text" id="input_s" name="s" size="5" maxlength="5" required>
+                <input type="text" id="input_s" name="s" size="3" maxlength="3" required>
               </td>
             </tr>
             <!-- Event -->
             <tr>
               <td class="title">Event&nbsp;</td>
               <td class="field">
-                <input type="text" id="input_e" name="e" value="" required>
+                <input type="text" id="input_e" name="e" value="" size="9" maxlength="9" required>
               </td>
             </tr>
             <!-- Team # -->
             <tr>
               <td class="title">Team #&nbsp;</td>
               <td class="field">
-                <input type="number" id="input_pt" name="pt" min="1" max="99999" required
+                <input type="number" id="input_t" name="t" min="1" max="99999" required
                        oninput="updatePitTeamLabel(this.value)">
               </td>
             </tr>
@@ -147,73 +147,69 @@
             <tr>
               <td class="title">Team Name&nbsp;</td>
               <td class="field">
-                <input type="text" id="input_pn" name="pn" size="20" maxlength="20">
+                <input type="text" id="input_tmn" name="tmn" size="20" maxlength="20">
               </td>
             </tr>
             <!-- Weight -->
             <tr>
               <td class="title">Weight (lbs)&nbsp;</td>
               <td class="field">
-                <input type="number" id="input_pw" name="pw" min="0" max="200" value="60" size="4">
+                <input type="number" id="input_lbs" name="lbs" min="0" max="200" value="60" size="4">
               </td>
             </tr>
             <!-- Drivetrain -->
             <tr>
               <td class="title">Drivetrain&nbsp;</td>
               <td class="field">
-                <input type="radio" id="input_pdt_S" name="pdt" value="S">Swerve<br>
-                <input type="radio" id="input_pdt_T" name="pdt" value="T">Tank<br>
-                <input type="radio" id="input_pdt_M" name="pdt" value="M">Mechanum<br>
-                <input type="radio" id="input_pdt_O" name="pdt" value="O">Other
-                <input type="hidden" id="display_pdt" value="">
+                <input type="radio" id="input_dvt_s" name="dvt" value="s">Swerve<br>
+                <input type="radio" id="input_dvt_t" name="dvt" value="t">Tank<br>
+                <input type="radio" id="input_dvt_m" name="dvt" value="m">Mechanum<br>
+                <input type="radio" id="input_dvt_o" name="dvt" value="o">Other
               </td>
             </tr>
-            <!-- Style -->
-            <tr>
-              <td class="title">Style&nbsp;</td>
-              <td class="field">
-                <input type="radio" id="input_pst_SH" name="pst" value="SH">Shooter<br>
-                <input type="radio" id="input_pst_TU" name="pst" value="TU">Turret<br>
-                <input type="radio" id="input_pst_WC" name="pst" value="WC">WCP CC<br>
-                <input type="radio" id="input_pst_KB" name="pst" value="KB">Kitbot<br>
-                <input type="radio" id="input_pst_OT" name="pst" value="OT">Other
-                <input type="hidden" id="display_pst" value="">
-              </td>
-            </tr>
-            <!-- Max Hang Level -->
+            <!-- Highest Endgame Hang Level -->
             <tr>
               <td class="title">Max Hang Level&nbsp;</td>
               <td class="field">
-                <input type="radio" id="input_phl_1" name="phl" value="1">Level 1<br>
-                <input type="radio" id="input_phl_2" name="phl" value="2">Level 2<br>
-                <input type="radio" id="input_phl_3" name="phl" value="3">Level 3<br>
-                <input type="radio" id="input_phl_X" name="phl" value="X">Not Attempting
-                <input type="hidden" id="display_phl" value="">
+                <input type="radio" id="input_hng_1" name="hng" value="1">Level 1<br>
+                <input type="radio" id="input_hng_2" name="hng" value="2">Level 2<br>
+                <input type="radio" id="input_hng_3" name="hng" value="3">Level 3<br>
+                <input type="radio" id="input_hng_n" name="hng" value="n">None
               </td>
             </tr>
-            <!-- Fuel Capacity -->
+            <!-- Max Fuel Capacity -->
             <tr>
-              <td class="title">Fuel Capacity&nbsp;</td>
+              <td class="title">Max Fuel Cap&nbsp;</td>
               <td class="field">
                 <input type="button" value="-" onclick="pitCounter(this.parentElement,-1)">
-                <input class="counter" id="input_pfc" type="text" name="pfc"
+                <input class="counter" id="input_mfc" type="text" name="mfc"
                        style="background-color:black;color:white;border:none;text-align:center;"
                        disabled value="15" size="3" maxlength="3">
                 <input type="button" value="+" onclick="pitCounter(this.parentElement,1)">
               </td>
             </tr>
-            <!-- Photo Taken -->
+            <!-- Robot Style -->
             <tr>
-              <td class="title">Photo Taken&nbsp;</td>
+              <td class="title">Robot Style&nbsp;</td>
               <td class="field">
-                <input type="checkbox" id="input_pph" name="pph">(checked = Yes)
+                <input type="radio" id="input_sty_S" name="sty" value="S">Shooter<br>
+                <input type="radio" id="input_sty_T" name="sty" value="T">Turret<br>
+                <input type="radio" id="input_sty_D" name="sty" value="D">WCP CC<br>
+                <input type="radio" id="input_sty_K" name="sty" value="K">Kitbot
               </td>
             </tr>
             <!-- Comments -->
             <tr>
               <td class="title">Comments&nbsp;</td>
               <td class="field">
-                <input type="text" id="input_pcm" name="pcm" size="20" maxlength="100">
+                <input type="text" id="input_com" name="com" size="20" maxlength="100">
+              </td>
+            </tr>
+            <!-- Photo Taken -->
+            <tr>
+              <td class="title">Photo Taken?&nbsp;</td>
+              <td class="field">
+                <input type="checkbox" id="input_pic" name="pic">(checked = Yes)
               </td>
             </tr>
           </table>
