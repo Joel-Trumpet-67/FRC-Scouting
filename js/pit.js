@@ -158,9 +158,13 @@ function getPitDataObject() {
   return result;
 }
 
-// Returns comma-separated string (same format as match data — Excel/QR compatible)
+// Returns KVS string matching Yatsuda's QRReader.bas format:
+//   "key=value;key=value;key=value"
+// QRReader.bas splits on ";" then on "=" to get key/value pairs.
+// Values already have semicolons replaced with "-" in getPitDataObject().
 function getPitData() {
-  return Object.values(getPitDataObject()).join(",");
+  var obj = getPitDataObject();
+  return Object.keys(obj).map(function(k) { return k + '=' + obj[k]; }).join(';');
 }
 
 // ============================================================

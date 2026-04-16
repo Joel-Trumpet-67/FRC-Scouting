@@ -317,9 +317,13 @@ function getDataObject() {
   return result;
 }
 
-// Returns comma-separated string (matches original scoutingPASS format)
+// Returns KVS string matching Yatsuda's QRReader.bas format:
+//   "key=value;key=value;key=value"
+// QRReader.bas splits on ";" then on "=" to get key/value pairs.
+// Values already have semicolons replaced with "-" in getDataObject().
 function getData() {
-  return Object.values(getDataObject()).join(",");
+  var obj = getDataObject();
+  return Object.keys(obj).map(function(k) { return k + '=' + obj[k]; }).join(';');
 }
 
 // ============================================================
