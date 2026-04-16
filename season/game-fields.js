@@ -228,7 +228,6 @@ var SQL_EXPORT_COLUMNS = [
   { key: 'm',   col: 'match_number' },
   { key: 'r',   col: 'robot_position' },
   { key: 't',   col: 'team_number' },
-  { key: 'as',  col: 'auto_start_pos' },
   // ── Auton ──
   { key: 'ad8', col: 'auto_dumps_8' },
   { key: 'as1', col: 'auto_shot_1' },
