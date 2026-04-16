@@ -864,6 +864,39 @@ function exportCSV() {
   a.click();
 }
 
+function exportPitCSV() {
+  var entries = Object.values(pitData);
+  if (!entries.length) { alert('No pit scouting data to export.'); return; }
+
+  // Columns: new codes first, fall back to legacy codes for each entry
+  var cols = [
+    { col: 'team',       fn: function(e){ return e.t   || e.pt  || ''; } },
+    { col: 'team_name',  fn: function(e){ return e.tmn || e.pn  || ''; } },
+    { col: 'weight_lbs', fn: function(e){ return e.lbs || e.pw  || ''; } },
+    { col: 'drivetrain', fn: function(e){ return e.dvt || e.pdt || ''; } },
+    { col: 'hang_level', fn: function(e){ return e.hng || e.phl || ''; } },
+    { col: 'fuel_cap',   fn: function(e){ return e.mfc || e.pfc || ''; } },
+    { col: 'style',      fn: function(e){ return e.sty || e.pst || ''; } },
+    { col: 'comments',   fn: function(e){ return e.com || e.pcm || ''; } },
+    { col: 'photo',      fn: function(e){ return (e.pic || e.pph) === '1' ? 'Yes' : 'No'; } },
+    { col: 'scouter',    fn: function(e){ return e.s   || ''; } },
+    { col: 'event',      fn: function(e){ return e.e   || ''; } },
+  ];
+
+  var header = cols.map(function(c){ return c.col; }).join(',');
+  var rows = entries
+    .sort(function(a, b){ return parseInt(a.t || a.pt || 0) - parseInt(b.t || b.pt || 0); })
+    .map(function(e){
+      return cols.map(function(c){ return JSON.stringify(c.fn(e)); }).join(',');
+    });
+
+  var csv = [header].concat(rows).join('\n');
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+  a.download = 'pit_scouting_' + (getEvent() || 'export') + '_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+}
+
 // ============================================================
 // QR CODE — scouts scan to open match.html
 // ============================================================
