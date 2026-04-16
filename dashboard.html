@@ -190,6 +190,19 @@
   </div>
 </div>
 
+<!-- Edit entry modal (opened by openEditModal() in js/dashboard.js) -->
+<div id="edit-modal">
+  <div class="edit-box">
+    <button class="edit-close" onclick="closeEditModal()">&#x2715;</button>
+    <div class="edit-title" id="edit-title">Edit Entry</div>
+    <div id="edit-fields"></div>
+    <div class="edit-actions">
+      <button class="btn btn-cancel" onclick="closeEditModal()">Cancel</button>
+      <button class="btn btn-save" onclick="saveEditEntry()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
 <!-- season/game-fields.js and pit-fields.js must load before dashboard.js -->
 <script src="season/teams.js"></script>
 <script src="season/game-fields.js"></script>

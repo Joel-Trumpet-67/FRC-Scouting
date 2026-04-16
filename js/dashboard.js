@@ -41,6 +41,7 @@ var pitData          = {};     // keyed by team number string — pit scouting e
 var sbEvent          = null;   // last event we fetched Statbotics data for (cache key)
 var scheduleMatches  = [];     // TBA qual match schedule (array of match objects)
 var scheduleEvent    = null;   // event code the schedule was fetched for (cache key)
+var editingEntry     = null;   // entry currently open in the edit modal
 
 // ============================================================
 // FIREBASE INIT
@@ -977,6 +978,7 @@ function openTeamModal(team) {
             '<span class="m-num">Match '+(e.m||'?')+'</span>'+
             robTag+
             '<span class="m-scout">'+(e.s||'?')+'</span>'+
+            (e._key ? '<button class="tm-edit-btn" onclick="openEditModal(\''+e._key+'\',\''+team+'\')">✏ Edit</button>' : '')+
             (e._key ? '<button class="tm-delete-btn" onclick="deleteEntry(\''+e._key+'\',\''+team+'\')">🗑 Delete</button>' : '')+
           '</div>'+
           ptsBadge+
@@ -1006,6 +1008,132 @@ function deleteEntry(key, team) {
 // Close modal when clicking the dark backdrop
 document.getElementById('team-modal').addEventListener('click', function(e){
   if (e.target === this) closeTeamModal();
+});
+
+// ============================================================
+// EDIT ENTRY MODAL
+// ============================================================
+
+function openEditModal(key, team) {
+  var entry = allData.find(function(e) { return e._key === key; });
+  if (!entry) { alert('Entry not found.'); return; }
+  if (key.startsWith('imp_')) {
+    alert('Imported entries cannot be edited.\nReload the page to clear imported data.');
+    return;
+  }
+  editingEntry = entry;
+  document.getElementById('edit-title').textContent = 'Edit — Team ' + team + ' · Match ' + (entry.m || '?');
+  document.getElementById('edit-fields').innerHTML = buildEditForm(entry);
+  document.getElementById('edit-modal').classList.add('open');
+}
+
+function buildEditForm(e) {
+  function fld(label, inputHtml, full) {
+    return '<div class="edit-field' + (full ? ' full' : '') + '"><label>' + label + '</label>' + inputHtml + '</div>';
+  }
+  function numIn(id, val, min, max) {
+    return '<input type="number" id="ef-' + id + '" value="' + (val != null ? val : 0) + '" min="' + (min != null ? min : 0) + '" max="' + (max != null ? max : 999) + '">';
+  }
+  function txtIn(id, val) {
+    return '<input type="text" id="ef-' + id + '" value="' + escAttr(val || '') + '">';
+  }
+  function boolSel(id, val) {
+    var v = String(val);
+    return '<select id="ef-' + id + '"><option value="0"' + (v !== '1' ? ' selected' : '') + '>No</option>' +
+           '<option value="1"' + (v === '1' ? ' selected' : '') + '>Yes</option></select>';
+  }
+  function mapSel(id, val, opts) {
+    return '<select id="ef-' + id + '">' +
+      Object.keys(opts).map(function(k) {
+        return '<option value="' + k + '"' + (val === k ? ' selected' : '') + '>' + opts[k] + '</option>';
+      }).join('') + '</select>';
+  }
+
+  var h = '<div class="edit-fields-grid">';
+
+  h += '<div class="edit-section">Pre-Match</div>';
+  h += fld('Scouter',      txtIn('s', e.s));
+  h += fld('Match #',      numIn('m', e.m, 1, 200));
+  h += fld('Match Level',  mapSel('l', e.l, LEVEL_LABELS));
+  h += fld('Robot',        mapSel('r', e.r, ROBOT_LABELS));
+  h += fld('Team #',       numIn('t', e.t, 1, 9999));
+
+  h += '<div class="edit-section">Auto</div>';
+  h += fld('Dumps 8',      boolSel('ad8', e.ad8));
+  h += fld('Auto Shot 1',  numIn('as1', e.as1));
+  h += fld('Auto Shot 5',  numIn('as5', e.as5));
+  h += fld('Auto Missed',  numIn('amf', e.amf));
+  h += fld('Auto L1 Climb', boolSel('ac1', e.ac1));
+
+  h += '<div class="edit-section">Teleop</div>';
+  h += fld('Won Auto',     boolSel('taw', e.taw));
+  h += fld('Tele Shot 1',  numIn('ts1', e.ts1));
+  h += fld('Tele Shot 5',  numIn('ts5', e.ts5));
+  h += fld('Tele Missed',  numIn('tmf', e.tmf));
+
+  h += '<div class="edit-section">Endgame</div>';
+  h += fld('Climb Timer (s)', numIn('ect', e.ect, 0, 150));
+  h += fld('Final Status',    mapSel('efs', e.efs, EFS_LABELS));
+
+  h += '<div class="edit-section">Post-Match</div>';
+  h += fld('Died',     boolSel('die', e.die));
+  h += fld('Tippy',    boolSel('tip', e.tip));
+  h += fld('Downtime', mapSel('dta', e.dta, DTA_LABELS));
+  h += fld('Comments', '<textarea id="ef-cmm" rows="3">' + escHtml(e.cmm || '') + '</textarea>', true);
+
+  h += '</div>';
+  return h;
+}
+
+function saveEditEntry() {
+  if (!editingEntry) return;
+  if (!entriesRef) { alert('Not connected to Firebase.'); return; }
+
+  function gval(id) { var el = document.getElementById('ef-' + id); return el ? el.value : null; }
+
+  var updates = {
+    s:   gval('s'),
+    l:   gval('l'),
+    m:   parseInt(gval('m'))   || editingEntry.m,
+    r:   gval('r'),
+    t:   parseInt(gval('t'))   || editingEntry.t,
+    ad8: gval('ad8'),
+    as1: parseInt(gval('as1')) || 0,
+    as5: parseInt(gval('as5')) || 0,
+    amf: parseInt(gval('amf')) || 0,
+    ac1: gval('ac1'),
+    taw: gval('taw'),
+    ts1: parseInt(gval('ts1')) || 0,
+    ts5: parseInt(gval('ts5')) || 0,
+    tmf: parseInt(gval('tmf')) || 0,
+    ect: parseInt(gval('ect')) || 0,
+    efs: gval('efs'),
+    die: gval('die'),
+    tip: gval('tip'),
+    dta: gval('dta'),
+    cmm: gval('cmm') || '',
+  };
+
+  entriesRef.child(editingEntry._key).update(updates)
+    .then(function() { closeEditModal(); })
+    .catch(function(err) { alert('Error saving: ' + err.message); });
+}
+
+function closeEditModal() {
+  document.getElementById('edit-modal').classList.remove('open');
+  editingEntry = null;
+}
+
+function escAttr(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+document.getElementById('edit-modal').addEventListener('click', function(ev) {
+  if (ev.target === this) closeEditModal();
 });
 
 // ============================================================
