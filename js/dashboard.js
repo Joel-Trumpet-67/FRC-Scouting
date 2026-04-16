@@ -584,26 +584,33 @@ function renderPitTable() {
   }
 
   // Sort by team number ascending
-  entries.sort(function(a, b) { return parseInt(a.pt || 0) - parseInt(b.pt || 0); });
+  entries.sort(function(a, b) { return parseInt(a.t || a.pt || 0) - parseInt(b.t || b.pt || 0); });
 
   tbody.innerHTML = entries.map(function(e) {
-    var td = TEAM_DATA && TEAM_DATA[String(e.pt)];
-    var teamCell = '<a class="tba" href="#" onclick="openTeamModal(\'' + e.pt + '\');return false;">' + (e.pt || '?') + '</a>' +
-      (td ? '<div style="font-size:11px;color:#888;line-height:1.2;">' + td.name + '</div>' : '');
+    // Support both new codes (t/tmn/lbs/dvt/hng/mfc/sty/com/pic) and
+    // legacy codes (pt/pn/pw/pdt/phl/pfc/pst/pcm/pph) from older entries
+    var teamNum  = e.t  || e.pt;
+    var weight   = e.lbs || e.pw  || '—';
+    var fuelCap  = e.mfc || e.pfc || '—';
+    var comments = e.com || e.pcm || '—';
+    var photo    = (e.pic || e.pph) === '1' ? '&#x2713;' : '—';
+    var dt = PIT_DRIVETRAIN_LABELS[e.dvt || e.pdt] || e.dvt || e.pdt || '—';
+    var st = PIT_STYLE_LABELS[e.sty || e.pst]      || e.sty || e.pst || '—';
+    var hl = PIT_HANGLEVEL_LABELS[e.hng || e.phl]  || e.hng || e.phl || '—';
 
-    var dt = PIT_DRIVETRAIN_LABELS[e.pdt] || e.pdt || '—';
-    var st = PIT_STYLE_LABELS[e.pst]      || e.pst || '—';
-    var hl = PIT_HANGLEVEL_LABELS[e.phl]  || e.phl || '—';
+    var td = TEAM_DATA && TEAM_DATA[String(teamNum)];
+    var teamCell = '<a class="tba" href="#" onclick="openTeamModal(\'' + teamNum + '\');return false;">' + (teamNum || '?') + '</a>' +
+      (td ? '<div style="font-size:11px;color:#888;line-height:1.2;">' + td.name + '</div>' : '');
 
     return '<tr>' +
       '<td class="team">' + teamCell + '</td>' +
-      '<td>' + (e.pw  || '—') + ' lbs</td>' +
+      '<td>' + weight + ' lbs</td>' +
       '<td>' + dt + '</td>' +
       '<td>' + st + '</td>' +
       '<td>' + hl + '</td>' +
-      '<td>' + (e.pfc || '—') + '</td>' +
-      '<td>' + (e.pph === '1' ? '&#x2713;' : '—') + '</td>' +
-      '<td style="font-size:12px;max-width:180px;">' + (e.pcm || '—') + '</td>' +
+      '<td>' + fuelCap + '</td>' +
+      '<td>' + photo + '</td>' +
+      '<td style="font-size:12px;max-width:180px;">' + comments + '</td>' +
       '<td style="font-size:11px;color:#888;">' + (e.s || '—') + '</td>' +
     '</tr>';
   }).join('');

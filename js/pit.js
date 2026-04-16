@@ -82,10 +82,10 @@ function moveTouch(e) {
 // ── Page validation ────────────────────────────────────────────
 function validatePitPage(pageIndex) {
   if (pageIndex === 0) {
-    var s  = (document.getElementById('input_s').value  || '').trim();
-    var pt = (document.getElementById('input_pt').value || '').trim();
-    if (!s)  return 'Enter Scouter Initials before continuing.';
-    if (!pt) return 'Enter a Team # before continuing.';
+    var s = (document.getElementById('input_s').value || '').trim();
+    var t = (document.getElementById('input_t').value || '').trim();
+    if (!s) return 'Enter Scouter Initials before continuing.';
+    if (!t) return 'Enter a Team # before continuing.';
   }
   return null;
 }
@@ -125,7 +125,7 @@ function updatePitTeamLabel(num) {
   var t = TEAM_DATA && TEAM_DATA[String(num)];
   label.textContent = t ? num + ' \u2014 ' + t.name + ' (' + t.city + ', ' + t.state + ')' : '';
   // Auto-fill team name field if it's empty
-  var nameEl = document.getElementById('input_pn');
+  var nameEl = document.getElementById('input_tmn');
   if (nameEl && !nameEl.value && t) nameEl.value = t.name;
 }
 
@@ -158,13 +158,13 @@ function getPitDataObject() {
   return result;
 }
 
-// Returns KVS string matching Yatsuda's QRReader.bas format:
-//   "key=value;key=value;key=value"
-// QRReader.bas splits on ";" then on "=" to get key/value pairs.
-// Values already have semicolons replaced with "-" in getPitDataObject().
+// Returns TSV string (tab-separated values) in PIT_TSV_KEYS order.
+// Matches dataFormat: "tsv" in config_data. Tabs inside values are replaced with spaces.
 function getPitData() {
   var obj = getPitDataObject();
-  return Object.keys(obj).map(function(k) { return k + '=' + obj[k]; }).join(';');
+  return PIT_TSV_KEYS.map(function(k) {
+    return (obj[k] || '').replace(/\t/g, ' ');
+  }).join('\t');
 }
 
 // ============================================================
@@ -216,7 +216,7 @@ function pitSubmitData() {
   var statusEl = document.getElementById("submit-status");
   var btn      = document.getElementById("submit");
 
-  if (!data.s || !data.pt) {
+  if (!data.s || !data.t) {
     statusEl.textContent = "Fill in Scouter and Team # first.";
     statusEl.style.color = "#c0392b";
     return;
@@ -235,12 +235,12 @@ function pitSubmitData() {
   btn.disabled = true;
 
   // Store at sessions/{code}/pit/{team_number} — one entry per team (overwrites on rescan)
-  pitRef.child(String(data.pt)).set(data, function(err) {
+  pitRef.child(String(data.t)).set(data, function(err) {
     if (err) {
       statusEl.textContent = "\u26A0 Firebase error \u2014 use QR code above to transfer data.";
       statusEl.style.color = "#c0392b";
     } else {
-      statusEl.textContent = "\u2713 Pit data saved for Team " + data.pt + "!";
+      statusEl.textContent = "\u2713 Pit data saved for Team " + data.t + "!";
       statusEl.style.color = "#27ae60";
     }
     btn.setAttribute("value", "Submit");
@@ -265,7 +265,7 @@ function pitClearForm() {
     if (el.type === 'radio')    { el.checked = false; return; }
     if (el.type === 'checkbox') { el.checked = false; return; }
     if (el.type === 'button')   { return; }
-    if (el.className === 'counter') { el.value = '15'; return; }
+    if (el.className === 'counter') { el.value = '15'; return; }  // mfc default
     el.value = '';
   });
 
