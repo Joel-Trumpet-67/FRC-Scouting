@@ -969,13 +969,6 @@ window.onload = function() {
     syncEl.value = DEFAULT_SYNC_CODE;
   }
 
-  // Field image canvas setup
-  var img = document.getElementById("img_as");
-  if (img) {
-    if (img.complete && img.naturalWidth) initCanvas();
-    else img.onload = initCanvas;
-  }
-
   // Fetch schedule immediately (uses cache if offline, fetches live if online)
   fetchSchedule();
 
