@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, maximum-scale=1.0">
+    <title>Pit Scouting</title>
+    <link rel="stylesheet" href="css/scouting.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <!-- Config: edit config/event-config.js to change event code each season -->
+    <script src="config/event-config.js"></script>
+    <script src="config/firebase-config.js"></script>
+    <style>
+      /* Show first page by default (scouting.css hides all .main-panel) */
+      #pit-info { display: table; }
+
+      /* Pit table — white text on black background */
+      #pit_table {
+        color: white;
+        font-family: -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif;
+        font-size: 13px;
+        letter-spacing: 1px;
+        border-color: white;
+      }
+
+      /* Sync code modal */
+      #sync-modal {
+        display: none; position: fixed; inset: 0;
+        background: rgba(0,0,0,0.85); z-index: 999;
+        align-items: center; justify-content: center;
+      }
+      .sync-box {
+        background: #1a1a1a; border: 1px solid #333; border-radius: 10px;
+        padding: 32px 28px; text-align: center; width: 300px;
+      }
+      .sync-box h2 { color: #97c7f0; font-size: 18px; margin-bottom: 6px; }
+      .sync-box p  { color: #777; font-size: 12px; margin-bottom: 18px; }
+      #sync-input {
+        width: 100%; padding: 10px; font-size: 18px; font-weight: 700;
+        text-align: center; text-transform: uppercase; letter-spacing: 2px;
+        background: #111; border: 1px solid #444; color: #fff;
+        border-radius: 6px; margin-bottom: 14px; box-sizing: border-box;
+      }
+      #sync-join {
+        width: 100%; padding: 10px; font-size: 14px; font-weight: 600;
+        background: #1a4a2a; color: #7ef; border: none; border-radius: 6px;
+        cursor: pointer;
+      }
+      #sync-join:hover { filter: brightness(1.2); }
+
+      /* Sync banner */
+      #sync-banner-bar {
+        background: #0d0d0d; border-bottom: 1px solid #222;
+        padding: 6px 16px; display: flex; align-items: center;
+        justify-content: space-between; font-size: 12px;
+      }
+      #sync-banner { font-weight: 600; }
+      #change-code-btn {
+        font-size: 11px; color: #555; cursor: pointer;
+        text-decoration: underline; background: none; border: none;
+      }
+      #change-code-btn:hover { color: #aaa; }
+
+      /* Submit page — white background, dark text */
+      #pit-submit {
+        text-align: center;
+        color: black;
+        background-color: white;
+      }
+      #pit-summary-table {
+        color: black; width: 90%; margin: 12px auto; font-size: 14px; border: none;
+      }
+      #pit-summary-table td { border: none; }
+
+      /* QR code container */
+      #qrcode-pit img,
+      #qrcode-pit canvas { margin: 0 auto; display: block; }
+
+      /* Submit page nav button — light blue on white */
+      #pit-prev-btn {
+        font-family: Alexis;
+        background-color: rgb(151, 199, 240);
+        padding: 10px;
+      }
+    </style>
+  </head>
+
+  <body>
+
+    <!-- Sync code modal -->
+    <div id="sync-modal">
+      <div class="sync-box">
+        <h2>Enter Sync Code</h2>
+        <p>Use the same code as your scouting team.</p>
+        <input id="sync-input" type="text" placeholder="e.g. TEAM1234"
+               onkeydown="if(event.key==='Enter') joinCode()">
+        <button id="sync-join" onclick="joinCode()">Join Session</button>
+      </div>
+    </div>
+
+    <!-- Sync banner -->
+    <div id="sync-banner-bar">
+      <span id="sync-banner" style="color:#555">Not connected…</span>
+      <button id="change-code-btn" onclick="changeCode()">change code</button>
+    </div>
+
+    <form id="pitForm" onsubmit="return false" name="pitForm">
+      <div id="main-panel-holder">
+
+        <!-- ===================== PIT INFO ===================== -->
+        <div id="pit-info" class="main-panel" style="background-color: black;">
+          <h1 id="pitHeader1">Pit Scouting</h1>
+          <p class="match-label">
+            <input type="button" value="Next" id="nextButton1" onclick="swipePage(1)">
+          </p>
+          <p id="page-error-0" style="display:none; color:#ff6b6b; font-weight:600;
+             text-align:center; margin:6px 0; font-size:14px;"></p>
+
+          <table id="pit_table">
+            <!-- Scouter Initials -->
+            <tr>
+              <td class="title">Scouter&nbsp;</td>
+              <td class="field">
+                <input type="text" id="input_s" name="s" size="5" maxlength="5" required>
+              </td>
+            </tr>
+            <!-- Event -->
+            <tr>
+              <td class="title">Event&nbsp;</td>
+              <td class="field">
+                <input type="text" id="input_e" name="e" value="" required>
+              </td>
+            </tr>
+            <!-- Team # -->
+            <tr>
+              <td class="title">Team #&nbsp;</td>
+              <td class="field">
+                <input type="number" id="input_pt" name="pt" min="1" max="99999" required
+                       oninput="updatePitTeamLabel(this.value)">
+              </td>
+            </tr>
+            <tr>
+              <td id="pit-teamname-label" colspan="2"
+                  style="text-align:center; font-weight:600; color:#97c7f0;"></td>
+            </tr>
+            <!-- Team Name -->
+            <tr>
+              <td class="title">Team Name&nbsp;</td>
+              <td class="field">
+                <input type="text" id="input_pn" name="pn" size="20" maxlength="20">
+              </td>
+            </tr>
+            <!-- Weight -->
+            <tr>
+              <td class="title">Weight (lbs)&nbsp;</td>
+              <td class="field">
+                <input type="number" id="input_pw" name="pw" min="0" max="200" value="60" size="4">
+              </td>
+            </tr>
+            <!-- Drivetrain -->
+            <tr>
+              <td class="title">Drivetrain&nbsp;</td>
+              <td class="field">
+                <input type="radio" id="input_pdt_S" name="pdt" value="S">Swerve<br>
+                <input type="radio" id="input_pdt_T" name="pdt" value="T">Tank<br>
+                <input type="radio" id="input_pdt_M" name="pdt" value="M">Mechanum<br>
+                <input type="radio" id="input_pdt_O" name="pdt" value="O">Other
+                <input type="hidden" id="display_pdt" value="">
+              </td>
+            </tr>
+            <!-- Style -->
+            <tr>
+              <td class="title">Style&nbsp;</td>
+              <td class="field">
+                <input type="radio" id="input_pst_SH" name="pst" value="SH">Shooter<br>
+                <input type="radio" id="input_pst_TU" name="pst" value="TU">Turret<br>
+                <input type="radio" id="input_pst_WC" name="pst" value="WC">WCP CC<br>
+                <input type="radio" id="input_pst_KB" name="pst" value="KB">Kitbot<br>
+                <input type="radio" id="input_pst_OT" name="pst" value="OT">Other
+                <input type="hidden" id="display_pst" value="">
+              </td>
+            </tr>
+            <!-- Max Hang Level -->
+            <tr>
+              <td class="title">Max Hang Level&nbsp;</td>
+              <td class="field">
+                <input type="radio" id="input_phl_1" name="phl" value="1">Level 1<br>
+                <input type="radio" id="input_phl_2" name="phl" value="2">Level 2<br>
+                <input type="radio" id="input_phl_3" name="phl" value="3">Level 3<br>
+                <input type="radio" id="input_phl_X" name="phl" value="X">Not Attempting
+                <input type="hidden" id="display_phl" value="">
+              </td>
+            </tr>
+            <!-- Fuel Capacity -->
+            <tr>
+              <td class="title">Fuel Capacity&nbsp;</td>
+              <td class="field">
+                <input type="button" value="-" onclick="pitCounter(this.parentElement,-1)">
+                <input class="counter" id="input_pfc" type="text" name="pfc"
+                       style="background-color:black;color:white;border:none;text-align:center;"
+                       disabled value="15" size="3" maxlength="3">
+                <input type="button" value="+" onclick="pitCounter(this.parentElement,1)">
+              </td>
+            </tr>
+            <!-- Photo Taken -->
+            <tr>
+              <td class="title">Photo Taken&nbsp;</td>
+              <td class="field">
+                <input type="checkbox" id="input_pph" name="pph">(checked = Yes)
+              </td>
+            </tr>
+            <!-- Comments -->
+            <tr>
+              <td class="title">Comments&nbsp;</td>
+              <td class="field">
+                <input type="text" id="input_pcm" name="pcm" size="20" maxlength="100">
+              </td>
+            </tr>
+          </table>
+
+          <p class="match-label">
+            <input type="button" value="Next" id="nextButton2" onclick="swipePage(1)">
+          </p>
+        </div>
+
+        <!-- ===================== SUBMIT + QR ===================== -->
+        <div id="pit-submit" class="main-panel" style="background-color: white;">
+          <h2 id="qrHeader2" style="color: black;">Submit Pit Data</h2>
+          <p class="match-label">
+            <input type="button" value="Prev" id="pit-prev-btn" onclick="swipePage(-1)">
+          </p>
+
+          <!-- Summary of entered data -->
+          <table id="pit-summary-table"></table>
+
+          <!-- Status message -->
+          <p id="submit-status" style="text-align:center; font-size:15px; font-weight:bold;
+             padding:10px 16px; min-height:24px;"></p>
+
+          <!-- Submit button -->
+          <div style="text-align:center; margin:8px 0;">
+            <input type="button" id="submit" value="Submit"
+              style="font-family:Alexis; padding:14px 32px; font-size:18px;
+                     background-color:#4CAF50; color:white; border:none; cursor:pointer;"
+              onclick="pitSubmitData()">
+          </div>
+
+          <!-- QR code — auto-generated on page load, always visible for offline transfer -->
+          <div style="text-align:center; margin:16px auto; max-width:280px;">
+            <p style="font-size:12px; color:#555; margin-bottom:8px;">
+              No WiFi? Scan this QR with the coach laptop (Excel/QR reader)
+            </p>
+            <div id="qrcode-pit" style="background:white; display:inline-block;
+                 padding:12px; border-radius:8px; border:1px solid #ccc;"></div>
+            <br>
+            <input type="button" value="&#x21BA; Refresh QR" onclick="generatePitQR()"
+              style="margin-top:8px; font-size:12px; padding:6px 16px;
+                     background:#1a3a5a; color:#97c7f0; border:none;
+                     border-radius:4px; cursor:pointer;">
+          </div>
+
+          <div style="text-align:center; margin-top:12px;">
+            <button type="button" class="clearForm" onclick="pitClearForm()">Clear Form</button>
+          </div>
+        </div>
+
+      </div><!-- #main-panel-holder -->
+    </form>
+
+    <!-- QR code library must load before pit.js -->
+    <script src="assets/lib/easy.qrcode.min.js"></script>
+    <script src="season/teams.js"></script>
+    <script src="season/pit-fields.js"></script>
+    <script src="js/pit.js"></script>
+  </body>
+</html>
