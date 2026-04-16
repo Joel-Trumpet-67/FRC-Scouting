@@ -38,6 +38,9 @@ var syncCode    = null;
 var entriesRef  = null;
 var isConnected = false;   // live Firebase connection state
 
+// QR code object (easy.qrcode) — for offline data transfer
+var qrMatchObj  = null;
+
 // ============================================================
 // NAVIGATION
 // ============================================================
@@ -62,13 +65,19 @@ function swipePage(increment) {
   window.scrollTo(0, 0);
   slides[slide].style.display = "table";
 
-  // When arriving at the Submit page (last), refresh the summary
+  // When arriving at the Submit page (last), refresh the summary and clear old QR
   if (slide === slides.length - 1) {
     updateSummary();
     document.getElementById("submit-status").textContent = "";
     document.getElementById("submit-status").style.color = "";
     document.getElementById("data").innerHTML = "";
     document.getElementById("copyButton").setAttribute("value", "Copy Data");
+    // Clear any stale QR from the previous entry
+    var qrContainer = document.getElementById('qrcode-match');
+    if (qrContainer) qrContainer.innerHTML = '';
+    qrMatchObj = null;
+    var qrLabel = document.getElementById('qr-data-label');
+    if (qrLabel) qrLabel.textContent = 'No WiFi? Generate a QR for the coach laptop to scan';
   }
 }
 
@@ -371,14 +380,16 @@ function submitData() {
   }
 
   // ── OFFLINE PATH ─────────────────────────────────────────────
-  // If Firebase is disconnected, skip the network entirely and
-  // queue locally. The queue flushes automatically on reconnect.
+  // If Firebase is disconnected, queue locally AND auto-show a QR
+  // code so the coach can scan it with Excel (QRReader.bas) right now.
+  // The queue will auto-flush when WiFi returns.
   if (!isConnected || !entriesRef) {
     queueAdd("sessions/" + syncCode + "/entries", data);
-    statusEl.textContent = "\uD83D\uDCF5 Saved offline \u2014 will sync when connected.";
+    generateQR();   // auto-show QR for immediate manual transfer
+    statusEl.textContent = "\uD83D\uDCF5 Saved offline \u2014 scan QR below, then tap Clear Form.";
     statusEl.style.color = "#e67e22";
     btn.setAttribute("value", "Queued \u2713");
-    setTimeout(clearForm, 1500);
+    // Don't auto-clear — scout must let coach scan the QR first
     return;
   }
 
@@ -471,6 +482,37 @@ function copyData() {
 // Copies the current entry as a compact JSON string.
 // Scouts paste this into Discord/text when Firebase is offline — dashboard
 // coach pastes it into the "Paste Entries" modal to import the data.
+// ============================================================
+// QR CODE (offline data transfer to coach laptop / Excel)
+// ============================================================
+//
+//  Encodes the current form data as a QR code using the
+//  easy.qrcode.min.js library already in assets/lib/.
+//
+//  When the scout is offline and submits, this is called
+//  automatically — the coach scans it with Excel (QRReader.bas)
+//  to import the entry without needing Firebase.
+//
+// ============================================================
+
+function generateQR() {
+  var data      = getData();
+  var container = document.getElementById('qrcode-match');
+  var label     = document.getElementById('qr-data-label');
+  if (!container) return;
+
+  // Regenerate from scratch so the QR always reflects current form state
+  container.innerHTML = '';
+  qrMatchObj = new QRCode(container, {
+    text:         data || ' ',
+    correctLevel: QRCode.CorrectLevel.L,   // L = highest data capacity
+    width:        220,
+    height:       220
+  });
+
+  if (label) label.textContent = 'Scan with coach laptop (Excel / QR reader)';
+}
+
 function copyEntryJSON() {
   var data = getDataObject();
   var json = JSON.stringify(data);

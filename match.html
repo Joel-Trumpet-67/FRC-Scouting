@@ -384,6 +384,20 @@
 
           <p id="data" style="text-align:center; font-family:monospace; font-size:12px; word-break:break-all; color:#333; padding:8px 16px;"></p>
 
+          <!-- QR code — for offline data transfer to coach laptop (Excel/QR reader) -->
+          <div id="qr-data-section" style="text-align:center; margin:12px auto; max-width:280px;">
+            <p id="qr-data-label" style="font-size:12px; color:#555; margin-bottom:8px;">
+              No WiFi? Generate a QR for the coach laptop to scan
+            </p>
+            <div id="qrcode-match" style="background:white; display:inline-block;
+                 padding:12px; border-radius:8px; border:1px solid #ccc; min-height:10px;"></div>
+            <br>
+            <input type="button" value="&#x1F4F7; Generate QR" onclick="generateQR()"
+              style="margin-top:10px; font-size:13px; padding:8px 18px;
+                     background:#1a3a5a; color:#97c7f0; border:none;
+                     border-radius:5px; cursor:pointer;">
+          </div>
+
           <div id="clearButton" style="text-align:center; margin-top:10px;">
             <button type="button" class="clearForm" onclick="clearForm()">Clear Form</button>
           </div>
@@ -393,6 +407,8 @@
       </div><!-- #main-panel-holder -->
     </form>
 
+    <!-- QR code library must load before match.js -->
+    <script src="assets/lib/easy.qrcode.min.js"></script>
     <!-- season/game-fields.js must load before match.js -->
     <script src="season/teams.js"></script>
     <script src="season/game-fields.js"></script>
