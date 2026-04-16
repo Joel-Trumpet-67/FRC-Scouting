@@ -868,19 +868,19 @@ function exportPitCSV() {
   var entries = Object.values(pitData);
   if (!entries.length) { alert('No pit scouting data to export.'); return; }
 
-  // Columns: new codes first, fall back to legacy codes for each entry
+  // Column order matches 2026_micmp4_pit SQL schema exactly
   var cols = [
-    { col: 'team',       fn: function(e){ return e.t   || e.pt  || ''; } },
-    { col: 'team_name',  fn: function(e){ return e.tmn || e.pn  || ''; } },
-    { col: 'weight_lbs', fn: function(e){ return e.lbs || e.pw  || ''; } },
-    { col: 'drivetrain', fn: function(e){ return e.dvt || e.pdt || ''; } },
-    { col: 'hang_level', fn: function(e){ return e.hng || e.phl || ''; } },
-    { col: 'fuel_cap',   fn: function(e){ return e.mfc || e.pfc || ''; } },
-    { col: 'style',      fn: function(e){ return e.sty || e.pst || ''; } },
-    { col: 'comments',   fn: function(e){ return e.com || e.pcm || ''; } },
-    { col: 'photo',      fn: function(e){ return (e.pic || e.pph) === '1' ? 'Yes' : 'No'; } },
-    { col: 'scouter',    fn: function(e){ return e.s   || ''; } },
-    { col: 'event',      fn: function(e){ return e.e   || ''; } },
+    { col: 'event_code',        fn: function(e){ return e.e   || ''; } },
+    { col: 'scout',             fn: function(e){ return e.s   || ''; } },
+    { col: 'team_number',       fn: function(e){ return e.t   || e.pt  || ''; } },
+    { col: 'team_name',         fn: function(e){ return e.tmn || e.pn  || ''; } },
+    { col: 'weight',            fn: function(e){ return e.lbs || e.pw  || ''; } },
+    { col: 'drivetrain',        fn: function(e){ return e.dvt || e.pdt || ''; } },
+    { col: 'endgame_climb_lvl', fn: function(e){ return e.hng || e.phl || ''; } },
+    { col: 'max_fuel_capacity', fn: function(e){ return e.mfc || e.pfc || ''; } },
+    { col: 'robot_style',       fn: function(e){ return e.sty || e.pst || ''; } },
+    { col: 'comments',          fn: function(e){ return e.com || e.pcm || ''; } },
+    { col: 'picture_taken',     fn: function(e){ return e.pic || e.pph || ''; } },
   ];
 
   var header = cols.map(function(c){ return c.col; }).join(',');
