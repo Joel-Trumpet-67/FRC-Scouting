@@ -238,7 +238,10 @@ function drawFields() {
 function onFieldClick(event) {
   var target      = event.target;
   var base        = getIdBase(target.id);
-  var coords      = event.offsetX + "," + event.offsetY;
+  var rect        = target.getBoundingClientRect();
+  var scaleX      = target.width  / rect.width;
+  var scaleY      = target.height / rect.height;
+  var coords      = (event.offsetX * scaleX) + "," + (event.offsetY * scaleY);
   var changingXY  = document.getElementById("XY"               + base);
   var changingIn  = document.getElementById("input"            + base);
   var restrictEl  = document.getElementById("clickRestriction" + base);
