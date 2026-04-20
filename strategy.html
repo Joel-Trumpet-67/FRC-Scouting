@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, maximum-scale=1.0">
+  <title>Strategy</title>
+  <link rel="stylesheet" href="css/scouting.css">
+  <style>
+    body { background: #111; color: #eee; }
+
+    #header { text-align: center; padding: 12px 0 0; }
+    #header h1 {
+      font-size: 28px; color: #97c7f0; margin: 0;
+      border: none; padding: 0;
+    }
+
+    #team-bar {
+      display: flex; align-items: center; justify-content: center;
+      gap: 10px; padding: 10px 16px;
+      background: #1a1a1a; border-bottom: 1px solid #333;
+    }
+    #team-bar label { font-size: 14px; color: #aaa; }
+    #team-input {
+      width: 90px; padding: 6px 10px; font-size: 16px; font-weight: 700;
+      background: #222; color: #fff; border: 1px solid #444; border-radius: 6px;
+      text-align: center;
+    }
+    #save-btn  { background: #1a4a2a; color: #7ef; border: none; border-radius: 5px; padding: 7px 16px; font-size: 13px; cursor: pointer; }
+    #clear-btn { background: #4a1a1a; color: #f88; border: none; border-radius: 5px; padding: 7px 16px; font-size: 13px; cursor: pointer; }
+    #save-btn:hover  { filter: brightness(1.2); }
+    #clear-btn:hover { filter: brightness(1.2); }
+
+    #mode-bar {
+      display: flex; justify-content: center; gap: 0; padding: 10px 16px;
+    }
+    .mode-btn {
+      padding: 9px 22px; font-size: 14px; font-weight: 700;
+      border: 2px solid #444; cursor: pointer; background: #1a1a1a; color: #888;
+    }
+    .mode-btn:first-child { border-radius: 8px 0 0 8px; }
+    .mode-btn:last-child  { border-radius: 0 8px 8px 0; }
+    #mode-auto.active  { background: #5af; color: #000; border-color: #5af; }
+    #mode-shoot.active { background: #fa6; color: #000; border-color: #fa6; }
+
+    #field-container { display: flex; justify-content: center; padding: 6px 0; }
+    #field-canvas {
+      max-width: 96vw; height: auto; cursor: crosshair;
+      border: 1px solid #444; border-radius: 4px; display: block;
+    }
+
+    #controls {
+      display: flex; justify-content: center; gap: 10px; padding: 6px 16px 10px;
+    }
+    #controls button {
+      padding: 7px 16px; font-size: 13px; border: 1px solid #444;
+      border-radius: 5px; cursor: pointer; background: #222; color: #ccc;
+    }
+    #controls button:hover { background: #333; }
+
+    #legend {
+      display: flex; justify-content: center; gap: 20px;
+      padding: 2px 16px 6px; font-size: 12px; color: #777;
+    }
+    .ldot {
+      display: inline-block; width: 12px; height: 12px;
+      border-radius: 50%; vertical-align: middle; margin-right: 4px;
+    }
+
+    #saved-teams {
+      text-align: center; font-size: 12px; color: #555; padding: 4px 16px 16px;
+    }
+    #saved-teams span {
+      color: #97c7f0; cursor: pointer; text-decoration: underline; margin: 0 3px;
+    }
+    #saved-teams span:hover { color: #fff; }
+  </style>
+</head>
+<body>
+
+<div id="header"><h1>Strategy</h1></div>
+
+<div id="team-bar">
+  <label for="team-input">Team #</label>
+  <input id="team-input" type="number" min="1" max="99999" placeholder="3603" oninput="onTeamChange()">
+  <button id="save-btn"  onclick="saveTeam()">Save</button>
+  <button id="clear-btn" onclick="clearAll()">Clear</button>
+</div>
+
+<div id="mode-bar">
+  <button id="mode-auto"  class="mode-btn active" onclick="setMode('auto')">Auto Path</button>
+  <button id="mode-shoot" class="mode-btn"         onclick="setMode('shoot')">Shoot Spots</button>
+</div>
+
+<div id="field-container">
+  <img id="field-img" src="assets/images/2026/field_image.png"
+       style="display:none" onload="initCanvas()">
+  <canvas id="field-canvas" onclick="onCanvasClick(event)"></canvas>
+</div>
+
+<div id="controls">
+  <button onclick="undoAuto()">Undo Auto</button>
+  <button onclick="undoShoot()">Undo Shot</button>
+  <button onclick="flipField()">Flip</button>
+</div>
+
+<div id="legend">
+  <span><span class="ldot" style="background:#5af;"></span>Auto waypoints (numbered)</span>
+  <span><span class="ldot" style="background:#fa6;"></span>Shoot spots</span>
+</div>
+
+<div id="saved-teams"><span id="saved-list"></span></div>
+
+<script>
+var mode    = 'auto';
+var flipped = false;
+
+var autoWaypoints  = [];   // ["x,y", ...]
+var shootWaypoints = [];
+
+var STORAGE_KEY = 'strategy_teams';
+
+// ── Mode ──────────────────────────────────────────────────────
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('mode-auto').classList.toggle('active',  m === 'auto');
+  document.getElementById('mode-shoot').classList.toggle('active', m === 'shoot');
+}
+
+// ── Canvas ────────────────────────────────────────────────────
+
+function initCanvas() {
+  var img    = document.getElementById('field-img');
+  var canvas = document.getElementById('field-canvas');
+  canvas.width  = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  redraw();
+}
+
+function onCanvasClick(event) {
+  var canvas = document.getElementById('field-canvas');
+  var rect   = canvas.getBoundingClientRect();
+  var scaleX = canvas.width  / rect.width;
+  var scaleY = canvas.height / rect.height;
+  var coord  = (event.offsetX * scaleX) + ',' + (event.offsetY * scaleY);
+
+  if (mode === 'auto') autoWaypoints.push(coord);
+  else                 shootWaypoints.push(coord);
+
+  redraw();
+}
+
+function undoAuto()  { autoWaypoints.pop();  redraw(); }
+function undoShoot() { shootWaypoints.pop(); redraw(); }
+
+function flipField() {
+  flipped = !flipped;
+  document.getElementById('field-canvas').style.transform = flipped ? 'rotate(180deg)' : '';
+}
+
+function clearAll() {
+  autoWaypoints  = [];
+  shootWaypoints = [];
+  redraw();
+}
+
+function redraw() {
+  var img    = document.getElementById('field-img');
+  var canvas = document.getElementById('field-canvas');
+  if (!img.complete || !img.naturalWidth) return;
+
+  var ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+  // Auto path — blue line connecting numbered circles
+  if (autoWaypoints.length) {
+    var pts = autoWaypoints.map(function(p) {
+      var c = p.split(',');
+      return { x: parseFloat(c[0]), y: parseFloat(c[1]) };
+    });
+
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (var i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+    ctx.strokeStyle = 'rgba(100,180,255,0.7)';
+    ctx.lineWidth   = 4;
+    ctx.stroke();
+
+    pts.forEach(function(p, i) {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 14, 0, 2 * Math.PI);
+      ctx.fillStyle   = 'rgba(70,140,255,0.9)';
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth   = 2;
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle    = '#fff';
+      ctx.font         = 'bold 14px sans-serif';
+      ctx.textAlign    = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(i + 1, p.x, p.y);
+    });
+  }
+
+  // Shoot spots — orange circles with white center
+  shootWaypoints.forEach(function(p) {
+    var c = p.split(',');
+    var x = parseFloat(c[0]), y = parseFloat(c[1]);
+
+    ctx.beginPath();
+    ctx.arc(x, y, 13, 0, 2 * Math.PI);
+    ctx.fillStyle   = 'rgba(255,170,70,0.9)';
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth   = 2;
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(x, y, 4, 0, 2 * Math.PI);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+  });
+}
+
+// ── Persistence ───────────────────────────────────────────────
+
+function loadStorage() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+  catch(e) { return {}; }
+}
+
+function saveStorage(data) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+  catch(e) {}
+}
+
+function saveTeam() {
+  var team = (document.getElementById('team-input').value || '').trim();
+  if (!team) { alert('Enter a team number first.'); return; }
+  var all  = loadStorage();
+  all[team] = { auto: autoWaypoints.slice(), shoot: shootWaypoints.slice() };
+  saveStorage(all);
+  renderSavedList();
+}
+
+function loadTeam(team) {
+  var all = loadStorage();
+  var d   = all[String(team)] || { auto: [], shoot: [] };
+  autoWaypoints  = d.auto  || [];
+  shootWaypoints = d.shoot || [];
+  document.getElementById('team-input').value = team;
+  redraw();
+}
+
+function onTeamChange() {
+  var team = (document.getElementById('team-input').value || '').trim();
+  if (!team) return;
+  var all = loadStorage();
+  if (all[team]) {
+    loadTeam(team);
+  } else {
+    autoWaypoints  = [];
+    shootWaypoints = [];
+    redraw();
+  }
+}
+
+function renderSavedList() {
+  var all   = loadStorage();
+  var teams = Object.keys(all).sort(function(a, b) { return parseInt(a) - parseInt(b); });
+  var el    = document.getElementById('saved-list');
+  if (!teams.length) { el.innerHTML = 'No saved teams yet'; return; }
+  el.innerHTML = 'Saved: ' + teams.map(function(t) {
+    return '<span onclick="loadTeam(\'' + t + '\')">' + t + '</span>';
+  }).join(' · ');
+}
+
+window.onload = function() {
+  var img = document.getElementById('field-img');
+  if (img.complete && img.naturalWidth) initCanvas();
+  renderSavedList();
+};
+</script>
+</body>
+</html>
