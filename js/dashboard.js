@@ -562,11 +562,14 @@ function switchTab(name) {
   document.getElementById('match-data-wrap').style.display = name === 'match'    ? '' : 'none';
   document.getElementById('alliance-wrap').style.display   = name === 'alliance' ? '' : 'none';
   document.getElementById('pit-wrap').style.display        = name === 'pit'      ? '' : 'none';
+  document.getElementById('strategy-wrap').style.display   = name === 'strategy' ? '' : 'none';
   document.getElementById('tab-match').classList.toggle('tab-active',    name === 'match');
   document.getElementById('tab-alliance').classList.toggle('tab-active', name === 'alliance');
   document.getElementById('tab-pit').classList.toggle('tab-active',      name === 'pit');
+  document.getElementById('tab-strategy').classList.toggle('tab-active', name === 'strategy');
   if (name === 'alliance') renderAllianceTable();
   if (name === 'pit')      renderPitTable();
+  if (name === 'strategy') buildStrategyView();
 }
 
 // ============================================================

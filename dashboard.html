@@ -67,6 +67,7 @@
   <button class="tab tab-active" id="tab-match"    onclick="switchTab('match')">Match Data</button>
   <button class="tab"            id="tab-alliance" onclick="switchTab('alliance')">Alliance Selection</button>
   <button class="tab"            id="tab-pit"      onclick="switchTab('pit')">Pit Scouting</button>
+  <button class="tab"            id="tab-strategy" onclick="switchTab('strategy')">Strategy</button>
 </div>
 
 <!-- ── Match data table ─────────────────────────────────────────── -->
@@ -166,6 +167,25 @@
   </table>
 </div><!-- #pit-wrap -->
 
+<!-- ── Strategy (Choreo compare) ───────────────────────────────── -->
+<div id="strategy-wrap" class="wrap" style="display:none;">
+  <div id="st-hint" style="text-align:center;font-size:13px;color:#666;padding:8px 0 4px;">
+    Tap teams to show / hide their paths &nbsp;·&nbsp; drawn in <a href="strategy.html" style="color:#97c7f0;">strategy.html</a>
+  </div>
+  <div id="st-chips" style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;padding:8px 16px;"></div>
+  <div id="st-legend" style="display:flex;flex-wrap:wrap;justify-content:center;gap:16px;padding:2px 16px 6px;font-size:12px;color:#777;">
+    <span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#aaa;border:1px dashed #fff;vertical-align:middle;margin-right:4px;"></span>Auto path (dashed, numbered)</span>
+    <span>A = auto shot &nbsp; T = tele shot</span>
+  </div>
+  <div id="st-no-teams" style="text-align:center;color:#555;font-size:14px;padding:24px;">
+    No strategy data yet — open <a href="strategy.html" style="color:#97c7f0;">strategy.html</a> to draw team paths.
+  </div>
+  <div id="st-field" style="display:flex;justify-content:center;padding:6px 0 16px;">
+    <img id="st-img" src="assets/images/2026/field_image.png" style="display:none" onload="strategyImgReady()">
+    <canvas id="st-canvas" style="max-width:96%;height:auto;border:1px solid #333;border-radius:4px;display:block;cursor:default;"></canvas>
+  </div>
+</div>
+
 <!-- QR code modal — scouts scan this to open match.html -->
 <div id="qr-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;display:none;align-items:center;justify-content:center;">
   <div style="background:#fff;border-radius:12px;padding:32px;text-align:center;max-width:320px;width:90%;">
@@ -209,6 +229,7 @@
 <script src="season/game-fields.js"></script>
 <script src="season/pit-fields.js"></script>
 <script src="js/dashboard.js"></script>
+<script src="js/strategy.js"></script>
 
 </body>
 </html>
