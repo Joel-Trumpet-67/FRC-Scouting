@@ -37,7 +37,7 @@ function buildStrategyView() {
   }
 
   noMsg.style.display    = 'none';
-  fieldEl.style.display  = 'flex';
+  fieldEl.style.display  = 'block';
   legendEl.style.display = 'flex';
 
   teams.forEach(function(t) { if (stActiveTeams[t] === undefined) stActiveTeams[t] = true; });
@@ -46,13 +46,8 @@ function buildStrategyView() {
   chipsEl.innerHTML = teams.map(function(t, i) {
     var col = ST_PALETTE[i % ST_PALETTE.length];
     var on  = stActiveTeams[t];
-    return '<div style="' +
-      'padding:6px 14px;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;' +
-      'border:2px solid ' + col + ';' +
-      'color:' + col + ';' +
-      'background:' + (on ? col + '22' : 'transparent') + ';' +
-      'opacity:' + (on ? '1' : '0.35') + ';' +
-      'transition:opacity 0.15s;user-select:none;"' +
+    return '<div class="st-chip' + (on ? ' on' : '') + '"' +
+      ' style="color:' + col + ';border-color:' + col + ';background:' + (on ? col + '22' : 'transparent') + ';"' +
       ' onclick="stToggle(\'' + t + '\')">' + t + '</div>';
   }).join('');
 
