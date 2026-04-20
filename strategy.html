@@ -38,8 +38,9 @@
     }
     .mode-btn:first-child { border-radius: 8px 0 0 8px; }
     .mode-btn:last-child  { border-radius: 0 8px 8px 0; }
-    #mode-auto.active  { background: #5af; color: #000; border-color: #5af; }
-    #mode-shoot.active { background: #fa6; color: #000; border-color: #fa6; }
+    #mode-auto.active       { background: #5af; color: #000; border-color: #5af; }
+    #mode-autoshot.active   { background: #fd0; color: #000; border-color: #fd0; }
+    #mode-tele.active       { background: #fa6; color: #000; border-color: #fa6; }
 
     #field-container { display: flex; justify-content: center; padding: 6px 0; }
     #field-canvas {
@@ -86,8 +87,9 @@
 </div>
 
 <div id="mode-bar">
-  <button id="mode-auto"  class="mode-btn active" onclick="setMode('auto')">Auto Path</button>
-  <button id="mode-shoot" class="mode-btn"         onclick="setMode('shoot')">Shoot Spots</button>
+  <button id="mode-auto"     class="mode-btn active" onclick="setMode('auto')">Auto Path</button>
+  <button id="mode-autoshot" class="mode-btn"        onclick="setMode('autoshot')">Auto Shots</button>
+  <button id="mode-tele"     class="mode-btn"        onclick="setMode('tele')">Tele Shots</button>
 </div>
 
 <div id="field-container">
@@ -97,14 +99,16 @@
 </div>
 
 <div id="controls">
-  <button onclick="undoAuto()">Undo Auto</button>
-  <button onclick="undoShoot()">Undo Shot</button>
+  <button onclick="undoLast('auto')">Undo Auto</button>
+  <button onclick="undoLast('autoshot')">Undo A.Shot</button>
+  <button onclick="undoLast('tele')">Undo T.Shot</button>
   <button onclick="flipField()">Flip</button>
 </div>
 
 <div id="legend">
-  <span><span class="ldot" style="background:#5af;"></span>Auto waypoints (numbered)</span>
-  <span><span class="ldot" style="background:#fa6;"></span>Shoot spots</span>
+  <span><span class="ldot" style="background:#5af;"></span>Auto path</span>
+  <span><span class="ldot" style="background:#fd0;"></span>Auto shots</span>
+  <span><span class="ldot" style="background:#fa6;"></span>Tele shots</span>
 </div>
 
 <div id="saved-teams"><span id="saved-list"></span></div>
@@ -114,7 +118,8 @@ var mode    = 'auto';
 var flipped = false;
 
 var autoWaypoints  = [];   // ["x,y", ...]
-var shootWaypoints = [];
+var autoShots      = [];
+var teleShots      = [];
 
 var STORAGE_KEY = 'strategy_teams';
 
@@ -122,8 +127,9 @@ var STORAGE_KEY = 'strategy_teams';
 
 function setMode(m) {
   mode = m;
-  document.getElementById('mode-auto').classList.toggle('active',  m === 'auto');
-  document.getElementById('mode-shoot').classList.toggle('active', m === 'shoot');
+  ['auto', 'autoshot', 'tele'].forEach(function(id) {
+    document.getElementById('mode-' + id).classList.toggle('active', m === id);
+  });
 }
 
 // ── Canvas ────────────────────────────────────────────────────
@@ -143,14 +149,19 @@ function onCanvasClick(event) {
   var scaleY = canvas.height / rect.height;
   var coord  = (event.offsetX * scaleX) + ',' + (event.offsetY * scaleY);
 
-  if (mode === 'auto') autoWaypoints.push(coord);
-  else                 shootWaypoints.push(coord);
+  if      (mode === 'auto')     autoWaypoints.push(coord);
+  else if (mode === 'autoshot') autoShots.push(coord);
+  else                          teleShots.push(coord);
 
   redraw();
 }
 
-function undoAuto()  { autoWaypoints.pop();  redraw(); }
-function undoShoot() { shootWaypoints.pop(); redraw(); }
+function undoLast(m) {
+  if      (m === 'auto')     autoWaypoints.pop();
+  else if (m === 'autoshot') autoShots.pop();
+  else                       teleShots.pop();
+  redraw();
+}
 
 function flipField() {
   flipped = !flipped;
@@ -158,8 +169,9 @@ function flipField() {
 }
 
 function clearAll() {
-  autoWaypoints  = [];
-  shootWaypoints = [];
+  autoWaypoints = [];
+  autoShots     = [];
+  teleShots     = [];
   redraw();
 }
 
@@ -203,11 +215,27 @@ function redraw() {
     });
   }
 
-  // Shoot spots — orange circles with white center
-  shootWaypoints.forEach(function(p) {
+  // Auto shots — yellow circles with white center
+  autoShots.forEach(function(p) {
     var c = p.split(',');
     var x = parseFloat(c[0]), y = parseFloat(c[1]);
+    ctx.beginPath();
+    ctx.arc(x, y, 13, 0, 2 * Math.PI);
+    ctx.fillStyle   = 'rgba(255,220,0,0.9)';
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth   = 2;
+    ctx.fill();
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(x, y, 4, 0, 2 * Math.PI);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+  });
 
+  // Tele shots — orange circles with white center
+  teleShots.forEach(function(p) {
+    var c = p.split(',');
+    var x = parseFloat(c[0]), y = parseFloat(c[1]);
     ctx.beginPath();
     ctx.arc(x, y, 13, 0, 2 * Math.PI);
     ctx.fillStyle   = 'rgba(255,170,70,0.9)';
@@ -215,7 +243,6 @@ function redraw() {
     ctx.lineWidth   = 2;
     ctx.fill();
     ctx.stroke();
-
     ctx.beginPath();
     ctx.arc(x, y, 4, 0, 2 * Math.PI);
     ctx.fillStyle = '#fff';
@@ -239,16 +266,17 @@ function saveTeam() {
   var team = (document.getElementById('team-input').value || '').trim();
   if (!team) { alert('Enter a team number first.'); return; }
   var all  = loadStorage();
-  all[team] = { auto: autoWaypoints.slice(), shoot: shootWaypoints.slice() };
+  all[team] = { auto: autoWaypoints.slice(), autoshot: autoShots.slice(), tele: teleShots.slice() };
   saveStorage(all);
   renderSavedList();
 }
 
 function loadTeam(team) {
   var all = loadStorage();
-  var d   = all[String(team)] || { auto: [], shoot: [] };
-  autoWaypoints  = d.auto  || [];
-  shootWaypoints = d.shoot || [];
+  var d   = all[String(team)] || { auto: [], autoshot: [], tele: [] };
+  autoWaypoints = d.auto     || [];
+  autoShots     = d.autoshot || [];
+  teleShots     = d.tele     || [];
   document.getElementById('team-input').value = team;
   redraw();
 }
@@ -260,8 +288,9 @@ function onTeamChange() {
   if (all[team]) {
     loadTeam(team);
   } else {
-    autoWaypoints  = [];
-    shootWaypoints = [];
+    autoWaypoints = [];
+    autoShots     = [];
+    teleShots     = [];
     redraw();
   }
 }
