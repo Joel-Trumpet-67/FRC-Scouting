@@ -8,11 +8,19 @@
     body { background: #111; color: #eee; }
 
     #header { text-align: center; padding: 12px 0 0; }
-    #header h1 {
-      font-size: 28px; color: #97c7f0; margin: 0;
-      border: none; padding: 0;
-    }
+    #header h1 { font-size: 28px; color: #97c7f0; margin: 0; border: none; padding: 0; }
 
+    #tab-bar { display: flex; background: #1a1a1a; border-bottom: 1px solid #333; margin-top: 4px; }
+    .tab {
+      flex: 1; padding: 12px; text-align: center; font-size: 15px; font-weight: 700;
+      cursor: pointer; color: #555; border-bottom: 3px solid transparent;
+    }
+    .tab.active { color: #97c7f0; border-bottom-color: #97c7f0; }
+
+    #draw-view, #compare-view { display: none; }
+    #draw-view.active, #compare-view.active { display: block; }
+
+    /* ── Team bar ── */
     #team-bar {
       display: flex; align-items: center; justify-content: center;
       gap: 10px; padding: 10px 16px;
@@ -29,37 +37,44 @@
     #save-btn:hover  { filter: brightness(1.2); }
     #clear-btn:hover { filter: brightness(1.2); }
 
-    #mode-bar {
-      display: flex; justify-content: center; gap: 0; padding: 10px 16px;
-    }
+    /* ── Mode bar ── */
+    #mode-bar { display: flex; justify-content: center; padding: 10px 16px; }
     .mode-btn {
-      padding: 9px 22px; font-size: 14px; font-weight: 700;
-      border: 2px solid #444; cursor: pointer; background: #1a1a1a; color: #888;
+      padding: 9px 18px; font-size: 13px; font-weight: 700;
+      border: 2px solid #444; cursor: pointer; background: #1a1a1a; color: #666;
     }
     .mode-btn:first-child { border-radius: 8px 0 0 8px; }
     .mode-btn:last-child  { border-radius: 0 8px 8px 0; }
-    #mode-auto.active       { background: #5af; color: #000; border-color: #5af; }
-    #mode-autoshot.active   { background: #fd0; color: #000; border-color: #fd0; }
-    #mode-tele.active       { background: #fa6; color: #000; border-color: #fa6; }
+    #mode-auto.active     { background: #5af; color: #000; border-color: #5af; }
+    #mode-autoshot.active { background: #fd0; color: #000; border-color: #fd0; }
+    #mode-tele.active     { background: #fa6; color: #000; border-color: #fa6; }
 
-    #field-container { display: flex; justify-content: center; padding: 6px 0; }
-    #field-canvas {
-      max-width: 96vw; height: auto; cursor: crosshair;
+    /* ── Field canvas ── */
+    #field-container, #compare-field { display: flex; justify-content: center; padding: 6px 0; }
+    .field-canvas {
+      max-width: 96vw; height: auto;
       border: 1px solid #444; border-radius: 4px; display: block;
     }
+    #draw-canvas   { cursor: crosshair; }
+    #compare-canvas { cursor: default; }
 
-    #controls {
-      display: flex; justify-content: center; gap: 10px; padding: 6px 16px 10px;
-    }
+    /* ── Controls ── */
+    #controls { display: flex; justify-content: center; gap: 8px; padding: 6px 16px 6px; flex-wrap: wrap; }
     #controls button {
-      padding: 7px 16px; font-size: 13px; border: 1px solid #444;
+      padding: 7px 14px; font-size: 12px; border: 1px solid #444;
       border-radius: 5px; cursor: pointer; background: #222; color: #ccc;
     }
     #controls button:hover { background: #333; }
 
-    #legend {
-      display: flex; justify-content: center; gap: 20px;
-      padding: 2px 16px 6px; font-size: 12px; color: #777;
+    #save-notice {
+      text-align: center; font-size: 13px; font-weight: 600;
+      padding: 4px; min-height: 22px;
+    }
+
+    /* ── Legend ── */
+    #draw-legend, #compare-legend-bar {
+      display: flex; justify-content: center; gap: 16px;
+      padding: 2px 16px 6px; font-size: 12px; color: #777; flex-wrap: wrap;
     }
     .ldot {
       display: inline-block; width: 12px; height: 12px;
@@ -67,61 +82,128 @@
     }
 
     #saved-teams {
-      text-align: center; font-size: 12px; color: #555; padding: 4px 16px 16px;
+      text-align: center; font-size: 12px; color: #555; padding: 4px 16px 14px;
     }
     #saved-teams span {
       color: #97c7f0; cursor: pointer; text-decoration: underline; margin: 0 3px;
     }
     #saved-teams span:hover { color: #fff; }
+
+    /* ── Compare tab ── */
+    #compare-hint {
+      text-align: center; font-size: 13px; color: #666; padding: 8px 16px 4px;
+    }
+    #team-chips {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; padding: 8px 16px;
+    }
+    .team-chip {
+      padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 700;
+      cursor: pointer; border: 2px solid; opacity: 0.35; transition: opacity 0.15s;
+      user-select: none;
+    }
+    .team-chip.on { opacity: 1; }
+
+    #no-teams-msg { text-align: center; color: #555; font-size: 14px; padding: 24px; }
   </style>
 </head>
 <body>
 
 <div id="header"><h1>Strategy</h1></div>
 
-<div id="team-bar">
-  <label for="team-input">Team #</label>
-  <input id="team-input" type="number" min="1" max="99999" placeholder="3603" oninput="onTeamChange()">
-  <button id="save-btn"  onclick="saveTeam()">Save</button>
-  <button id="clear-btn" onclick="clearAll()">Clear</button>
+<div id="tab-bar">
+  <div class="tab active" onclick="switchTab('draw')">Draw</div>
+  <div class="tab"        onclick="switchTab('compare')">Compare</div>
 </div>
 
-<div id="mode-bar">
-  <button id="mode-auto"     class="mode-btn active" onclick="setMode('auto')">Auto Path</button>
-  <button id="mode-autoshot" class="mode-btn"        onclick="setMode('autoshot')">Auto Shots</button>
-  <button id="mode-tele"     class="mode-btn"        onclick="setMode('tele')">Tele Shots</button>
+<!-- ════ DRAW TAB ════ -->
+<div id="draw-view" class="active">
+
+  <div id="team-bar">
+    <label for="team-input">Team #</label>
+    <input id="team-input" type="number" min="1" max="99999" placeholder="3603" oninput="onTeamChange()">
+    <button id="save-btn"  onclick="saveTeam()">Save</button>
+    <button id="clear-btn" onclick="clearAll()">Clear</button>
+  </div>
+
+  <div id="mode-bar">
+    <button id="mode-auto"     class="mode-btn active" onclick="setMode('auto')">Auto Path</button>
+    <button id="mode-autoshot" class="mode-btn"        onclick="setMode('autoshot')">Auto Shots</button>
+    <button id="mode-tele"     class="mode-btn"        onclick="setMode('tele')">Tele Shots</button>
+  </div>
+
+  <div id="field-container">
+    <img id="field-img" src="assets/images/2026/field_image.png"
+         style="display:none" onload="initCanvas()">
+    <canvas id="draw-canvas" class="field-canvas" onclick="onCanvasClick(event)"></canvas>
+  </div>
+
+  <div id="save-notice"></div>
+
+  <div id="controls">
+    <button onclick="undoLast('auto')">Undo Auto</button>
+    <button onclick="undoLast('autoshot')">Undo A.Shot</button>
+    <button onclick="undoLast('tele')">Undo T.Shot</button>
+    <button onclick="flipField()">Flip</button>
+  </div>
+
+  <div id="draw-legend">
+    <span><span class="ldot" style="background:#5af;"></span>Auto path</span>
+    <span><span class="ldot" style="background:#fd0;"></span>Auto shots</span>
+    <span><span class="ldot" style="background:#fa6;"></span>Tele shots</span>
+  </div>
+
+  <div id="saved-teams"><span id="saved-list"></span></div>
+
 </div>
 
-<div id="field-container">
-  <img id="field-img" src="assets/images/2026/field_image.png"
-       style="display:none" onload="initCanvas()">
-  <canvas id="field-canvas" onclick="onCanvasClick(event)"></canvas>
-</div>
+<!-- ════ COMPARE TAB ════ -->
+<div id="compare-view">
 
-<div id="controls">
-  <button onclick="undoLast('auto')">Undo Auto</button>
-  <button onclick="undoLast('autoshot')">Undo A.Shot</button>
-  <button onclick="undoLast('tele')">Undo T.Shot</button>
-  <button onclick="flipField()">Flip</button>
-</div>
+  <div id="compare-hint">Tap teams to show / hide · dots labeled A = auto shot, T = tele shot</div>
+  <div id="team-chips"></div>
 
-<div id="legend">
-  <span><span class="ldot" style="background:#5af;"></span>Auto path</span>
-  <span><span class="ldot" style="background:#fd0;"></span>Auto shots</span>
-  <span><span class="ldot" style="background:#fa6;"></span>Tele shots</span>
-</div>
+  <div id="compare-legend-bar">
+    <span><span class="ldot" style="background:#aaa;border:1px dashed #fff;"></span>Auto path (dashed, numbered)</span>
+    <span>A = auto shot &nbsp; T = tele shot</span>
+  </div>
 
-<div id="saved-teams"><span id="saved-list"></span></div>
+  <div id="no-teams-msg">No saved teams yet — draw some in the Draw tab first.</div>
+
+  <div id="compare-field">
+    <canvas id="compare-canvas" class="field-canvas"></canvas>
+  </div>
+
+</div>
 
 <script>
-var mode    = 'auto';
-var flipped = false;
+var mode      = 'auto';
+var flipped   = false;
+var activeTab = 'draw';
 
-var autoWaypoints  = [];   // ["x,y", ...]
-var autoShots      = [];
-var teleShots      = [];
+var autoWaypoints = [];
+var autoShots     = [];
+var teleShots     = [];
+
+var activeTeams = {};
 
 var STORAGE_KEY = 'strategy_teams';
+
+var PALETTE = [
+  '#f55','#5af','#5d5','#fa5','#c5f','#5ff','#ff5','#f5a',
+  '#a5f','#5fa','#f95','#59f','#9f5','#f59','#5f9','#95f'
+];
+
+// ── Tabs ──────────────────────────────────────────────────────
+
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab').forEach(function(el, i) {
+    el.classList.toggle('active', (tab === 'draw' && i === 0) || (tab === 'compare' && i === 1));
+  });
+  document.getElementById('draw-view').classList.toggle('active',    tab === 'draw');
+  document.getElementById('compare-view').classList.toggle('active', tab === 'compare');
+  if (tab === 'compare') buildCompareView();
+}
 
 // ── Mode ──────────────────────────────────────────────────────
 
@@ -132,18 +214,21 @@ function setMode(m) {
   });
 }
 
-// ── Canvas ────────────────────────────────────────────────────
+// ── Canvas init ───────────────────────────────────────────────
 
 function initCanvas() {
-  var img    = document.getElementById('field-img');
-  var canvas = document.getElementById('field-canvas');
-  canvas.width  = img.naturalWidth;
-  canvas.height = img.naturalHeight;
+  var img = document.getElementById('field-img');
+  ['draw-canvas', 'compare-canvas'].forEach(function(id) {
+    var c = document.getElementById(id);
+    if (c) { c.width = img.naturalWidth; c.height = img.naturalHeight; }
+  });
   redraw();
 }
 
+// ── Draw tab canvas ───────────────────────────────────────────
+
 function onCanvasClick(event) {
-  var canvas = document.getElementById('field-canvas');
+  var canvas = document.getElementById('draw-canvas');
   var rect   = canvas.getBoundingClientRect();
   var scaleX = canvas.width  / rect.width;
   var scaleY = canvas.height / rect.height;
@@ -152,7 +237,6 @@ function onCanvasClick(event) {
   if      (mode === 'auto')     autoWaypoints.push(coord);
   else if (mode === 'autoshot') autoShots.push(coord);
   else                          teleShots.push(coord);
-
   redraw();
 }
 
@@ -165,7 +249,7 @@ function undoLast(m) {
 
 function flipField() {
   flipped = !flipped;
-  document.getElementById('field-canvas').style.transform = flipped ? 'rotate(180deg)' : '';
+  document.getElementById('draw-canvas').style.transform = flipped ? 'rotate(180deg)' : '';
 }
 
 function clearAll() {
@@ -177,77 +261,76 @@ function clearAll() {
 
 function redraw() {
   var img    = document.getElementById('field-img');
-  var canvas = document.getElementById('field-canvas');
-  if (!img.complete || !img.naturalWidth) return;
-
+  var canvas = document.getElementById('draw-canvas');
+  if (!img || !img.complete || !img.naturalWidth) return;
   var ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  drawPath(ctx, autoWaypoints, '#5af', 'rgba(70,140,255,0.9)', 14, false);
+  drawSpots(ctx, autoShots,  'rgba(255,220,0,0.9)',   '#fff', 13, '');
+  drawSpots(ctx, teleShots,  'rgba(255,170,70,0.9)',  '#fff', 13, '');
+}
 
-  // Auto path — blue line connecting numbered circles
-  if (autoWaypoints.length) {
-    var pts = autoWaypoints.map(function(p) {
-      var c = p.split(',');
-      return { x: parseFloat(c[0]), y: parseFloat(c[1]) };
-    });
+// ── Shared draw helpers ───────────────────────────────────────
 
+function drawPath(ctx, waypoints, lineColor, fillColor, r, dashed) {
+  if (!waypoints.length) return;
+  var pts = waypoints.map(parseCoord);
+  ctx.save();
+  ctx.beginPath();
+  if (dashed) ctx.setLineDash([7, 5]);
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (var i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+  ctx.strokeStyle = lineColor;
+  ctx.lineWidth   = dashed ? 2.5 : 4;
+  ctx.globalAlpha = 0.65;
+  ctx.stroke();
+  ctx.restore();
+
+  pts.forEach(function(p, i) {
     ctx.beginPath();
-    ctx.moveTo(pts[0].x, pts[0].y);
-    for (var i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
-    ctx.strokeStyle = 'rgba(100,180,255,0.7)';
-    ctx.lineWidth   = 4;
+    ctx.arc(p.x, p.y, r, 0, 2 * Math.PI);
+    ctx.fillStyle   = fillColor;
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth   = 1.5;
+    ctx.fill();
     ctx.stroke();
+    ctx.fillStyle    = '#fff';
+    ctx.font         = 'bold ' + (r - 2) + 'px sans-serif';
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(i + 1, p.x, p.y);
+  });
+}
 
-    pts.forEach(function(p, i) {
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, 14, 0, 2 * Math.PI);
-      ctx.fillStyle   = 'rgba(70,140,255,0.9)';
-      ctx.strokeStyle = '#fff';
-      ctx.lineWidth   = 2;
-      ctx.fill();
-      ctx.stroke();
-
+function drawSpots(ctx, waypoints, fillColor, strokeColor, r, label) {
+  waypoints.forEach(function(p) {
+    var c = parseCoord(p);
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, r, 0, 2 * Math.PI);
+    ctx.fillStyle   = fillColor;
+    ctx.strokeStyle = strokeColor;
+    ctx.lineWidth   = 2;
+    ctx.fill();
+    ctx.stroke();
+    if (label) {
       ctx.fillStyle    = '#fff';
-      ctx.font         = 'bold 14px sans-serif';
+      ctx.font         = 'bold ' + (r - 2) + 'px sans-serif';
       ctx.textAlign    = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(i + 1, p.x, p.y);
-    });
-  }
-
-  // Auto shots — yellow circles with white center
-  autoShots.forEach(function(p) {
-    var c = p.split(',');
-    var x = parseFloat(c[0]), y = parseFloat(c[1]);
-    ctx.beginPath();
-    ctx.arc(x, y, 13, 0, 2 * Math.PI);
-    ctx.fillStyle   = 'rgba(255,220,0,0.9)';
-    ctx.strokeStyle = '#fff';
-    ctx.lineWidth   = 2;
-    ctx.fill();
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(x, y, 4, 0, 2 * Math.PI);
-    ctx.fillStyle = '#fff';
-    ctx.fill();
+      ctx.fillText(label, c.x, c.y);
+    } else {
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, 4, 0, 2 * Math.PI);
+      ctx.fillStyle = '#fff';
+      ctx.fill();
+    }
   });
+}
 
-  // Tele shots — orange circles with white center
-  teleShots.forEach(function(p) {
-    var c = p.split(',');
-    var x = parseFloat(c[0]), y = parseFloat(c[1]);
-    ctx.beginPath();
-    ctx.arc(x, y, 13, 0, 2 * Math.PI);
-    ctx.fillStyle   = 'rgba(255,170,70,0.9)';
-    ctx.strokeStyle = '#fff';
-    ctx.lineWidth   = 2;
-    ctx.fill();
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(x, y, 4, 0, 2 * Math.PI);
-    ctx.fillStyle = '#fff';
-    ctx.fill();
-  });
+function parseCoord(p) {
+  var c = p.split(',');
+  return { x: parseFloat(c[0]), y: parseFloat(c[1]) };
 }
 
 // ── Persistence ───────────────────────────────────────────────
@@ -264,11 +347,24 @@ function saveStorage(data) {
 
 function saveTeam() {
   var team = (document.getElementById('team-input').value || '').trim();
-  if (!team) { alert('Enter a team number first.'); return; }
+  if (!team) { showNotice('Enter a team number first.', '#f88'); return; }
   var all  = loadStorage();
   all[team] = { auto: autoWaypoints.slice(), autoshot: autoShots.slice(), tele: teleShots.slice() };
   saveStorage(all);
+  showNotice('Saved ' + team + ' \u2713', '#7ef');
+  autoWaypoints = [];
+  autoShots     = [];
+  teleShots     = [];
+  document.getElementById('team-input').value = '';
+  redraw();
   renderSavedList();
+}
+
+function showNotice(msg, color) {
+  var el = document.getElementById('save-notice');
+  el.textContent = msg;
+  el.style.color = color || '#7ef';
+  setTimeout(function() { el.textContent = ''; }, 2200);
 }
 
 function loadTeam(team) {
@@ -278,6 +374,7 @@ function loadTeam(team) {
   autoShots     = d.autoshot || [];
   teleShots     = d.tele     || [];
   document.getElementById('team-input').value = team;
+  switchTab('draw');
   redraw();
 }
 
@@ -285,14 +382,8 @@ function onTeamChange() {
   var team = (document.getElementById('team-input').value || '').trim();
   if (!team) return;
   var all = loadStorage();
-  if (all[team]) {
-    loadTeam(team);
-  } else {
-    autoWaypoints = [];
-    autoShots     = [];
-    teleShots     = [];
-    redraw();
-  }
+  if (all[team]) { loadTeam(team); }
+  else { autoWaypoints = []; autoShots = []; teleShots = []; redraw(); }
 }
 
 function renderSavedList() {
@@ -302,7 +393,75 @@ function renderSavedList() {
   if (!teams.length) { el.innerHTML = 'No saved teams yet'; return; }
   el.innerHTML = 'Saved: ' + teams.map(function(t) {
     return '<span onclick="loadTeam(\'' + t + '\')">' + t + '</span>';
-  }).join(' · ');
+  }).join(' \xb7 ');
+}
+
+// ── Compare tab ───────────────────────────────────────────────
+
+function buildCompareView() {
+  var all   = loadStorage();
+  var teams = Object.keys(all).sort(function(a, b) { return parseInt(a) - parseInt(b); });
+
+  var chipsEl   = document.getElementById('team-chips');
+  var noMsg     = document.getElementById('no-teams-msg');
+  var fieldEl   = document.getElementById('compare-field');
+  var legendEl  = document.getElementById('compare-legend-bar');
+
+  if (!teams.length) {
+    chipsEl.innerHTML  = '';
+    noMsg.style.display  = 'block';
+    fieldEl.style.display = 'none';
+    legendEl.style.display = 'none';
+    return;
+  }
+
+  noMsg.style.display    = 'none';
+  fieldEl.style.display  = 'flex';
+  legendEl.style.display = 'flex';
+
+  teams.forEach(function(t) { if (activeTeams[t] === undefined) activeTeams[t] = true; });
+  Object.keys(activeTeams).forEach(function(t) { if (!all[t]) delete activeTeams[t]; });
+
+  chipsEl.innerHTML = teams.map(function(t, i) {
+    var col = PALETTE[i % PALETTE.length];
+    var on  = activeTeams[t];
+    return '<div class="team-chip' + (on ? ' on' : '') + '" ' +
+      'style="color:' + col + ';border-color:' + col + ';' +
+      'background:' + (on ? col + '22' : 'transparent') + ';" ' +
+      'onclick="toggleTeam(\'' + t + '\')">' + t + '</div>';
+  }).join('');
+
+  redrawCompare();
+}
+
+function toggleTeam(team) {
+  activeTeams[team] = !activeTeams[team];
+  buildCompareView();
+}
+
+function redrawCompare() {
+  var img    = document.getElementById('field-img');
+  var canvas = document.getElementById('compare-canvas');
+  if (!img || !img.complete || !img.naturalWidth) return;
+
+  var all   = loadStorage();
+  var teams = Object.keys(all).sort(function(a, b) { return parseInt(a) - parseInt(b); });
+
+  var ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+  teams.forEach(function(t, i) {
+    if (!activeTeams[t]) return;
+    var d   = all[t];
+    var col = PALETTE[i % PALETTE.length];
+    // Auto path — dashed line in team color
+    drawPath(ctx, d.auto || [], col, col + 'cc', 11, true);
+    // Auto shots — team color fill, yellow ring, "A" label
+    drawSpots(ctx, d.autoshot || [], col + 'cc', '#fd0', 10, 'A');
+    // Tele shots — team color fill, orange ring, "T" label
+    drawSpots(ctx, d.tele     || [], col + 'cc', '#fa6', 10, 'T');
+  });
 }
 
 window.onload = function() {
