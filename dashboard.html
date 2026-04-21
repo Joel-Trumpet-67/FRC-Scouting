@@ -170,10 +170,25 @@
 <!-- ── Strategy (Choreo compare) ───────────────────────────────── -->
 <div id="strategy-wrap" style="display:none;">
   <div class="st-toolbar">
-    <span class="st-hint">Tap teams to show / hide · drawn in <a href="strategy.html">strategy.html</a></span>
+    <span class="st-hint">Draw team paths in <a href="strategy.html">strategy.html</a>, then view here</span>
     <button class="btn btn-code" onclick="buildStrategyView()">&#x21bb; Refresh</button>
   </div>
-  <div class="st-chips"  id="st-chips"></div>
+  <div class="st-chips" id="st-chips"></div>
+
+  <!-- Layout toggle -->
+  <div class="st-layout-bar" id="st-layout-bar" style="display:none;">
+    <button id="st-layout-overlay" class="st-layout-btn st-layout-active" onclick="stSetLayout('overlay')">Overlay</button>
+    <button id="st-layout-split"   class="st-layout-btn"                  onclick="stSetLayout('split')">Split</button>
+  </div>
+
+  <!-- Playback controls -->
+  <div class="st-playback-bar" id="st-playback-bar" style="display:none;">
+    <button id="st-play-btn" class="st-play-btn" onclick="stPlayPause()">&#9654; Play</button>
+    <button class="st-reset-btn" title="Reset to start" onclick="stResetAnim()">&#8635;</button>
+    <input type="range" id="st-anim-slider" min="0" max="100" value="100"
+           oninput="stSliderChange(this.value)" class="st-anim-slider">
+  </div>
+
   <div class="st-legend" id="st-legend" style="display:none;">
     <span><span class="st-ldot" style="background:#777;border:1px dashed #aaa;"></span>Auto path (dashed)</span>
     <span>A&nbsp;=&nbsp;auto shot &nbsp; T&nbsp;=&nbsp;tele shot</span>
@@ -185,6 +200,8 @@
     <img id="st-img" src="assets/images/2026/field_image.png" style="display:none" onload="strategyImgReady()">
     <canvas id="st-canvas"></canvas>
   </div>
+  <!-- Split grid (shown when layout = split) -->
+  <div id="st-split-grid" class="st-split-grid" style="display:none;"></div>
 </div>
 
 <!-- QR code modal — scouts scan this to open match.html -->
