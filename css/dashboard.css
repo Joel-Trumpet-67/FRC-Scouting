@@ -54,7 +54,7 @@ header h1 { font-family:Alexis; font-size:22px; font-weight:400; color:#97c7f0; 
 .strip { display:flex; gap:6px; padding:12px 24px 6px; flex-wrap:wrap; }
 .chip { background:#141414; border:1px solid #222; border-radius:6px; padding:8px 14px; text-align:center; min-width:88px; }
 .chip-val   { font-size:20px; font-weight:700; color:#97c7f0; }
-.chip-label { font-size:10px; color:#555; text-transform:uppercase; letter-spacing:1px; margin-top:2px; }
+.chip-label { font-size:11px; color:#888; text-transform:uppercase; letter-spacing:1px; margin-top:2px; }
 .chip-warn  { border-color:#b8860b; cursor:pointer; }
 .chip-warn .chip-val   { color:#f5a623; }
 .chip-warn .chip-label { color:#b8860b; }
@@ -119,7 +119,7 @@ header h1 { font-family:Alexis; font-size:22px; font-weight:400; color:#97c7f0; 
 .gap-over  { color:#ff6b6b; font-weight:600; }
 .gap-under { color:#f5a623; font-weight:600; }
 
-.timestamp { font-size:11px; color:#333; padding:2px 24px 8px; }
+.timestamp { font-size:11px; color:#666; padding:2px 24px 8px; }
 
 /* ── Rankings table ─────────────────────────────────────── */
 .wrap { padding:0 24px 40px; overflow-x:auto; }
@@ -127,29 +127,29 @@ header h1 { font-family:Alexis; font-size:22px; font-weight:400; color:#97c7f0; 
 table { width:100%; border-collapse:collapse; font-size:13px; min-width:680px; }
 
 thead th {
-  background:#111; color:#777; padding:9px 10px; text-align:center;
+  background:#111; color:#999; padding:9px 10px; text-align:center;
   white-space:nowrap; border-bottom:1px solid #1e1e1e;
-  font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.8px;
+  font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.8px;
   position:sticky; top:0; z-index:1; cursor:pointer; user-select:none;
 }
-thead th:hover { color:#ddd; }
+thead th:hover { color:#eee; }
 thead th.sorted-asc::after  { content:' ▲'; color:#97c7f0; }
 thead th.sorted-desc::after { content:' ▼'; color:#97c7f0; }
 thead th.no-sort { cursor:default; }
 
 /* Section header row (SCOUTED / STATBOTICS EPA labels) */
-tr.sec-hdr th { background:#0a0a0a; font-size:9px; letter-spacing:2px; padding:3px 10px; cursor:default; border-bottom:1px solid #161616; }
-.lbl-scout { color:#4a7aaa; }
-.lbl-sb    { color:#8a6a10; }
+tr.sec-hdr th { background:#0d0d0d; font-size:10px; letter-spacing:2px; padding:4px 10px; cursor:default; border-bottom:1px solid #1e1e1e; }
+.lbl-scout { color:#6a9acc; }
+.lbl-sb    { color:#c8921a; }
 
 tbody tr { border-bottom:1px solid #141414; }
 tbody tr:hover { background:#161616; }
 td { padding:10px 10px; text-align:center; }
 
 /* Rank column */
-td.rank        { font-size:20px; font-weight:700; color:#252525; min-width:40px; }
+td.rank        { font-size:20px; font-weight:700; color:#444; min-width:40px; }
 td.rank.top3   { color:#f0c060; }
-td.rank.top10  { color:#777; }
+td.rank.top10  { color:#999; }
 
 /* Team number column (clickable → opens detail modal) */
 td.team { font-size:17px; font-weight:700; color:#97c7f0; }
@@ -159,12 +159,12 @@ a.tba:hover { text-decoration:underline; }
 /* Scouted data color tiers (percentile-based, set in dashboard.js) */
 td.good { color:#5dd85d; font-weight:600; }
 td.ok   { color:#c8e86a; }
-td.mid  { color:#bbb; }
-td.low  { color:#555; }
+td.mid  { color:#ccc; }
+td.low  { color:#888; }
 
 /* Statbotics EPA color tiers */
 td.sb     { color:#f0c060; }
-td.sb-low { color:#5a4510; }
+td.sb-low { color:#9a7a30; }
 
 /* Visual separator between Scouted and SB columns */
 th.sb-div, td.sb-div { border-left:2px solid #3a2e00; }
@@ -176,7 +176,7 @@ th.sb-div, td.sb-div { border-left:2px solid #3a2e00; }
 .b-dnp  { background:#2b0f0f; color:#f88;   border-color:#5a2a2a; }
 .badge:hover { filter:brightness(1.3); }
 
-.no-data td { color:#333; text-align:center; padding:50px; font-size:14px; }
+.no-data td { color:#666; text-align:center; padding:50px; font-size:14px; }
 
 /* ── Tab bar (Match Data / Pre-Comp toggle) ──────────────── */
 .tab-bar {
@@ -388,3 +388,52 @@ tr.as-dnp    { background: rgba(192, 57,  43, 0.08); }
 
 .st-canvas-wrap { display: flex; justify-content: center; padding: 8px 16px 0; }
 #st-canvas { max-width: 100%; height: auto; display: block; border: 1px solid #1e1e1e; border-radius: 4px; }
+
+/* ── Strategy: layout toggle ────────────────────────────────── */
+.st-layout-bar {
+  display: flex; padding: 6px 24px; gap: 0;
+  border-bottom: 1px solid #1a1a1a;
+}
+.st-layout-btn {
+  flex: 0 1 auto; padding: 7px 20px; font-size: 12px; font-weight: 700;
+  border: 2px solid #2a2a2a; cursor: pointer; background: #111;
+  color: #666; transition: 0.15s; font-family: inherit;
+}
+.st-layout-btn:first-child { border-radius: 6px 0 0 6px; }
+.st-layout-btn:last-child  { border-radius: 0 6px 6px 0; }
+.st-layout-btn.st-layout-active { background: #1a3060; color: #5af; border-color: #5af; }
+
+/* ── Strategy: playback bar ─────────────────────────────────── */
+.st-playback-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 24px; border-bottom: 1px solid #1a1a1a;
+}
+.st-play-btn {
+  padding: 6px 16px; font-size: 13px; font-weight: 700;
+  background: #1a3060; color: #5af; border: 1.5px solid #5af;
+  border-radius: 6px; cursor: pointer; font-family: inherit; min-width: 92px;
+  transition: background 0.15s; white-space: nowrap;
+}
+.st-play-btn:hover { background: #243a70; }
+.st-reset-btn {
+  padding: 6px 11px; font-size: 16px; line-height: 1;
+  background: #1a1a1a; color: #777; border: 1.5px solid #2a2a2a;
+  border-radius: 6px; cursor: pointer; transition: background 0.15s;
+}
+.st-reset-btn:hover { background: #252525; color: #bbb; }
+.st-anim-slider { flex: 1; accent-color: #5af; cursor: pointer; }
+
+/* ── Strategy: split grid ───────────────────────────────────── */
+.st-split-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 10px; padding: 12px 24px 24px;
+}
+.st-split-panel {
+  background: #111; border: 1px solid #222; border-radius: 6px; overflow: hidden;
+}
+.st-split-hdr {
+  padding: 7px 12px; font-size: 15px; font-weight: 700;
+  border-bottom: 1px solid #1a1a1a; letter-spacing: 0.5px;
+}
+.st-split-canvas { width: 100%; height: auto; display: block; }
