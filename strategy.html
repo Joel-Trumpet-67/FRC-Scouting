@@ -13,12 +13,8 @@
       padding: 12px 20px; display: flex; align-items: center;
       justify-content: space-between;
     }
-    header h1 {
-      font-size: 20px; font-weight: 400; color: #97c7f0; letter-spacing: 2px;
-    }
-    #dash-link {
-      font-size: 12px; color: #555; text-decoration: none;
-    }
+    header h1 { font-size: 20px; font-weight: 400; color: #97c7f0; letter-spacing: 2px; }
+    #dash-link { font-size: 12px; color: #555; text-decoration: none; }
     #dash-link:hover { color: #97c7f0; }
 
     /* ── Tab bar ── */
@@ -54,10 +50,7 @@
     #save-btn  { background: #1a4a2a; color: #7ef; }
     #clear-btn { background: #3a1010; color: #faa; }
     .tbtn:hover { filter: brightness(1.25); }
-    #save-notice {
-      font-size: 12px; font-weight: 600; color: #7ef;
-      min-width: 70px; transition: opacity 0.3s;
-    }
+    #save-notice { font-size: 12px; font-weight: 600; color: #7ef; min-width: 70px; transition: opacity 0.3s; }
 
     /* ── Mode bar ── */
     .mode-bar { display: flex; padding: 10px 16px; gap: 0; }
@@ -72,19 +65,15 @@
     #mode-autoshot.active { background: #302800; color: #fd0; border-color: #fd0; }
     #mode-tele.active     { background: #302010; color: #fa6; border-color: #fa6; }
 
-    /* ── Canvas ── */
+    /* ── Canvas (draw tab) ── */
     .canvas-wrap { display: flex; justify-content: center; padding: 8px 12px 4px; }
     .field-canvas {
       max-width: 100%; height: auto; display: block;
       border: 1px solid #222; border-radius: 4px; cursor: crosshair;
     }
-    #compare-canvas { cursor: default; }
 
     /* ── Controls ── */
-    .controls {
-      display: flex; justify-content: center; gap: 8px;
-      padding: 6px 16px 8px; flex-wrap: wrap;
-    }
+    .controls { display: flex; justify-content: center; gap: 8px; padding: 6px 16px 8px; flex-wrap: wrap; }
     .ctrl-btn {
       padding: 7px 18px; font-size: 12px; font-weight: 600;
       border: 1px solid #2a2a2a; border-radius: 5px; cursor: pointer;
@@ -97,48 +86,79 @@
       display: flex; justify-content: center; gap: 18px; flex-wrap: wrap;
       padding: 2px 16px 10px; font-size: 11px; color: #555;
     }
-    .ldot {
-      display: inline-block; width: 11px; height: 11px;
-      border-radius: 50%; vertical-align: middle; margin-right: 4px;
-    }
+    .ldot { display: inline-block; width: 11px; height: 11px; border-radius: 50%; vertical-align: middle; margin-right: 4px; }
 
     /* ── Saved team chips ── */
-    .saved-section {
-      padding: 6px 16px 16px; border-top: 1px solid #1a1a1a;
-    }
-    .saved-label {
-      font-size: 10px; text-transform: uppercase; letter-spacing: 1px;
-      color: #444; margin-bottom: 6px;
-    }
+    .saved-section { padding: 6px 16px 16px; border-top: 1px solid #1a1a1a; }
+    .saved-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #444; margin-bottom: 6px; }
     .saved-chips { display: flex; flex-wrap: wrap; gap: 6px; }
     .saved-chip {
       padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 700;
-      cursor: pointer; border: 1.5px solid; opacity: 0.75; transition: opacity 0.15s;
-      user-select: none;
+      cursor: pointer; border: 1.5px solid; opacity: 0.75; transition: opacity 0.15s; user-select: none;
     }
     .saved-chip:hover { opacity: 1; }
 
     /* ── Compare: team toggle chips ── */
-    .compare-bar {
-      padding: 8px 16px 4px; display: flex; flex-wrap: wrap; gap: 6px;
-      border-bottom: 1px solid #1a1a1a;
-    }
+    .compare-bar { padding: 8px 16px 6px; display: flex; flex-wrap: wrap; gap: 6px; border-bottom: 1px solid #1a1a1a; }
     .cmp-chip {
       padding: 5px 14px; border-radius: 20px; font-size: 13px; font-weight: 700;
-      cursor: pointer; border: 2px solid; opacity: 0.35; transition: opacity 0.15s;
-      user-select: none;
+      cursor: pointer; border: 2px solid; opacity: 0.35; transition: opacity 0.15s; user-select: none;
     }
     .cmp-chip.on { opacity: 1; }
 
+    /* ── Layout toggle ── */
+    .layout-bar { display: flex; padding: 6px 16px; gap: 0; border-bottom: 1px solid #1a1a1a; }
+    .layout-btn {
+      flex: 1; padding: 8px 4px; font-size: 12px; font-weight: 700;
+      border: 2px solid #2a2a2a; cursor: pointer; background: #111;
+      color: #555; transition: 0.15s; text-align: center; font-family: inherit;
+    }
+    .layout-btn:first-child { border-radius: 6px 0 0 6px; }
+    .layout-btn:last-child  { border-radius: 0 6px 6px 0; }
+    .layout-btn.active { background: #1a3060; color: #5af; border-color: #5af; }
+
+    /* ── Playback bar ── */
+    .playback-bar {
+      display: flex; align-items: center; gap: 8px; padding: 8px 16px;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    .play-btn {
+      padding: 6px 16px; font-size: 13px; font-weight: 700;
+      background: #1a3060; color: #5af; border: 1.5px solid #5af;
+      border-radius: 6px; cursor: pointer; font-family: inherit; min-width: 92px;
+      transition: background 0.15s; white-space: nowrap;
+    }
+    .play-btn:hover { background: #243a70; }
+    .reset-btn {
+      padding: 6px 11px; font-size: 16px; line-height: 1;
+      background: #1a1a1a; color: #666; border: 1.5px solid #2a2a2a;
+      border-radius: 6px; cursor: pointer; transition: background 0.15s;
+    }
+    .reset-btn:hover { background: #252525; color: #aaa; }
+    .anim-slider { flex: 1; accent-color: #5af; cursor: pointer; }
+
+    /* ── Compare legend ── */
     .cmp-legend {
       display: flex; flex-wrap: wrap; justify-content: center; gap: 16px;
       padding: 6px 16px 4px; font-size: 11px; color: #555;
     }
 
-    #no-teams-msg {
-      text-align: center; color: #444; font-size: 14px; padding: 32px 16px;
-    }
+    #no-teams-msg { text-align: center; color: #444; font-size: 14px; padding: 32px 16px; }
     #no-teams-msg a { color: #97c7f0; }
+
+    /* ── Overlay canvas ── */
+    #compare-canvas { cursor: default; max-width: 100%; height: auto; display: block; border: 1px solid #222; border-radius: 4px; }
+    .overlay-wrap { display: flex; justify-content: center; padding: 8px 12px 12px; }
+
+    /* ── Split grid ── */
+    .split-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 10px; padding: 10px 12px 16px;
+    }
+    .split-panel { background: #111; border: 1px solid #222; border-radius: 6px; overflow: hidden; }
+    .split-panel-header { padding: 6px 10px 6px 12px; font-size: 14px; font-weight: 700; border-bottom: 1px solid #1a1a1a; letter-spacing: 0.5px; }
+    .split-canvas { width: 100%; height: auto; display: block; }
   </style>
 </head>
 <body>
@@ -199,8 +219,22 @@
 
   <div class="compare-bar" id="cmp-chips"></div>
 
+  <!-- Layout toggle -->
+  <div class="layout-bar">
+    <button id="layout-overlay" class="layout-btn active" onclick="setCmpLayout('overlay')">Overlay</button>
+    <button id="layout-split"   class="layout-btn"        onclick="setCmpLayout('split')">Split</button>
+  </div>
+
+  <!-- Playback controls -->
+  <div class="playback-bar">
+    <button id="play-btn" class="play-btn" onclick="playPause()">&#9654; Play</button>
+    <button class="reset-btn" title="Reset to start" onclick="resetAnim()">&#8635;</button>
+    <input type="range" id="anim-slider" min="0" max="100" value="100"
+           oninput="sliderChange(this.value)" class="anim-slider">
+  </div>
+
   <div class="cmp-legend">
-    <span><span class="ldot" style="background:#777;border:1px dashed #aaa;"></span>Auto path (dashed)</span>
+    <span><span class="ldot" style="background:#777;border:1px dashed #aaa;"></span>Auto path</span>
     <span>A&nbsp;=&nbsp;auto shot</span>
     <span>T&nbsp;=&nbsp;tele shot</span>
   </div>
@@ -209,9 +243,13 @@
     No saved teams yet — use the <strong>Draw</strong> tab to map team paths.
   </div>
 
-  <div class="canvas-wrap" id="cmp-canvas-wrap">
-    <canvas id="compare-canvas" class="field-canvas"></canvas>
+  <!-- Overlay canvas -->
+  <div class="overlay-wrap" id="cmp-canvas-wrap">
+    <canvas id="compare-canvas"></canvas>
   </div>
+
+  <!-- Split grid -->
+  <div id="split-grid" class="split-grid" style="display:none;"></div>
 
 </div>
 
@@ -230,6 +268,13 @@ var PALETTE = [
   '#f55','#5af','#5d5','#fa5','#c5f','#5ff','#ff5','#f5a',
   '#a5f','#5fa','#f95','#59f','#9f5','#f59','#5f9','#95f'
 ];
+
+// ── Animation state ───────────────────────────────────────────
+var animProgress = 1;    // 0 = blank, 1 = fully drawn
+var animPlaying  = false;
+var animRaf      = null;
+var animSpeed    = 0.005; // per frame (~3.3 s at 60 fps)
+var cmpLayout    = 'overlay';
 
 // ── Tabs ──────────────────────────────────────────────────────
 
@@ -251,7 +296,7 @@ function setMode(m) {
   });
 }
 
-// ── Canvas ────────────────────────────────────────────────────
+// ── Canvas (draw tab) ─────────────────────────────────────────
 
 function initCanvas() {
   var img = document.getElementById('field-img');
@@ -303,7 +348,7 @@ function redraw() {
   drawSpots(ctx, teleShots,  'rgba(255,170,70,0.9)', '#fff', 13, '');
 }
 
-// ── Shared draw helpers ───────────────────────────────────────
+// ── Draw helpers ──────────────────────────────────────────────
 
 function drawPath(ctx, waypoints, lineColor, fillColor, r, dashed) {
   if (!waypoints.length) return;
@@ -366,19 +411,13 @@ function saveStorage(d) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); } catch(e) {}
 }
 
-function teamColor(team) {
-  var teams = Object.keys(loadStorage()).sort(function(a,b){ return parseInt(a)-parseInt(b); });
-  var idx   = teams.indexOf(String(team));
-  return PALETTE[(idx >= 0 ? idx : teams.length) % PALETTE.length];
-}
-
 function saveTeam() {
   var team = (document.getElementById('team-input').value || '').trim();
   if (!team) { flash('Enter a team # first', '#faa'); return; }
   var all  = loadStorage();
   all[team] = { auto: autoWaypoints.slice(), autoshot: autoShots.slice(), tele: teleShots.slice() };
   saveStorage(all);
-  flash('Saved ' + team + ' \u2713', '#7ef');
+  flash('Saved ' + team + ' ✓', '#7ef');
   autoWaypoints = []; autoShots = []; teleShots = [];
   document.getElementById('team-input').value = '';
   redraw();
@@ -387,8 +426,7 @@ function saveTeam() {
 
 function flash(msg, color) {
   var el = document.getElementById('save-notice');
-  el.textContent = msg; el.style.color = color;
-  el.style.opacity = '1';
+  el.textContent = msg; el.style.color = color; el.style.opacity = '1';
   setTimeout(function() { el.style.opacity = '0'; setTimeout(function(){ el.textContent=''; }, 300); }, 2000);
 }
 
@@ -428,14 +466,18 @@ function renderSavedChips() {
 function buildCompareView() {
   var all   = loadStorage();
   var teams = Object.keys(all).sort(function(a,b){ return parseInt(a)-parseInt(b); });
-  var noMsg = document.getElementById('no-teams-msg');
-  var wrap  = document.getElementById('cmp-canvas-wrap');
+  var noMsg       = document.getElementById('no-teams-msg');
+  var overlayWrap = document.getElementById('cmp-canvas-wrap');
+  var splitGrid   = document.getElementById('split-grid');
 
   if (!teams.length) {
     document.getElementById('cmp-chips').innerHTML = '';
-    noMsg.style.display = 'block'; wrap.style.display = 'none'; return;
+    noMsg.style.display       = 'block';
+    overlayWrap.style.display = 'none';
+    splitGrid.style.display   = 'none';
+    return;
   }
-  noMsg.style.display = 'none'; wrap.style.display = 'flex';
+  noMsg.style.display = 'none';
 
   teams.forEach(function(t) { if (activeTeams[t] === undefined) activeTeams[t] = true; });
   Object.keys(activeTeams).forEach(function(t) { if (!all[t]) delete activeTeams[t]; });
@@ -448,12 +490,20 @@ function buildCompareView() {
       ' onclick="cmpToggle(\'' + t + '\')">' + t + '</div>';
   }).join('');
 
-  var img = document.getElementById('field-img');
-  if (img && img.complete && img.naturalWidth) {
-    var c = document.getElementById('compare-canvas');
-    if (!c.width) { c.width = img.naturalWidth; c.height = img.naturalHeight; }
+  if (cmpLayout === 'overlay') {
+    overlayWrap.style.display = 'flex';
+    splitGrid.style.display   = 'none';
+    var img = document.getElementById('field-img');
+    if (img && img.complete && img.naturalWidth) {
+      var c = document.getElementById('compare-canvas');
+      if (!c.width) { c.width = img.naturalWidth; c.height = img.naturalHeight; }
+    }
+    redrawCmpFrame();
+  } else {
+    overlayWrap.style.display = 'none';
+    splitGrid.style.display   = 'grid';
+    buildSplitView();
   }
-  redrawCompare();
 }
 
 function cmpToggle(team) {
@@ -461,23 +511,192 @@ function cmpToggle(team) {
   buildCompareView();
 }
 
-function redrawCompare() {
+// ── Layout toggle ─────────────────────────────────────────────
+
+function setCmpLayout(layout) {
+  cmpLayout = layout;
+  document.getElementById('layout-overlay').classList.toggle('active', layout === 'overlay');
+  document.getElementById('layout-split').classList.toggle('active',   layout === 'split');
+  buildCompareView();
+}
+
+// ── Playback ──────────────────────────────────────────────────
+
+function playPause() {
+  if (animPlaying) {
+    animPlaying = false;
+    if (animRaf) { cancelAnimationFrame(animRaf); animRaf = null; }
+    updatePlayBtn();
+  } else {
+    if (animProgress >= 1) animProgress = 0;
+    animPlaying = true;
+    updatePlayBtn();
+    animStep();
+  }
+}
+
+function resetAnim() {
+  animPlaying = false;
+  if (animRaf) { cancelAnimationFrame(animRaf); animRaf = null; }
+  animProgress = 1;
+  var sl = document.getElementById('anim-slider');
+  if (sl) sl.value = 100;
+  updatePlayBtn();
+  if (cmpLayout === 'overlay') redrawCmpFrame();
+  else redrawAllSplitPanels();
+}
+
+function updatePlayBtn() {
+  var btn = document.getElementById('play-btn');
+  if (!btn) return;
+  btn.innerHTML = animPlaying ? '&#9646;&#9646; Pause' : '&#9654; Play';
+}
+
+function animStep() {
+  animRaf = requestAnimationFrame(function() {
+    if (!animPlaying) return;
+    animProgress += animSpeed;
+    if (animProgress >= 1) {
+      animProgress = 1;
+      animPlaying  = false;
+      updatePlayBtn();
+    }
+    var sl = document.getElementById('anim-slider');
+    if (sl) sl.value = animProgress * 100;
+    if (cmpLayout === 'overlay') redrawCmpFrame();
+    else redrawAllSplitPanels();
+    if (animPlaying) animStep();
+  });
+}
+
+function sliderChange(val) {
+  animPlaying = false;
+  if (animRaf) { cancelAnimationFrame(animRaf); animRaf = null; }
+  animProgress = val / 100;
+  updatePlayBtn();
+  if (cmpLayout === 'overlay') redrawCmpFrame();
+  else redrawAllSplitPanels();
+}
+
+// ── Animated frame rendering ──────────────────────────────────
+
+function redrawCmpFrame() {
   var img    = document.getElementById('field-img');
   var canvas = document.getElementById('compare-canvas');
-  if (!img || !img.complete || !img.naturalWidth || !canvas.width) return;
-
+  if (!img || !img.complete || !img.naturalWidth || !canvas || !canvas.width) return;
   var all   = loadStorage();
   var teams = Object.keys(all).sort(function(a,b){ return parseInt(a)-parseInt(b); });
   var ctx   = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  teams.forEach(function(t, i) {
+    if (!activeTeams[t]) return;
+    drawTeamFrame(ctx, all[t], PALETTE[i % PALETTE.length], animProgress, 11);
+  });
+}
+
+// progress 0→0.75 traces auto path, 0.75→0.875 reveals auto shots, 0.875→1 reveals tele shots
+function drawTeamFrame(ctx, d, col, progress, r) {
+  var autoPath  = d.auto     || [];
+  var autoShots = d.autoshot || [];
+  var teleShots = d.tele     || [];
+
+  drawPathAnimated(ctx, autoPath, col, col + 'cc', r, true, Math.min(1, progress / 0.75));
+
+  if (progress >= 0.75 && autoShots.length) {
+    var aCount = Math.ceil(Math.min(1, (progress - 0.75) / 0.125) * autoShots.length);
+    drawSpots(ctx, autoShots.slice(0, aCount), col + 'cc', '#fd0', 10, 'A');
+  }
+  if (progress >= 0.875 && teleShots.length) {
+    var tCount = Math.ceil(Math.min(1, (progress - 0.875) / 0.125) * teleShots.length);
+    drawSpots(ctx, teleShots.slice(0, tCount), col + 'cc', '#fa6', 10, 'T');
+  }
+}
+
+function drawPathAnimated(ctx, waypoints, lineColor, fillColor, r, dashed, progress) {
+  if (!waypoints.length || progress <= 0) return;
+  var pts = waypoints.map(parseCoord);
+
+  if (pts.length === 1) {
+    ctx.beginPath(); ctx.arc(pts[0].x, pts[0].y, r, 0, 2 * Math.PI);
+    ctx.fillStyle = fillColor; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.font = 'bold ' + (r - 2) + 'px sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('1', pts[0].x, pts[0].y);
+    return;
+  }
+
+  var totalSegs = pts.length - 1;
+  var segProg   = progress * totalSegs;
+  var fullSegs  = Math.min(Math.floor(segProg), totalSegs);
+  var partial   = segProg - fullSegs;
+
+  ctx.save();
+  ctx.beginPath();
+  if (dashed) ctx.setLineDash([7, 5]);
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (var i = 1; i <= fullSegs; i++) ctx.lineTo(pts[i].x, pts[i].y);
+  if (fullSegs < totalSegs && partial > 0) {
+    var p1 = pts[fullSegs], p2 = pts[fullSegs + 1];
+    ctx.lineTo(p1.x + (p2.x - p1.x) * partial, p1.y + (p2.y - p1.y) * partial);
+  }
+  ctx.strokeStyle = lineColor; ctx.lineWidth = dashed ? 2.5 : 4; ctx.globalAlpha = 0.65;
+  ctx.stroke();
+  ctx.restore();
+
+  for (var j = 0; j <= fullSegs && j < pts.length; j++) {
+    ctx.beginPath(); ctx.arc(pts[j].x, pts[j].y, r, 0, 2 * Math.PI);
+    ctx.fillStyle = fillColor; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.font = 'bold ' + (r - 2) + 'px sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(j + 1, pts[j].x, pts[j].y);
+  }
+}
+
+// ── Split view ────────────────────────────────────────────────
+
+function buildSplitView() {
+  var all   = loadStorage();
+  var teams = Object.keys(all).sort(function(a,b){ return parseInt(a)-parseInt(b); });
+  var img   = document.getElementById('field-img');
+  var grid  = document.getElementById('split-grid');
+  if (!grid || !img || !img.complete || !img.naturalWidth) return;
+
+  var active = teams.filter(function(t) { return activeTeams[t]; });
+
+  grid.innerHTML = active.map(function(t) {
+    var idx = teams.indexOf(t);
+    var col = PALETTE[idx % PALETTE.length];
+    return '<div class="split-panel" id="sp-' + t + '">' +
+      '<div class="split-panel-header" style="color:' + col + ';border-left:3px solid ' + col + ';">' + t + '</div>' +
+      '<canvas id="sp-canvas-' + t + '" class="split-canvas"></canvas>' +
+    '</div>';
+  }).join('');
+
+  active.forEach(function(t) {
+    var c = document.getElementById('sp-canvas-' + t);
+    if (c) { c.width = img.naturalWidth; c.height = img.naturalHeight; }
+  });
+
+  redrawAllSplitPanels();
+}
+
+function redrawAllSplitPanels() {
+  var all   = loadStorage();
+  var teams = Object.keys(all).sort(function(a,b){ return parseInt(a)-parseInt(b); });
+  var img   = document.getElementById('field-img');
+  if (!img || !img.complete || !img.naturalWidth) return;
 
   teams.forEach(function(t, i) {
     if (!activeTeams[t]) return;
-    var d = all[t]; var col = PALETTE[i % PALETTE.length];
-    drawPath(ctx,  d.auto     || [], col, col + 'cc', 11, true);
-    drawSpots(ctx, d.autoshot || [], col + 'cc', '#fd0', 10, 'A');
-    drawSpots(ctx, d.tele     || [], col + 'cc', '#fa6', 10, 'T');
+    var canvas = document.getElementById('sp-canvas-' + t);
+    if (!canvas || !canvas.width) return;
+    var ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    drawTeamFrame(ctx, all[t], PALETTE[i % PALETTE.length], animProgress, 11);
   });
 }
 
