@@ -14,6 +14,7 @@ var stAnimProgress = 1;
 var stAnimPlaying  = false;
 var stAnimRaf      = null;
 var stAnimSpeed    = 0.005;
+var stCachedData   = null;  // invalidated in buildStrategyView(), avoids re-parsing on every frame
 
 // ── Image ready ───────────────────────────────────────────────
 
@@ -30,7 +31,8 @@ function strategyImgReady() {
 // ── Build / refresh view ──────────────────────────────────────
 
 function buildStrategyView() {
-  var all   = stLoad();
+  stCachedData = stLoad();
+  var all   = stCachedData;
   var teams = Object.keys(all).sort(function(a, b) { return parseInt(a) - parseInt(b); });
 
   var chipsEl     = document.getElementById('st-chips');
@@ -164,7 +166,7 @@ function stRedrawCmpFrame() {
   var canvas = document.getElementById('st-canvas');
   if (!img || !img.complete || !img.naturalWidth || !canvas || !canvas.width) return;
 
-  var all   = stLoad();
+  var all   = stCachedData || stLoad();
   var teams = Object.keys(all).sort(function(a, b) { return parseInt(a) - parseInt(b); });
 
   var ctx = canvas.getContext('2d');
@@ -203,7 +205,7 @@ function stDrawPathAnimated(ctx, waypoints, lineColor, fillColor, r, dashed, pro
     ctx.beginPath(); ctx.arc(pts[0].x, pts[0].y, r, 0, 2 * Math.PI);
     ctx.fillStyle = fillColor; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
     ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#fff'; ctx.font = 'bold ' + (r - 1) + 'px sans-serif';
+    ctx.fillStyle = '#fff'; ctx.font = 'bold ' + (r - 2) + 'px sans-serif';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText('1', pts[0].x, pts[0].y);
     return;
@@ -231,7 +233,7 @@ function stDrawPathAnimated(ctx, waypoints, lineColor, fillColor, r, dashed, pro
     ctx.beginPath(); ctx.arc(pts[j].x, pts[j].y, r, 0, 2 * Math.PI);
     ctx.fillStyle = fillColor; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
     ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#fff'; ctx.font = 'bold ' + (r - 1) + 'px sans-serif';
+    ctx.fillStyle = '#fff'; ctx.font = 'bold ' + (r - 2) + 'px sans-serif';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(j + 1, pts[j].x, pts[j].y);
   }
@@ -240,7 +242,7 @@ function stDrawPathAnimated(ctx, waypoints, lineColor, fillColor, r, dashed, pro
 // ── Split view ────────────────────────────────────────────────
 
 function stBuildSplitView() {
-  var all   = stLoad();
+  var all   = stCachedData || stLoad();
   var teams = Object.keys(all).sort(function(a, b) { return parseInt(a) - parseInt(b); });
   var img   = document.getElementById('st-img');
   var grid  = document.getElementById('st-split-grid');
@@ -267,7 +269,7 @@ function stBuildSplitView() {
 }
 
 function stRedrawAllSplitPanels() {
-  var all   = stLoad();
+  var all   = stCachedData || stLoad();
   var teams = Object.keys(all).sort(function(a, b) { return parseInt(a) - parseInt(b); });
   var img   = document.getElementById('st-img');
   if (!img || !img.complete || !img.naturalWidth) return;

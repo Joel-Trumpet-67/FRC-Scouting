@@ -275,6 +275,7 @@ var animPlaying  = false;
 var animRaf      = null;
 var animSpeed    = 0.005; // per frame (~3.3 s at 60 fps)
 var cmpLayout    = 'overlay';
+var cachedData   = null;  // invalidated in buildCompareView(), avoids re-parsing on every frame
 
 // ── Tabs ──────────────────────────────────────────────────────
 
@@ -417,6 +418,7 @@ function saveTeam() {
   var all  = loadStorage();
   all[team] = { auto: autoWaypoints.slice(), autoshot: autoShots.slice(), tele: teleShots.slice() };
   saveStorage(all);
+  cachedData = null;
   flash('Saved ' + team + ' ✓', '#7ef');
   autoWaypoints = []; autoShots = []; teleShots = [];
   document.getElementById('team-input').value = '';
@@ -464,7 +466,8 @@ function renderSavedChips() {
 // ── Compare ───────────────────────────────────────────────────
 
 function buildCompareView() {
-  var all   = loadStorage();
+  cachedData = loadStorage();
+  var all   = cachedData;
   var teams = Object.keys(all).sort(function(a,b){ return parseInt(a)-parseInt(b); });
   var noMsg       = document.getElementById('no-teams-msg');
   var overlayWrap = document.getElementById('cmp-canvas-wrap');
@@ -584,7 +587,7 @@ function redrawCmpFrame() {
   var img    = document.getElementById('field-img');
   var canvas = document.getElementById('compare-canvas');
   if (!img || !img.complete || !img.naturalWidth || !canvas || !canvas.width) return;
-  var all   = loadStorage();
+  var all   = cachedData || loadStorage();
   var teams = Object.keys(all).sort(function(a,b){ return parseInt(a)-parseInt(b); });
   var ctx   = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -658,7 +661,7 @@ function drawPathAnimated(ctx, waypoints, lineColor, fillColor, r, dashed, progr
 // ── Split view ────────────────────────────────────────────────
 
 function buildSplitView() {
-  var all   = loadStorage();
+  var all   = cachedData || loadStorage();
   var teams = Object.keys(all).sort(function(a,b){ return parseInt(a)-parseInt(b); });
   var img   = document.getElementById('field-img');
   var grid  = document.getElementById('split-grid');
@@ -684,7 +687,7 @@ function buildSplitView() {
 }
 
 function redrawAllSplitPanels() {
-  var all   = loadStorage();
+  var all   = cachedData || loadStorage();
   var teams = Object.keys(all).sort(function(a,b){ return parseInt(a)-parseInt(b); });
   var img   = document.getElementById('field-img');
   if (!img || !img.complete || !img.naturalWidth) return;

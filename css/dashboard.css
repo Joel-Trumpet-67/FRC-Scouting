@@ -155,6 +155,7 @@ td.rank.top10  { color:#999; }
 td.team { font-size:17px; font-weight:700; color:#97c7f0; }
 a.tba { color:inherit; text-decoration:none; }
 a.tba:hover { text-decoration:underline; }
+.team-sub { font-size:11px; color:#888; line-height:1.2; }
 
 /* Scouted data color tiers (percentile-based, set in dashboard.js) */
 td.good { color:#5dd85d; font-weight:600; }

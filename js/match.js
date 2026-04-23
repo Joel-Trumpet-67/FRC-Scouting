@@ -20,7 +20,7 @@
 //
 // ============================================================
 
-// Touch swipe support
+// Touch swipe support (handlers defined in scout-common.js)
 document.addEventListener("touchstart", startTouch, false);
 document.addEventListener("touchend",   moveTouch,  false);
 
@@ -81,18 +81,6 @@ function swipePage(increment) {
   }
 }
 
-function startTouch(e) {
-  initialX = e.touches[0].screenX;
-}
-
-function moveTouch(e) {
-  if (initialX === null) return;
-  var diffX = initialX - e.changedTouches[0].screenX;
-  if      (diffX / screen.width >  xThreshold) swipePage(1);
-  else if (diffX / screen.width < -xThreshold) swipePage(-1);
-  initialX = null;
-}
-
 // ── Page validation ───────────────────────────────────────────
 // Returns an error string if the page is incomplete, null if ok.
 // Add cases here as needed for other pages.
@@ -108,20 +96,6 @@ function validatePage(pageIndex) {
     if (!t) return 'Team # is missing — check TBA auto-fill or enter manually.';
   }
   return null;
-}
-
-function showPageError(pageIndex, msg) {
-  var el = document.getElementById('page-error-' + pageIndex);
-  if (!el) return;
-  el.textContent = '\u26A0 ' + msg;
-  el.style.display = 'block';
-}
-
-function clearPageError(pageIndex) {
-  var el = document.getElementById('page-error-' + pageIndex);
-  if (!el) return;
-  el.textContent = '';
-  el.style.display = 'none';
 }
 
 // ============================================================
@@ -296,14 +270,13 @@ function updateTeamLabel(num) {
 // DATA COLLECTION
 // ============================================================
 
-// Returns a plain object with all named form fields
 function getDataObject() {
   var Form = document.forms.scoutingForm;
   var seen = [];
   var result = {};
 
-  Array.from(Form.elements, el => el.name).forEach(fn => {
-    if (fn && !seen.includes(fn)) seen.push(fn);
+  Array.from(Form.elements).forEach(function(el) {
+    if (el.name && !seen.includes(el.name)) seen.push(el.name);
   });
 
   seen.forEach(function(fieldname) {
@@ -927,6 +900,7 @@ function applyCode(code) {
   syncCode   = code;
   entriesRef = db.ref("sessions/" + code + "/entries");
   localStorage.setItem("scout_sync_code", code);
+  document.getElementById("sync-modal").style.display = "none";
   updateBannerWithQueue();
   fetchSchedule();
   // If we're already online, flush anything that was queued under this code.
@@ -935,25 +909,6 @@ function applyCode(code) {
 
 function showCodeModal() {
   document.getElementById("sync-modal").style.display = "flex";
-}
-
-function joinCode() {
-  var input = document.getElementById("sync-input").value.trim().toUpperCase().replace(/\s+/g, "");
-  if (!input) return;
-  document.getElementById("sync-modal").style.display = "none";
-  applyCode(input);
-}
-
-function changeCode() {
-  document.getElementById("sync-input").value = syncCode || "";
-  document.getElementById("sync-modal").style.display = "flex";
-}
-
-function showSyncBanner(text, color) {
-  var el = document.getElementById("sync-banner");
-  if (!el) return;
-  el.textContent = text;
-  el.style.color = color || "#eee";
 }
 
 // TODO: show entry count in the sync banner so scouts can confirm their data went through.

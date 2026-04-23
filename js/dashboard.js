@@ -276,7 +276,6 @@ function mergeStatbotics() {
 // PROCESS ENTRIES → TEAM STATS
 // ============================================================
 
-// Summarizes raw scouting entries into per-team averages.
 // Scoring formula lives in season/game-fields.js — edit that, not this.
 function processData() {
   var teams = {};
@@ -333,9 +332,8 @@ function autoFlagOverrated() {
     var sp = scoutIdx[s.t] / n;
     var bp = sbIdx[s.t] / n;
     if (bp >= 0.65 && sp <= 0.35) {
-      if (picklistRef) picklistRef.child(key).set('overrated');
+      if (picklistRef && picklistData[key] !== 'overrated') picklistRef.child(key).set('overrated');
     } else if (picklistData[key] === 'overrated') {
-      // No longer qualifies — reset to available
       if (picklistRef) picklistRef.child(key).set('available');
     }
   });
@@ -388,7 +386,7 @@ function renderTable() {
     else                           { bdg='✅ Available';   bcls='badge b-ok'; }
     var td = TEAM_DATA && TEAM_DATA[String(r.t)];
     var teamCell = '<a class="tba" href="#" onclick="openTeamModal(\''+r.t+'\');return false;">'+r.t+'</a>'+
-      (td ? '<div style="font-size:11px;color:#888;line-height:1.2;">'+td.name+'</div>' : '');
+      (td ? '<div class="team-sub">'+td.name+'</div>' : '');
     return '<tr>'+
       '<td class="'+rankCls+'">'+(r.sbRank!=null?r.sbRank:'—')+'</td>'+
       '<td class="team">'+teamCell+'</td>'+
@@ -470,6 +468,12 @@ function toggleStatus(team) {
 
 var allianceStatusOrder = { us:0, available:1, overrated:1, dnp:2, picked:3 };
 
+function allianceBtn(team, status, s, label, cls) {
+  var active = status === s ? ' as-active' : '';
+  return '<td><button class="as-btn ' + cls + active + '" ' +
+         'onclick="setAllianceStatus(\'' + team + '\',\'' + s + '\')">' + label + '</button></td>';
+}
+
 function renderAllianceTable() {
   var tbody = document.getElementById('alliance-tbody');
   if (!tbody) return;
@@ -500,24 +504,18 @@ function renderAllianceTable() {
                  status === 'picked' ? 'as-picked'  :
                  status === 'dnp'    ? 'as-dnp'     : '';
 
-    function abtn(s, label, cls) {
-      var active = status === s ? ' as-active' : '';
-      return '<td><button class="as-btn ' + cls + active + '" ' +
-             'onclick="setAllianceStatus(\'' + r.t + '\',\'' + s + '\')">' + label + '</button></td>';
-    }
-
     var atd = TEAM_DATA && TEAM_DATA[String(r.t)];
     var aTeamCell = '<a class="tba" href="#" onclick="openTeamModal(\'' + r.t + '\');return false;">' + r.t + '</a>' +
-      (atd ? '<div style="font-size:11px;color:#888;line-height:1.2;">' + atd.name + '</div>' : '');
+      (atd ? '<div class="team-sub">' + atd.name + '</div>' : '');
     return '<tr class="' + trCls + '">' +
       '<td class="team">' + aTeamCell + '</td>' +
       '<td>' + (r.sbRank  != null ? r.sbRank        : '—') + '</td>' +
       '<td>' + (r.sbTotal != null ? r1(r.sbTotal)   : '—') + '</td>' +
       '<td>' + (r.scoutAuto > 0   ? r1(r.scoutAuto) : '—') + '</td>' +
       '<td>' + (r.scoutTele > 0   ? r1(r.scoutTele) : '—') + '</td>' +
-      abtn('us',     '✅ Ours',  'as-btn-ours')  +
-      abtn('picked', '🚫 Taken', 'as-btn-taken') +
-      abtn('dnp',    '❌ DNP',   'as-btn-dnp')   +
+      allianceBtn(r.t, status, 'us',     '✅ Ours',  'as-btn-ours')  +
+      allianceBtn(r.t, status, 'picked', '🚫 Taken', 'as-btn-taken') +
+      allianceBtn(r.t, status, 'dnp',    '❌ DNP',   'as-btn-dnp')   +
     '</tr>';
   }).join('');
 }
@@ -603,7 +601,7 @@ function renderPitTable() {
 
     var td = TEAM_DATA && TEAM_DATA[String(teamNum)];
     var teamCell = '<a class="tba" href="#" onclick="openTeamModal(\'' + teamNum + '\');return false;">' + (teamNum || '?') + '</a>' +
-      (td ? '<div style="font-size:11px;color:#888;line-height:1.2;">' + td.name + '</div>' : '');
+      (td ? '<div class="team-sub">' + td.name + '</div>' : '');
 
     return '<tr>' +
       '<td class="team">' + teamCell + '</td>' +
@@ -753,7 +751,6 @@ function validateData() {
   }
 
   qualityFlags = [];
-  var CLIMB_PTS = {'1':10,'2':20,'3':30};
   var OVER_BUFFER  = 10;  // scouts can't exceed TBA by more than this (fouls only go up)
   var UNDER_BUFFER = 50;  // allow up to 50pts gap for foul/penalty points scouts can't track
 
@@ -930,11 +927,12 @@ function clearAll() {
 // HELPERS
 // ============================================================
 
+var CLIMB_PTS = {'1':10,'2':20,'3':30};
+
 function num(v)   { return parseFloat(v)||0; }
 function avg(arr) { return arr.length ? arr.reduce(function(a,b){return a+b;},0)/arr.length : 0; }
 function r1(v)    { return Math.round(v*10)/10; }
 
-// Returns the most common event code across all scouting entries
 // Falls back to EVENT_CODE from config/event-config.js
 function getEvent() {
   var c={};
@@ -999,8 +997,6 @@ function openTeamModal(team) {
       var isRed  = (e.r||'').charAt(0)==='r';
       var robTag = '<span class="m-robot '+(isRed?'red-tag':'blue-tag')+'">'+(ROBOT_LABELS[e.r]||e.r||'?')+'</span>';
 
-      // Points scored this match
-      var CLIMB_PTS = {'1':10,'2':20,'3':30};
       var autoPts  = num(e.as1)*1 + num(e.as5)*5 + num(e.ad8)*8 + num(e.ac1)*15;
       var telePts  = num(e.ts1)*1 + num(e.ts5)*5;
       var endPts   = CLIMB_PTS[e.efs] || 0;
