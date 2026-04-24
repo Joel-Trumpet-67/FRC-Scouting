@@ -35,6 +35,7 @@
     <span id="pill-sb"     class="pill p-grey">Statbotics —</span>
     <button class="btn btn-code"   onclick="changeCode()">Change Code</button>
     <button class="btn btn-qr"     onclick="showQR()">📱 Scout QR</button>
+    <button class="btn btn-scan"   onclick="openScanModal()">📷 Import QR</button>
     <button class="btn btn-export" onclick="exportCSV()">Export Match CSV</button>
     <button class="btn btn-export" onclick="exportPitCSV()">Export Pit CSV</button>
     <button class="btn btn-clear"  onclick="clearAll()">Clear Data</button>
@@ -211,6 +212,38 @@
     <div style="font-size:13px;color:#666;margin-bottom:20px;" id="qr-url-label"></div>
     <div id="qr-code-img"></div>
     <button onclick="document.getElementById('qr-modal').style.display='none'" style="margin-top:20px;padding:10px 28px;font-size:15px;border:none;border-radius:8px;background:#222;color:#fff;cursor:pointer;">Close</button>
+  </div>
+</div>
+
+<!-- QR data import modal — coach scans or pastes scout QR codes to ingest entries -->
+<div id="scan-modal">
+  <div class="scan-box">
+    <button class="scan-close" onclick="closeScanModal()">&#x2715;</button>
+    <div class="scan-title">Import QR Scouting Data</div>
+
+    <div id="scan-camera-section" style="display:none; margin-bottom:16px;">
+      <video id="scan-video" autoplay playsinline muted
+             style="width:100%;border-radius:8px;background:#000;display:block;"></video>
+    </div>
+
+    <div style="font-size:13px;color:#555;margin-bottom:6px;">
+      Paste the QR text below (or use the camera above):
+    </div>
+    <textarea id="scan-paste" rows="4"
+      placeholder="e.g. s=JT;e=2026micmp4;l=qm;m=5;r=r1;t=3603;as1=2;as5=1;..."
+      style="width:100%;box-sizing:border-box;font-family:monospace;font-size:12px;
+             padding:8px;border:1px solid #ccc;border-radius:6px;resize:vertical;"></textarea>
+
+    <div style="margin-top:12px; display:flex; gap:10px; justify-content:flex-end;">
+      <button onclick="submitScanPaste()"
+              style="padding:8px 22px;background:#1a73e8;color:#fff;border:none;
+                     border-radius:6px;font-size:14px;cursor:pointer;">Import</button>
+      <button onclick="closeScanModal()"
+              style="padding:8px 22px;background:#555;color:#fff;border:none;
+                     border-radius:6px;font-size:14px;cursor:pointer;">Close</button>
+    </div>
+
+    <div id="scan-feedback" style="margin-top:10px;font-size:13px;min-height:18px;"></div>
   </div>
 </div>
 
