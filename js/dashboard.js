@@ -917,6 +917,136 @@ function showQR() {
 //       each team's scouted + SB data next to their pick status.
 
 // ============================================================
+// QR DATA IMPORT — scan scout phones directly into the dashboard
+// ============================================================
+
+var _scanStream   = null;
+var _scanDetector = null;
+var _scanTimer    = null;
+
+// Parse "key=value;key=value" KVS string (QR code format) into a plain object.
+function parseKVS(kvs) {
+  var obj = {};
+  kvs.split(';').forEach(function(pair) {
+    var idx = pair.indexOf('=');
+    if (idx > 0) obj[pair.slice(0, idx).trim()] = pair.slice(idx + 1).trim();
+  });
+  return obj;
+}
+
+// Ingest a KVS string from a QR code into the live dashboard.
+// Returns true on success, false if invalid or duplicate.
+function ingestKVS(kvs) {
+  var entry = parseKVS(kvs.trim());
+  if (!entry.s || !entry.m || !entry.r || !entry.t) {
+    _scanFeedback('Missing required fields (s, m, r, t) — is this a scouting QR?', 'red');
+    return false;
+  }
+  var dup = allData.some(function(e) {
+    return e.s === entry.s && e.m === entry.m && e.r === entry.r &&
+           (entry.e ? e.e === entry.e : true);
+  });
+  if (dup) {
+    _scanFeedback('Duplicate: Q' + entry.m + ' ' + entry.r + ' from ' + entry.s + ' already exists.', 'orange');
+    return false;
+  }
+  if (!entry.timestamp) entry.timestamp = new Date().toISOString();
+  entry._key    = 'qr_' + Date.now();
+  entry._source = 'qr';
+  allData.push(entry);
+  processData();
+  var event = getEvent();
+  if (event) { fetchStatbotics(event); fetchMatchSchedule(event); validateData(); }
+  else       { renderTable(); renderAllianceTable(); updateChips(); }
+
+  // Forward to local server if running
+  if (typeof LOCAL_SERVER !== 'undefined' && LOCAL_SERVER) {
+    fetch(LOCAL_SERVER + '/scan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kvs: kvs })
+    }).catch(function() {});
+  }
+
+  _scanFeedback('✓ Imported Q' + entry.m + ' ' + entry.r + ' · Team ' + entry.t + ' · Scout ' + entry.s, 'green');
+  return true;
+}
+
+function openScanModal() {
+  document.getElementById('scan-modal').classList.add('open');
+  document.getElementById('scan-paste').value = '';
+  _scanFeedback('', '');
+
+  // Try camera scanning via BarcodeDetector (Chrome/Edge 83+)
+  if (typeof BarcodeDetector !== 'undefined' && navigator.mediaDevices) {
+    _startCamera();
+  } else {
+    document.getElementById('scan-camera-section').style.display = 'none';
+  }
+}
+
+function closeScanModal() {
+  _stopCamera();
+  document.getElementById('scan-modal').classList.remove('open');
+}
+
+function submitScanPaste() {
+  var raw = document.getElementById('scan-paste').value.trim();
+  if (!raw) { _scanFeedback('Paste a KVS string first.', 'red'); return; }
+  ingestKVS(raw);
+}
+
+function _startCamera() {
+  _scanDetector = new BarcodeDetector({ formats: ['qr_code'] });
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+    .then(function(stream) {
+      _scanStream = stream;
+      var video = document.getElementById('scan-video');
+      video.srcObject = stream;
+      video.play();
+      document.getElementById('scan-camera-section').style.display = 'block';
+      _scanFeedback('Camera active — point at a scout phone QR code.', '#555');
+      _scheduleFrame();
+    })
+    .catch(function() {
+      document.getElementById('scan-camera-section').style.display = 'none';
+    });
+}
+
+function _stopCamera() {
+  clearTimeout(_scanTimer);
+  if (_scanStream) { _scanStream.getTracks().forEach(function(t){ t.stop(); }); _scanStream = null; }
+}
+
+function _scheduleFrame() {
+  _scanTimer = setTimeout(_scanFrame, 200);
+}
+
+function _scanFrame() {
+  if (!_scanStream) return;
+  var video = document.getElementById('scan-video');
+  _scanDetector.detect(video).then(function(codes) {
+    if (!_scanStream) return;
+    var match = codes.find(function(c) { return c.rawValue.indexOf('=') > -1; });
+    if (match) {
+      _stopCamera();
+      ingestKVS(match.rawValue);
+    } else {
+      _scheduleFrame();
+    }
+  }).catch(function() {
+    if (_scanStream) _scheduleFrame();
+  });
+}
+
+function _scanFeedback(msg, color) {
+  var el = document.getElementById('scan-feedback');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = color || '#333';
+}
+
+// ============================================================
 // CLEAR ALL DATA
 // ============================================================
 
