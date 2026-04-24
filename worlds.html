@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Worlds Strategy — Johnson Division</title>
+  <script src="config/event-config.js"></script>
+  <link rel="stylesheet" href="css/worlds.css">
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="div-badge">Johnson Division · Houston, TX · Apr 29 – May 2</div>
+    <h1>Team 3603 — Worlds Match Strategy</h1>
+  </div>
+  <div class="header-pills">
+    <span id="pill-sched" class="pill pill-grey">Schedule —</span>
+    <span id="pill-sb"    class="pill pill-grey">Statbotics —</span>
+  </div>
+</header>
+
+<!-- ── OUR MATCHES ─────────────────────────────────────────── -->
+<section>
+  <div class="section-header">
+    <h2>Our Qual Matches</h2>
+    <span id="our-count" class="section-sub"></span>
+  </div>
+
+  <div id="sched-pending" class="pending-banner">
+    ⏳ Qual schedule not yet posted — this page checks TBA every 60 seconds and will auto-update the moment it's available.
+  </div>
+
+  <div id="our-matches-grid" class="match-grid"></div>
+</section>
+
+<!-- ── ALL TEAMS ───────────────────────────────────────────── -->
+<section>
+  <div class="section-header">
+    <h2>All Teams — Johnson Division</h2>
+    <span class="section-sub">75 teams · click column headers to sort</span>
+  </div>
+
+  <div class="table-wrap">
+    <table id="teams-table">
+      <thead>
+        <tr>
+          <th class="sortable" data-col="num"      onclick="sortTeams('num')">Team #</th>
+          <th>Name</th>
+          <th>Location</th>
+          <th class="sortable" data-col="sbTotal"  onclick="sortTeams('sbTotal')">SB EPA</th>
+          <th class="sortable" data-col="sbRank"   onclick="sortTeams('sbRank')">SB Rank</th>
+          <th class="sortable" data-col="matchCount" onclick="sortTeams('matchCount')">Matches vs/with Us</th>
+        </tr>
+      </thead>
+      <tbody id="teams-tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ── NOTES MODAL ─────────────────────────────────────────── -->
+<div id="notes-modal" class="modal-overlay">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeNotes()">&#x2715;</button>
+    <div class="modal-title" id="notes-modal-title"></div>
+    <textarea id="notes-textarea" rows="8" placeholder="Strategy notes for this match…"></textarea>
+    <div class="modal-actions">
+      <button class="btn-save-notes" onclick="saveNotes()">Save</button>
+      <button class="btn-cancel-notes" onclick="closeNotes()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script src="season/teams.js"></script>
+<script src="js/worlds.js"></script>
+</body>
+</html>

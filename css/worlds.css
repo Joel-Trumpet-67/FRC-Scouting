@@ -1,0 +1,367 @@
+/* ── Reset & base ───────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #0e0e0e;
+  color: #e0e0e0;
+  min-height: 100vh;
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 20px 28px 16px;
+  background: #111;
+  border-bottom: 2px solid #1e3a5f;
+}
+
+.div-badge {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #f0c040;
+  margin-bottom: 4px;
+}
+
+h1 {
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.header-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  padding-top: 4px;
+}
+
+/* ── Pills ──────────────────────────────────────────────────── */
+.pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.pill-grey  { background: #222; color: #888; }
+.pill-green { background: #0d2e0d; color: #4caf50; }
+.pill-blue  { background: #0d1f3c; color: #64b5f6; }
+
+/* ── Section layout ─────────────────────────────────────────── */
+section {
+  padding: 24px 28px 32px;
+  border-bottom: 1px solid #1a1a1a;
+}
+
+.section-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+h2 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #97c7f0;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.section-sub {
+  font-size: 12px;
+  color: #555;
+}
+
+/* ── Pending banner ─────────────────────────────────────────── */
+.pending-banner {
+  background: #1a1500;
+  border: 1px solid #3a3000;
+  color: #c8a800;
+  border-radius: 8px;
+  padding: 14px 18px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ── Match cards grid ───────────────────────────────────────── */
+.match-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(560px, 1fr));
+  gap: 16px;
+}
+
+.match-card {
+  background: #141414;
+  border: 1px solid #222;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.mc-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #181818;
+  border-bottom: 1px solid #222;
+  flex-wrap: wrap;
+}
+
+.mc-num {
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  min-width: 44px;
+}
+
+.mc-time {
+  font-size: 11px;
+  color: #666;
+  flex: 1;
+}
+
+.mc-side {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 12px;
+}
+.side-red  { background: #3a0a0a; color: #ff6b6b; }
+.side-blue { background: #0a1a3a; color: #6ba3ff; }
+
+.mc-note-btn {
+  margin-left: auto;
+  background: #1e2a1e;
+  border: 1px solid #2a3a2a;
+  color: #7dbf7d;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.mc-note-btn:hover { background: #2a3a2a; }
+
+/* ── Alliance comparison ────────────────────────────────────── */
+.mc-alliances {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  padding: 14px;
+}
+
+.mc-alliance {
+  flex: 1;
+}
+
+.mc-alliance-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+  color: #555;
+}
+
+.mc-epa-sum {
+  font-size: 11px;
+  color: #888;
+  margin-bottom: 8px;
+}
+
+.mc-vs {
+  width: 32px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #444;
+  padding-top: 28px;
+  flex-shrink: 0;
+}
+
+/* ── Team chips ─────────────────────────────────────────────── */
+.team-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  margin-bottom: 5px;
+  border-left: 3px solid transparent;
+}
+.team-chip-red  { background: #1a0808; border-left-color: #8b2020; }
+.team-chip-blue { background: #080818; border-left-color: #202080; }
+.team-chip-us   { border-left-color: #f0c040 !important; background: #1a1500 !important; }
+
+.chip-num  { font-size: 14px; font-weight: 700; color: #e0e0e0; min-width: 42px; }
+.chip-name { font-size: 11px; color: #888; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
+.chip-epa  { font-size: 11px; color: #666; margin-left: auto; white-space: nowrap; }
+
+.mc-allies  .chip-epa { color: #4caf50; }
+.mc-enemies .chip-epa { color: #ef5350; }
+
+/* ── Match notes ────────────────────────────────────────────── */
+.mc-note {
+  background: #0d1a0d;
+  border-top: 1px solid #1a2e1a;
+  padding: 10px 14px;
+  font-size: 12px;
+  color: #7dbf7d;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+/* ── Teams table ────────────────────────────────────────────── */
+.table-wrap {
+  overflow-x: auto;
+}
+
+#teams-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+#teams-table th {
+  background: #111;
+  color: #666;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid #1a1a1a;
+  white-space: nowrap;
+}
+
+.sortable { cursor: pointer; }
+.sortable:hover { color: #97c7f0; }
+.sort-asc::after  { content: ' ▲'; color: #97c7f0; }
+.sort-desc::after { content: ' ▼'; color: #97c7f0; }
+
+#teams-table td {
+  padding: 7px 12px;
+  border-bottom: 1px solid #151515;
+  vertical-align: middle;
+}
+
+#teams-table tr:hover td { background: #161616; }
+
+.row-us td { background: #1a1500 !important; }
+.row-us .td-num { color: #f0c040; font-weight: 700; }
+
+.td-num  { font-weight: 600; color: #e0e0e0; }
+.td-name { color: #aaa; }
+.td-loc  { color: #555; font-size: 12px; }
+.td-epa  { font-weight: 600; }
+.td-rank { color: #888; }
+.td-matches { white-space: nowrap; }
+
+/* EPA color classes */
+.epa-high { color: #ef5350; }
+.epa-mid  { color: #ffa726; }
+.epa-low  { color: #66bb6a; }
+
+/* ── Match tags ─────────────────────────────────────────────── */
+.mtag {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  margin: 1px 2px;
+}
+.mtag-opp  { background: #2e0a0a; color: #ff6b6b; }
+.mtag-ally { background: #0a1e0a; color: #66bb6a; }
+.mtag-none { color: #333; font-size: 11px; }
+
+/* ── Notes modal ────────────────────────────────────────────── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+
+.modal-box {
+  background: #141414;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  padding: 28px;
+  max-width: 480px;
+  width: 92%;
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  top: 12px; right: 14px;
+  background: none; border: none;
+  color: #555; font-size: 20px;
+  cursor: pointer; line-height: 1;
+}
+.modal-close:hover { color: #fff; }
+
+.modal-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #97c7f0;
+  margin-bottom: 14px;
+}
+
+#notes-textarea {
+  width: 100%;
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  color: #e0e0e0;
+  border-radius: 6px;
+  padding: 10px;
+  font-family: inherit;
+  font-size: 13px;
+  resize: vertical;
+}
+#notes-textarea:focus { outline: none; border-color: #4a7aaa; }
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+  justify-content: flex-end;
+}
+
+.btn-save-notes {
+  background: #1a4a2a; color: #7ef;
+  border: none; border-radius: 6px;
+  padding: 8px 20px; font-size: 13px; cursor: pointer;
+}
+.btn-cancel-notes {
+  background: #222; color: #888;
+  border: none; border-radius: 6px;
+  padding: 8px 20px; font-size: 13px; cursor: pointer;
+}
+.btn-save-notes:hover   { background: #2a6a3a; }
+.btn-cancel-notes:hover { background: #2a2a2a; }
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  section   { padding: 16px 14px 24px; }
+  header    { padding: 14px 14px 12px; }
+  .match-grid { grid-template-columns: 1fr; }
+  h1        { font-size: 17px; }
+}
+
+.no-data { color: #444; text-align: center; padding: 40px; font-size: 14px; }
